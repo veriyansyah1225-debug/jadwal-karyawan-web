@@ -8,11 +8,11 @@ const MONTHS = [
 const DAYS = ['MG', 'SN', 'SL', 'RB', 'KM', 'JM', 'SB']
 
 const demoEmployees = [
-  { department: 'FARM', job: 'SECURITY', name: 'Yusuf', codes: ['S','OFF','M','S','M','S','S','M','S','OFF','M','S','S','M','OFF','M','S','OFF','M','S','M','S','OFF','M','S','M','S','OFF','M','S','M'] },
-  { department: 'FARM', job: 'SECURITY', name: 'Ahmadi', codes: ['M','S','S','OFF','M','M','S','M','OFF','M','S','S','M','OFF','S','M','S','OFF','M','S','M','S','OFF','M','S','M','S','OFF','M','S','S'] },
-  { department: 'FARM', job: 'POS 1', name: 'Alvi', codes: ['OFF','S','P','S','P','S','OFF','P','S','P','S','P','S','P','S','P','S','OFF','P','S','P','S','OFF','P','S','P','S','OFF','P','S','OFF'] },
-  { department: 'FARM', job: 'MEKANIK', name: 'Wasto', codes: ['','','','OFF','','','','','','','OFF','','','','','OFF','','','','','OFF','','','','','OFF','','','','','OFF','',''] },
-  { department: 'FARM', job: 'LONDRY', name: 'Anisah', codes: ['','','','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT'] },
+  { department: 'FARM', job: 'SECURITY', jobs: ['SECURITY'], name: 'Yusuf', codes: ['S','OFF','M','S','M','S','S','M','S','OFF','M','S','S','M','OFF','M','S','OFF','M','S','M','S','OFF','M','S','M','S','OFF','M','S','M'] },
+  { department: 'FARM', job: 'SECURITY', jobs: ['SECURITY'], name: 'Ahmadi', codes: ['M','S','S','OFF','M','M','S','M','OFF','M','S','S','M','OFF','S','M','S','OFF','M','S','M','S','OFF','M','S','M','S','OFF','M','S','S'] },
+  { department: 'FARM', job: 'POS 1', jobs: ['POS 1'], name: 'Alvi', codes: ['OFF','S','P','S','P','S','OFF','P','S','P','S','P','S','P','S','P','S','OFF','P','S','P','S','OFF','P','S','P','S','OFF','P','S','OFF'] },
+  { department: 'FARM', job: 'MEKANIK', jobs: ['MEKANIK'], name: 'Wasto', codes: ['','','','OFF','','','','','','','OFF','','','','','OFF','','','','','OFF','','','','','OFF','','','','','OFF','',''] },
+  { department: 'FARM', job: 'LONDRY', jobs: ['LONDRY'], name: 'Anisah', codes: ['','','','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT'] },
 ]
 
 function daysInMonth(month, year) {
@@ -36,7 +36,7 @@ function App() {
   const totalDays = useMemo(() => daysInMonth(month, year), [month, year])
 
   const jobs = useMemo(
-    () => [...new Set(rows.map((row) => row.job).filter(Boolean))].sort(),
+    () => [...new Set(rows.flatMap((row) => row.jobs || (row.job ? [row.job] : [])))].sort(),
     [rows],
   )
 
@@ -44,7 +44,7 @@ function App() {
     const q = search.trim().toLowerCase()
     return rows.filter((row) =>
       (!department || row.department === department) &&
-      (!job || row.job === job) &&
+      (!job || (row.jobs || []).includes(job)) &&
       (!q || row.name.toLowerCase().includes(q)),
     )
   }, [rows, department, job, search])
@@ -63,11 +63,10 @@ function App() {
 
       const { data, error: queryError } = await supabase
         .from('v_jadwal_karyawan')
-        .select('tanggal,nama_departemen,nama_job,nama_karyawan,kode_jadwal,keterangan')
+        .select('employee_id,tanggal,nama_departemen,nama_job,nama_job_master,nama_karyawan,kode_jadwal,keterangan')
         .gte('tanggal', start)
         .lte('tanggal', end)
         .eq('nama_departemen', department)
-        .order('nama_job')
         .order('nama_karyawan')
         .order('tanggal')
 
@@ -86,23 +85,45 @@ function App() {
       }
 
       const grouped = new Map()
+
       for (const item of data) {
-        const key = `${item.nama_job || ''}|${item.nama_karyawan}`
+        const key = String(item.employee_id)
+
         if (!grouped.has(key)) {
           grouped.set(key, {
             department: item.nama_departemen,
-            job: item.nama_job || '',
+            job: item.nama_job_master || '',
+            jobs: new Set(item.nama_job_master ? [item.nama_job_master] : []),
             name: item.nama_karyawan,
             codes: Array(totalDays).fill(''),
+            assignmentDays: new Set(),
           })
         }
+
+        const row = grouped.get(key)
+        if (item.nama_job) row.jobs.add(item.nama_job)
+
         const day = Number(String(item.tanggal).slice(-2))
         if (day >= 1 && day <= totalDays) {
-          grouped.get(key).codes[day - 1] = item.kode_jadwal || ''
+          if (item.kode_jadwal) {
+            row.codes[day - 1] = item.kode_jadwal
+          } else if (item.nama_job) {
+            row.codes[day - 1] = item.nama_job
+            row.assignmentDays.add(day - 1)
+          }
         }
       }
 
-      setRows([...grouped.values()])
+      const normalized = [...grouped.values()].map((row) => {
+        const jobsArray = [...row.jobs].sort()
+        return {
+          ...row,
+          jobs: jobsArray,
+          job: row.job || jobsArray.join(' / '),
+        }
+      })
+
+      setRows(normalized)
       setLoading(false)
     }
 
@@ -142,7 +163,7 @@ function App() {
           <div className="filters">
             <div><label>Bulan</label><select value={month} onChange={(e) => setMonth(Number(e.target.value))}>{MONTHS.map((name, index) => <option key={name} value={index + 1}>{name}</option>)}</select></div>
             <div><label>Tahun</label><select value={year} onChange={(e) => setYear(Number(e.target.value))}><option>2026</option><option>2027</option></select></div>
-            <div><label>Departemen</label><select value={department} onChange={(e) => setDepartment(e.target.value)}><option>FARM</option><option>HATCHERY</option></select></div>
+            <div><label>Departemen</label><select value={department} onChange={(e) => { setDepartment(e.target.value); setJob('') }}><option>FARM</option><option>HATCHERY</option></select></div>
             <div><label>JOB</label><select value={job} onChange={(e) => setJob(e.target.value)}><option value="">Semua</option>{jobs.map((item) => <option key={item}>{item}</option>)}</select></div>
             <div><label>Cari Karyawan</label><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nama karyawan..." /></div>
             <div><label>&nbsp;</label><button type="button" onClick={() => setSearch(search.trim())}>Tampilkan</button></div>
@@ -166,12 +187,12 @@ function App() {
             <div className="wrap">
               <table>
                 <thead><tr><th className="sticky-job">JOB</th><th className="sticky-name">Nama Karyawan</th>{Array.from({ length: totalDays }, (_, i) => { const date = new Date(year, month - 1, i + 1); return <th key={i}>{i + 1}<br /><span>{DAYS[date.getDay()]}</span></th> })}</tr></thead>
-                <tbody>{filteredRows.map((row) => <tr key={row.name + row.job}><td className="sticky-job group">{row.job || '—'}</td><td className="sticky-name">{row.name}</td>{row.codes.slice(0, totalDays).map((code, i) => <td key={i} className={code ? `cell ${code}` : 'empty'}>{code || '—'}</td>)}</tr>)}</tbody>
+                <tbody>{filteredRows.map((row) => <tr key={row.name}><td className="sticky-job group">{row.job || '—'}</td><td className="sticky-name">{row.name}</td>{row.codes.slice(0, totalDays).map((code, i) => { const assignment = row.assignmentDays?.has(i); return <td key={i} className={code ? assignment ? 'cell assignment' : `cell ${code}` : 'empty'}>{code || '—'}</td> })}</tr>)}</tbody>
               </table>
             </div>
           )}
 
-          <div className="note">Prototype v2 menjadi acuan tampilan. Data produksi akan berasal dari <b>v_jadwal_karyawan</b>.</div>
+          <div className="note">Data produksi berasal dari <b>v_jadwal_karyawan</b>. Jika pada tanggal tertentu terdapat penempatan JOB, JOB tersebut ditampilkan pada sel tanggal.</div>
         </section>
 
         <section className="card">
