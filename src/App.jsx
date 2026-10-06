@@ -60,7 +60,9 @@ function App() {
   const [endDate, setEndDate] = useState(toInputDate(getMonthEnd(today)))
   const [department, setDepartment] = useState('FARM')
   const [job, setJob] = useState('')
-  const [search, setSearch] = useState('')
+  const [employeeSearch, setEmployeeSearch] = useState('')
+  const [selectedEmployees, setSelectedEmployees] = useState([])
+  const [employeePickerOpen, setEmployeePickerOpen] = useState(false)
   const [rows, setRows] = useState(demoEmployees)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -74,20 +76,45 @@ function App() {
     [rows],
   )
 
+  const availableEmployees = useMemo(() => {
+    const q = employeeSearch.trim().toLowerCase()
+    return rows
+      .filter((row) => !job || (row.jobs || []).includes(job))
+      .filter((row) => !q || row.name.toLowerCase().includes(q))
+      .sort((a, b) => a.name.localeCompare(b.name))
+  }, [rows, job, employeeSearch])
+
+  const selectedEmployeeSet = useMemo(() => new Set(selectedEmployees), [selectedEmployees])
+
   const filteredRows = useMemo(() => {
-    const q = search.trim().toLowerCase()
     return rows.filter((row) =>
       (!department || row.department === department) &&
       (!job || (row.jobs || []).includes(job)) &&
-      (!q || row.name.toLowerCase().includes(q)),
+      (selectedEmployees.length === 0 || selectedEmployeeSet.has(String(row.employeeId))),
     )
-  }, [rows, department, job, search])
+  }, [rows, department, job, selectedEmployees, selectedEmployeeSet])
+
+  function toggleEmployee(employeeId) {
+    const key = String(employeeId)
+    setSelectedEmployees((current) =>
+      current.includes(key) ? current.filter((id) => id !== key) : [...current, key],
+    )
+  }
+
+  function selectAllEmployees() {
+    setSelectedEmployees(availableEmployees.map((row) => String(row.employeeId)))
+  }
+
+  function clearSelectedEmployees() {
+    setSelectedEmployees([])
+  }
 
   function goToCurrentMonth() {
     const now = new Date()
     setStartDate(toInputDate(getMonthStart(now)))
     setEndDate(toInputDate(getMonthEnd(now)))
     setJob('')
+    setSelectedEmployees([])
   }
 
   useEffect(() => {
@@ -179,8 +206,13 @@ function App() {
     }
   }, [department, startDate, endDate, invalidRange])
 
+  useEffect(() => {
+    const validIds = new Set(rows.map((row) => String(row.employeeId)))
+    setSelectedEmployees((current) => current.filter((id) => validIds.has(id)))
+  }, [rows])
+
   function resetToDemo() {
-    setRows(demoEmployees)
+    setRows(demoEmployees.map((row, index) => ({ ...row, employeeId: `demo-${index}` })))
     setError('')
   }
 
@@ -208,10 +240,42 @@ function App() {
           <div className="filters">
             <div><label>Dari Tanggal</label><input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></div>
             <div><label>Sampai Tanggal</label><input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} /></div>
-            <div><label>Departemen</label><select value={department} onChange={(e) => { setDepartment(e.target.value); setJob('') }}><option>FARM</option><option>HATCHERY</option></select></div>
-            <div><label>JOB</label><select value={job} onChange={(e) => setJob(e.target.value)}><option value="">Semua</option>{jobs.map((item) => <option key={item}>{item}</option>)}</select></div>
-            <div><label>Cari Karyawan</label><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nama karyawan..." /></div>
-            <div className="filter-actions"><label>&nbsp;</label><button type="button" onClick={() => setSearch(search.trim())}>Tampilkan</button></div>
+            <div><label>Departemen</label><select value={department} onChange={(e) => { setDepartment(e.target.value); setJob(''); setSelectedEmployees([]) }}><option>FARM</option><option>HATCHERY</option></select></div>
+            <div><label>JOB</label><select value={job} onChange={(e) => { setJob(e.target.value); setSelectedEmployees([]) }}><option value="">Semua</option>{jobs.map((item) => <option key={item}>{item}</option>)}</select></div>
+            <div className="employee-filter">
+              <label>Pilih Karyawan</label>
+              <button type="button" className="employee-picker-trigger" onClick={() => setEmployeePickerOpen((open) => !open)}>
+                {selectedEmployees.length ? `${selectedEmployees.length} karyawan dipilih` : 'Semua karyawan'}
+                <span>⌄</span>
+              </button>
+              {employeePickerOpen && (
+                <div className="employee-picker">
+                  <div className="employee-picker-head">
+                    <input value={employeeSearch} onChange={(e) => setEmployeeSearch(e.target.value)} placeholder="Cari nama..." />
+                  </div>
+                  <div className="employee-picker-actions">
+                    <button type="button" className="picker-action" onClick={selectAllEmployees}>Pilih Semua</button>
+                    <button type="button" className="picker-action" onClick={clearSelectedEmployees}>Hapus Semua</button>
+                  </div>
+                  <div className="employee-picker-list">
+                    {availableEmployees.length === 0 && <div className="employee-empty">Tidak ada nama yang cocok.</div>}
+                    {availableEmployees.map((row) => {
+                      const key = String(row.employeeId)
+                      return (
+                        <label className="employee-option" key={key}>
+                          <input type="checkbox" checked={selectedEmployeeSet.has(key)} onChange={() => toggleEmployee(key)} />
+                          <span>{row.name}</span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                  <div className="employee-picker-footer">
+                    {selectedEmployees.length ? `${selectedEmployees.length} karyawan dipilih` : 'Semua karyawan ditampilkan'}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="filter-actions"><label>&nbsp;</label><button type="button" onClick={() => setEmployeePickerOpen(false)}>Tampilkan</button></div>
           </div>
           {invalidRange && <div className="state error date-error">Tanggal awal tidak boleh lebih besar dari tanggal akhir.</div>}
         </section>
@@ -241,7 +305,7 @@ function App() {
             </div>
           )}
 
-          <div className="note">Data produksi berasal dari <b>v_jadwal_karyawan</b>. Filter tanggal hanya mengatur rentang tampilan dan pembacaan data; jadwal tetap tersimpan per tanggal di database. Jika rentang melewati bulan, tabel akan menampilkan seluruh tanggal dalam rentang tersebut dan dapat digeser secara horizontal.</div>
+          <div className="note">Data produksi berasal dari <b>v_jadwal_karyawan</b>. Filter tanggal dan pemilihan karyawan hanya mengatur tampilan; jadwal tetap tersimpan per tanggal di database. Jika rentang melewati bulan, tabel dapat digeser secara horizontal.</div>
         </section>
 
         <section className="card">
