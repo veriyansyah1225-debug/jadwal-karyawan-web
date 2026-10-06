@@ -1,7 +1,7 @@
 # Dokumentasi Progres Pengembangan Web UI — Jadwal Karyawan
 
 **Status:** Draft / Progress Development  
-**Versi:** 0.5  
+**Versi:** 0.6  
 **Tanggal:** 2026-10-06  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Database:** `database-jadwal-karyawan` / PostgreSQL 17 / Supabase
@@ -835,3 +835,46 @@ Setiap milestone berikutnya akan dicatat dengan prinsip:
 
 **Milestone saat ini:**  
 **Online Web UI + Supabase Integration + JOB Display Correction — SELESAI.**
+
+
+---
+
+# 28. Penyempurnaan Web UI — Navigasi Periode Jadwal
+
+Sebagai bagian dari milestone aktif **Penyelesaian Web UI Jadwal Karyawan v1**, ditambahkan kontrol navigasi periode pada kartu jadwal.
+
+Perubahan:
+
+- tombol **Bulan Sebelumnya**;
+- tombol **Bulan Ini**;
+- tombol **Bulan Berikutnya**;
+- perpindahan bulan otomatis memperbarui tahun ketika melewati Januari/Desember;
+- pilihan JOB dikosongkan ketika periode berpindah agar filter tidak membawa konteks JOB yang mungkin tidak tersedia pada periode baru;
+- kontrol navigasi dibuat lebih sesuai untuk layar kecil.
+
+Perubahan ini hanya berada pada Web UI dan **tidak mengubah struktur atau data database**.
+
+## Status
+
+**Selesai — Penyempurnaan navigasi periode.**
+
+---
+
+# 29. Milestone Aktif — Update
+
+**Milestone aktif: Penyelesaian Web UI Jadwal Karyawan v1**
+
+Status:
+
+**SEDANG DIKERJAKAN**
+
+Pekerjaan yang telah diselesaikan dalam milestone ini sejauh ini:
+
+- integrasi data aktual;
+- filter dasar;
+- tabel jadwal bulanan;
+- responsive dasar;
+- navigasi bulan sebelumnya/berikutnya;
+- tombol kembali ke bulan berjalan.
+
+Pekerjaan berikutnya tetap difokuskan pada penyempurnaan Web UI sebelum berpindah ke Authentication, RLS final, atau perubahan besar aturan bisnis.
