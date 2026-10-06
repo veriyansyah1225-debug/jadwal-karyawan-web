@@ -925,3 +925,72 @@ Pekerjaan Web UI yang telah diselesaikan dalam milestone aktif:
 - detail jadwal per sel.
 
 Pekerjaan berikutnya tetap difokuskan pada penyempurnaan pengalaman penggunaan tabel dan responsive sebelum berpindah ke tahap Authentication, RLS final, atau perubahan besar aturan bisnis.
+
+
+---
+
+# 32. Penyempurnaan Web UI — Mode Ringkas Hari
+
+Sebagai lanjutan penyempurnaan tabel jadwal, tombol **Ringkas Hari** sekarang memiliki perilaku nyata pada tabel.
+
+Perubahan:
+
+- mode **Tampilkan Semua Hari** menampilkan seluruh tanggal dalam bulan;
+- mode **Ringkas Hari** menyembunyikan Sabtu dan Minggu dari tampilan tabel;
+- data Sabtu dan Minggu tidak dihapus dan tetap tersedia pada data jadwal;
+- tombol berubah menjadi **Tampilkan Semua Hari** ketika mode ringkas aktif;
+- keterangan pada bagian bawah tabel menjelaskan mode yang sedang digunakan;
+- identitas baris menggunakan `employee_id` bila tersedia sehingga lebih aman terhadap nama karyawan yang sama.
+
+Perubahan ini hanya berada pada Web UI dan **tidak mengubah struktur atau data database**.
+
+## Status
+
+**Selesai — Mode ringkas tabel jadwal.**
+
+---
+
+# 33. Validasi Deployment Web UI
+
+Setelah penyempurnaan UI, deployment Production diverifikasi melalui Vercel.
+
+Kondisi yang berhasil dikonfirmasi:
+
+- repository: `jadwal-karyawan-web`;
+- branch: `main`;
+- environment: `Production`;
+- deployment berstatus `Ready`;
+- commit UI terbaru berhasil dibuat dan diproses Vercel;
+- versi terbaru dapat dibuka melalui tombol **Visit** pada deployment Production.
+
+Temuan sebelumnya adalah browser membuka deployment lama. Setelah memilih deployment Production terbaru, perubahan UI berhasil tampil.
+
+## Status
+
+**Selesai — Validasi deployment Production.**
+
+---
+
+# 34. Milestone Aktif — Update
+
+**Milestone aktif: Penyelesaian Web UI Jadwal Karyawan v1**
+
+Status:
+
+**SEDANG DIKERJAKAN**
+
+Pekerjaan Web UI yang telah diselesaikan:
+
+- integrasi data aktual;
+- filter dasar;
+- tabel jadwal bulanan;
+- responsive dasar;
+- navigasi bulan;
+- tombol Bulan Ini;
+- detail jadwal per sel;
+- mode Ringkas Hari untuk menyembunyikan Sabtu/Minggu;
+- validasi deployment Production.
+
+Pekerjaan berikutnya tetap berada dalam milestone Web UI v1 sampai baseline UI dianggap stabil.
+
+**Authentication, RLS final, perubahan aturan bisnis JOB, input/edit jadwal, absensi, dan laporan belum dimulai pada tahap ini.**
