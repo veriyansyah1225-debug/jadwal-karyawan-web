@@ -1,7 +1,7 @@
 # Dokumentasi Progres Pengembangan Web UI — Jadwal Karyawan
 
 **Status:** Draft / Progress Development  
-**Versi:** 0.6  
+**Versi:** 0.7  
 **Tanggal:** 2026-10-06  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Database:** `database-jadwal-karyawan` / PostgreSQL 17 / Supabase
@@ -878,3 +878,50 @@ Pekerjaan yang telah diselesaikan dalam milestone ini sejauh ini:
 - tombol kembali ke bulan berjalan.
 
 Pekerjaan berikutnya tetap difokuskan pada penyempurnaan Web UI sebelum berpindah ke Authentication, RLS final, atau perubahan besar aturan bisnis.
+
+
+---
+
+# 30. Penyempurnaan Web UI — Detail Jadwal per Sel
+
+Sebagai bagian dari penyelesaian Web UI v1, setiap sel jadwal sekarang dapat diklik untuk membuka detail.
+
+Informasi yang ditampilkan:
+
+- nama karyawan;
+- departemen;
+- JOB;
+- tanggal;
+- status/kode jadwal;
+- tugas/penempatan jika tersedia;
+- keterangan jika tersedia.
+
+Detail mengambil informasi dari data yang sudah diterima dari `v_jadwal_karyawan`, termasuk kolom `keterangan`. Tidak ada perubahan struktur database pada pekerjaan ini.
+
+Klik di luar dialog atau tombol tutup digunakan untuk menutup detail.
+
+## Status
+
+**Selesai — Interaksi detail jadwal dasar.**
+
+---
+
+# 31. Milestone Aktif — Update
+
+**Milestone aktif: Penyelesaian Web UI Jadwal Karyawan v1**
+
+Status:
+
+**SEDANG DIKERJAKAN**
+
+Pekerjaan Web UI yang telah diselesaikan dalam milestone aktif:
+
+- integrasi data aktual;
+- filter dasar;
+- tabel jadwal bulanan;
+- responsive dasar;
+- navigasi bulan;
+- tombol Bulan Ini;
+- detail jadwal per sel.
+
+Pekerjaan berikutnya tetap difokuskan pada penyempurnaan pengalaman penggunaan tabel dan responsive sebelum berpindah ke tahap Authentication, RLS final, atau perubahan besar aturan bisnis.
