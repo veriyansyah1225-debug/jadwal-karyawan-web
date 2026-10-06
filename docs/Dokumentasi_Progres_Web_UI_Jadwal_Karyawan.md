@@ -1,7 +1,7 @@
 # Dokumentasi Progres Pengembangan Web UI — Jadwal Karyawan
 
 **Status:** Draft / Progress Development  
-**Versi:** 0.3  
+**Versi:** 0.4  
 **Tanggal:** 2026-10-06  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Database:** `database-jadwal-karyawan` / PostgreSQL 17 / Supabase
@@ -481,9 +481,23 @@ Masalah ini **belum boleh langsung diperbaiki dengan asumsi**. Aturan bisnis per
 - atau apakah JOB pada jadwal boleh berbeda dari JOB master;
 - atau apakah keduanya memiliki fungsi berbeda.
 
+## Perbaikan yang Dilakukan
+
+Setelah pemeriksaan data, ditemukan bahwa frontend sebelumnya mengelompokkan baris berdasarkan kombinasi `nama_job` pada schedule dan nama karyawan. Akibatnya satu karyawan seperti Deta/Alda dapat terpecah menjadi beberapa baris dan JOB tertentu tampil sebagai `—`.
+
+Perbaikan dilakukan pada dua lapisan:
+
+1. View `v_jadwal_karyawan` sekarang juga menyediakan `job_master_id` dan `nama_job_master` tanpa menghilangkan kolom lama.
+2. Frontend mengelompokkan jadwal berdasarkan `employee_id`, bukan berdasarkan JOB pada setiap record tanggal.
+3. JOB master digunakan sebagai JOB utama bila tersedia.
+4. Jika tidak ada JOB master tetapi terdapat penempatan JOB pada tanggal tertentu, daftar JOB tersebut digunakan sebagai informasi JOB.
+5. Jika suatu tanggal berisi penempatan JOB seperti `KANTIN` atau `LONDRY` dan tidak mempunyai schedule code, nama JOB ditampilkan langsung pada sel tanggal.
+
+Dengan demikian data `KANTIN`/`LONDRY` tidak lagi membuat satu karyawan menjadi beberapa baris terpisah.
+
 ## Status
 
-**Pengujian berhasil; aturan bisnis JOB masih terbuka.**
+**Selesai — perbaikan struktur pembacaan JOB dan pengelompokan karyawan.**
 
 ---
 
@@ -584,9 +598,15 @@ Temuan penting setelah aplikasi benar-benar terhubung ke data:
 
 ### 19.1 JOB pada schedule
 
-Sebagian schedule memiliki `job_id` kosong sehingga UI menampilkan `—`.
+Temuan awal `JOB —` sudah ditangani pada sisi pembacaan data tanpa mengubah isi data jadwal.
 
-Ini perlu keputusan bisnis sebelum perubahan struktur atau view.
+Sekarang frontend membedakan:
+
+- JOB master karyawan;
+- JOB assignment pada tanggal tertentu;
+- schedule code seperti P/S/M/L/OFF/CT.
+
+Data yang memang tidak mempunyai JOB tetap tidak dibuat-buat. Jadi `—` hanya digunakan ketika sumber data memang tidak menyediakan informasi JOB.
 
 ### 19.2 L dan OFF
 
@@ -784,7 +804,7 @@ Menambahkan:
 | v0.3 | Konfigurasi environment variable | Selesai |
 | v0.3 | Perbaikan Invalid API Key | Selesai |
 | v0.3 | Pengujian browser online | Selesai |
-| v0.3 | Validasi data FARM Oktober 2026 | Selesai |
+| v0.3 | Validasi data FARM Oktober 2026 | Selesai |\n| v0.4 | Analisis penyebab JOB tampil `—` | Selesai |\n| v0.4 | Perbaikan view untuk JOB master | Selesai |\n| v0.4 | Perbaikan grouping frontend berdasarkan employee | Selesai |\n| v0.4 | Tampilan assignment KANTIN/LONDRY pada sel tanggal | Selesai |
 | v0.3 | Authentication | Belum |
 | v0.3 | RLS policy final | Belum |
 | v0.3 | Input/Edit jadwal | Belum |
@@ -814,4 +834,4 @@ Setiap milestone berikutnya akan dicatat dengan prinsip:
 > **Frontend React + Vite sudah terhubung ke Supabase, dideploy melalui Vercel, dan berhasil menampilkan data PostgreSQL aktual dari browser. Authentication, RLS final, pengelolaan jadwal, absensi, laporan, dan aturan bisnis tertentu masih dalam pengembangan.**
 
 **Milestone saat ini:**  
-**Online Web UI + Supabase Integration + Browser Testing — BERHASIL.**
+**Online Web UI + Supabase Integration + JOB Display Correction — SELESAI.**
