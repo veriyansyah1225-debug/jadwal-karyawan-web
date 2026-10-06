@@ -67,6 +67,7 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [selectedCell, setSelectedCell] = useState(null)
+  const [focusMode, setFocusMode] = useState(false)
 
   const dateRange = useMemo(() => getDateRange(startDate, endDate), [startDate, endDate])
   const invalidRange = Boolean(startDate && endDate && startDate > endDate)
@@ -217,7 +218,7 @@ function App() {
   }
 
   return (
-    <div className="app">
+    <div className={`app${focusMode ? ' focus-mode' : ''}`}>
       <aside className="side">
         <div className="brand">▣ Jadwal Karyawan<small>Database Jadwal & Absensi</small></div>
         <nav className="nav">
@@ -275,7 +276,6 @@ function App() {
                 </div>
               )}
             </div>
-            <div className="filter-actions"><label>&nbsp;</label><button type="button" onClick={() => setEmployeePickerOpen(false)}>Tampilkan</button></div>
           </div>
           {invalidRange && <div className="state error date-error">Tanggal awal tidak boleh lebih besar dari tanggal akhir.</div>}
         </section>
@@ -288,6 +288,9 @@ function App() {
             </div>
             <div className="title-actions">
               <button className="secondary today" type="button" onClick={goToCurrentMonth}>Bulan Ini</button>
+              <button className="focus-toggle" type="button" onClick={() => setFocusMode((value) => !value)}>
+                {focusMode ? 'Kembalikan Tampilan' : 'Perbesar Jadwal'}
+              </button>
               <div className="badge">Total Karyawan: {filteredRows.length}</div>
             </div>
           </div>
