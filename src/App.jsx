@@ -1,10 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase, supabaseConfigured } from './lib/supabase'
 
-const MONTHS = [
-  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
-]
 const DAYS = ['MG', 'SN', 'SL', 'RB', 'KM', 'JM', 'SB']
 
 const demoEmployees = [
@@ -15,17 +11,53 @@ const demoEmployees = [
   { department: 'FARM', job: 'LONDRY', jobs: ['LONDRY'], name: 'Anisah', codes: ['','','','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT'] },
 ]
 
-function daysInMonth(month, year) {
-  return new Date(year, month, 0).getDate()
+function getMonthStart(date = new Date()) {
+  return new Date(date.getFullYear(), date.getMonth(), 1)
 }
 
-function formatDate(year, month, day) {
-  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+function getMonthEnd(date = new Date()) {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0)
+}
+
+function toInputDate(date) {
+  return date.toISOString().slice(0, 10)
+}
+
+function formatDisplayDate(value) {
+  if (!value) return ''
+  return new Date(`${value}T00:00:00`).toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
+function getDateRange(startDate, endDate) {
+  if (!startDate || !endDate || startDate > endDate) return []
+
+  const dates = []
+  const cursor = new Date(`${startDate}T00:00:00Z`)
+  const end = new Date(`${endDate}T00:00:00Z`)
+
+  while (cursor <= end) {
+    const value = cursor.toISOString().slice(0, 10)
+    const localDate = new Date(`${value}T00:00:00`)
+    dates.push({
+      value,
+      date: localDate,
+      day: localDate.getDate(),
+      dayName: DAYS[localDate.getDay()],
+    })
+    cursor.setUTCDate(cursor.getUTCDate() + 1)
+  }
+
+  return dates
 }
 
 function App() {
-  const [month, setMonth] = useState(10)
-  const [year, setYear] = useState(2026)
+  const today = new Date()
+  const [startDate, setStartDate] = useState(toInputDate(getMonthStart(today)))
+  const [endDate, setEndDate] = useState(toInputDate(getMonthEnd(today)))
   const [department, setDepartment] = useState('FARM')
   const [job, setJob] = useState('')
   const [search, setSearch] = useState('')
@@ -33,30 +65,9 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [selectedCell, setSelectedCell] = useState(null)
-  const [showAllDays, setShowAllDays] = useState(true)
 
-  const totalDays = useMemo(() => daysInMonth(month, year), [month, year])
-
-  const visibleDays = useMemo(() => (
-    Array.from({ length: totalDays }, (_, index) => {
-      const date = new Date(year, month - 1, index + 1)
-      return { index, day: index + 1, date, isWeekend: date.getDay() === 0 || date.getDay() === 6 }
-    }).filter((item) => showAllDays || !item.isWeekend)
-  ), [totalDays, year, month, showAllDays])
-
-  function changeMonth(offset) {
-    const next = new Date(year, month - 1 + offset, 1)
-    setYear(next.getFullYear())
-    setMonth(next.getMonth() + 1)
-    setJob('')
-  }
-
-  function goToCurrentMonth() {
-    const now = new Date()
-    setYear(now.getFullYear())
-    setMonth(now.getMonth() + 1)
-    setJob('')
-  }
+  const dateRange = useMemo(() => getDateRange(startDate, endDate), [startDate, endDate])
+  const invalidRange = Boolean(startDate && endDate && startDate > endDate)
 
   const jobs = useMemo(
     () => [...new Set(rows.flatMap((row) => row.jobs || (row.job ? [row.job] : [])))].sort(),
@@ -72,8 +83,15 @@ function App() {
     )
   }, [rows, department, job, search])
 
+  function goToCurrentMonth() {
+    const now = new Date()
+    setStartDate(toInputDate(getMonthStart(now)))
+    setEndDate(toInputDate(getMonthEnd(now)))
+    setJob('')
+  }
+
   useEffect(() => {
-    if (!supabaseConfigured) return
+    if (!supabaseConfigured || invalidRange) return
 
     let cancelled = false
 
@@ -81,14 +99,11 @@ function App() {
       setLoading(true)
       setError('')
 
-      const start = formatDate(year, month, 1)
-      const end = formatDate(year, month, totalDays)
-
       const { data, error: queryError } = await supabase
         .from('v_jadwal_karyawan')
         .select('employee_id,tanggal,nama_departemen,nama_job,nama_job_master,nama_karyawan,kode_jadwal,keterangan')
-        .gte('tanggal', start)
-        .lte('tanggal', end)
+        .gte('tanggal', startDate)
+        .lte('tanggal', endDate)
         .eq('nama_departemen', department)
         .order('nama_karyawan')
         .order('tanggal')
@@ -119,8 +134,8 @@ function App() {
             job: item.nama_job_master || '',
             jobs: new Set(item.nama_job_master ? [item.nama_job_master] : []),
             name: item.nama_karyawan,
-            codes: Array(totalDays).fill(''),
-            details: Array.from({ length: totalDays }, () => null),
+            codes: {},
+            details: {},
             assignmentDays: new Set(),
           })
         }
@@ -128,20 +143,19 @@ function App() {
         const row = grouped.get(key)
         if (item.nama_job) row.jobs.add(item.nama_job)
 
-        const day = Number(String(item.tanggal).slice(-2))
-        if (day >= 1 && day <= totalDays) {
-          if (item.kode_jadwal) {
-            row.codes[day - 1] = item.kode_jadwal
-          } else if (item.nama_job) {
-            row.codes[day - 1] = item.nama_job
-            row.assignmentDays.add(day - 1)
-          }
-          row.details[day - 1] = {
-            date: item.tanggal,
-            code: item.kode_jadwal || '',
-            assignment: item.nama_job || '',
-            note: item.keterangan || '',
-          }
+        const dateKey = String(item.tanggal)
+        if (item.kode_jadwal) {
+          row.codes[dateKey] = item.kode_jadwal
+        } else if (item.nama_job) {
+          row.codes[dateKey] = item.nama_job
+          row.assignmentDays.add(dateKey)
+        }
+
+        row.details[dateKey] = {
+          date: dateKey,
+          code: item.kode_jadwal || '',
+          assignment: item.nama_job || '',
+          note: item.keterangan || '',
         }
       }
 
@@ -163,7 +177,7 @@ function App() {
     return () => {
       cancelled = true
     }
-  }, [department, month, year, totalDays])
+  }, [department, startDate, endDate, invalidRange])
 
   function resetToDemo() {
     setRows(demoEmployees)
@@ -192,43 +206,42 @@ function App() {
 
         <section className="card">
           <div className="filters">
-            <div><label>Bulan</label><select value={month} onChange={(e) => setMonth(Number(e.target.value))}>{MONTHS.map((name, index) => <option key={name} value={index + 1}>{name}</option>)}</select></div>
-            <div><label>Tahun</label><select value={year} onChange={(e) => setYear(Number(e.target.value))}><option>2026</option><option>2027</option></select></div>
+            <div><label>Dari Tanggal</label><input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></div>
+            <div><label>Sampai Tanggal</label><input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} /></div>
             <div><label>Departemen</label><select value={department} onChange={(e) => { setDepartment(e.target.value); setJob('') }}><option>FARM</option><option>HATCHERY</option></select></div>
             <div><label>JOB</label><select value={job} onChange={(e) => setJob(e.target.value)}><option value="">Semua</option>{jobs.map((item) => <option key={item}>{item}</option>)}</select></div>
             <div><label>Cari Karyawan</label><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nama karyawan..." /></div>
             <div className="filter-actions"><label>&nbsp;</label><button type="button" onClick={() => setSearch(search.trim())}>Tampilkan</button></div>
           </div>
+          {invalidRange && <div className="state error date-error">Tanggal awal tidak boleh lebih besar dari tanggal akhir.</div>}
         </section>
 
         <section className="card">
           <div className="title">
             <div>
-              <h2>Jadwal {department} — {MONTHS[month - 1]} {year}</h2>
+              <h2>Jadwal {department} — {formatDisplayDate(startDate)}{startDate !== endDate ? ` – ${formatDisplayDate(endDate)}` : ''}</h2>
               <div className="meta">{supabaseConfigured ? 'Sumber: Supabase / v_jadwal_karyawan' : 'Mode demo — Supabase belum dikonfigurasi'}</div>
             </div>
             <div className="title-actions">
-              <button className="secondary nav-month" type="button" onClick={() => changeMonth(-1)} aria-label="Bulan sebelumnya">‹</button>
               <button className="secondary today" type="button" onClick={goToCurrentMonth}>Bulan Ini</button>
-              <button className="secondary nav-month" type="button" onClick={() => changeMonth(1)} aria-label="Bulan berikutnya">›</button>
-              <div className="view-actions"><button className="secondary compact" type="button" onClick={() => setShowAllDays((value) => !value)}>{showAllDays ? 'Ringkas Hari' : 'Tampilkan Semua Hari'}</button><div className="badge">Total Karyawan: {filteredRows.length}</div></div>
+              <div className="badge">Total Karyawan: {filteredRows.length}</div>
             </div>
           </div>
 
           {loading && <div className="state">Memuat jadwal...</div>}
           {error && <div className="state error">Gagal memuat data Supabase: {error}<button className="secondary" onClick={resetToDemo}>Gunakan data demo</button></div>}
-          {!loading && !error && filteredRows.length === 0 && <div className="state">Tidak ada karyawan yang sesuai dengan filter.</div>}
+          {!loading && !error && !invalidRange && filteredRows.length === 0 && <div className="state">Tidak ada karyawan yang sesuai dengan filter.</div>}
 
-          {!loading && !error && filteredRows.length > 0 && (
+          {!loading && !error && !invalidRange && filteredRows.length > 0 && (
             <div className="wrap">
               <table>
-                <thead><tr><th className="sticky-job">JOB</th><th className="sticky-name">Nama Karyawan</th>{visibleDays.map(({ day, date, isWeekend }) => <th key={day} className={isWeekend ? 'weekend-column' : ''}>{day}<br /><span>{DAYS[date.getDay()]}</span></th>)}</tr></thead>
-                <tbody>{filteredRows.map((row) => <tr key={row.employeeId || row.name}><td className="sticky-job group">{row.job || '—'}</td><td className="sticky-name">{row.name}</td>{visibleDays.map(({ index, day, isWeekend }) => { const code = row.codes[index]; const assignment = row.assignmentDays?.has(index); const detail = row.details?.[index]; return <td key={day} className={isWeekend ? 'weekend-column' : ''}><button type="button" className={code ? assignment ? 'cell-button assignment' : `cell-button ${code}` : 'cell-button empty'} onClick={() => setSelectedCell({ row, day, detail })} title="Klik untuk melihat detail">{code || '—'}</button></td> })}</tr>)}</tbody>
+                <thead><tr><th className="sticky-job">JOB</th><th className="sticky-name">Nama Karyawan</th>{dateRange.map(({ value, day, dayName }) => <th key={value}>{day}<br /><span>{dayName}</span></th>)}</tr></thead>
+                <tbody>{filteredRows.map((row) => <tr key={row.employeeId || row.name}><td className="sticky-job group">{row.job || '—'}</td><td className="sticky-name">{row.name}</td>{dateRange.map(({ value }) => { const code = row.codes?.[value] || ''; const assignment = row.assignmentDays?.has(value); const detail = row.details?.[value]; return <td key={value}><button type="button" className={code ? assignment ? 'cell-button assignment' : `cell-button ${code}` : 'cell-button empty'} onClick={() => setSelectedCell({ row, date: value, detail })} title="Klik untuk melihat detail">{code || '—'}</button></td> })}</tr>)}</tbody>
               </table>
             </div>
           )}
 
-          <div className="note">Data produksi berasal dari <b>v_jadwal_karyawan</b>. Jika pada tanggal tertentu terdapat penempatan JOB, JOB tersebut ditampilkan pada sel tanggal. {showAllDays ? 'Tampilan menampilkan seluruh hari.' : 'Tampilan ringkas menyembunyikan Sabtu dan Minggu; data jadwal tetap tersimpan.'}</div>
+          <div className="note">Data produksi berasal dari <b>v_jadwal_karyawan</b>. Filter tanggal hanya mengatur rentang tampilan dan pembacaan data; jadwal tetap tersimpan per tanggal di database. Jika rentang melewati bulan, tabel akan menampilkan seluruh tanggal dalam rentang tersebut dan dapat digeser secara horizontal.</div>
         </section>
 
         <section className="card">
@@ -250,7 +263,7 @@ function App() {
             <div className="detail-grid">
               <div><span>Departemen</span><strong>{selectedCell.row.department}</strong></div>
               <div><span>JOB</span><strong>{selectedCell.row.job || '—'}</strong></div>
-              <div><span>Tanggal</span><strong>{selectedCell.detail?.date || formatDate(year, month, selectedCell.day)}</strong></div>
+              <div><span>Tanggal</span><strong>{selectedCell.detail?.date || selectedCell.date}</strong></div>
               <div><span>Status / Kode</span><strong>{selectedCell.detail?.code || selectedCell.detail?.assignment || 'Tidak ada jadwal'}</strong></div>
               <div className="detail-wide"><span>Tugas / Penempatan</span><strong>{selectedCell.detail?.assignment || '—'}</strong></div>
               <div className="detail-wide"><span>Keterangan</span><strong>{selectedCell.detail?.note || '—'}</strong></div>
