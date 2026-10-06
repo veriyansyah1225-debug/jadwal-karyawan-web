@@ -1,7 +1,7 @@
 # Dokumentasi Progres Pengembangan Web UI — Jadwal Karyawan
 
 **Status:** Draft / Living Document  
-**Versi:** 1.1  
+**Versi:** 1.2  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Database:** `database-jadwal-karyawan` / PostgreSQL 17 / Supabase
@@ -224,7 +224,7 @@ Tujuannya agar satu karyawan tidak terpecah menjadi beberapa baris hanya karena 
 | Loading / Error / Empty state | ✓ Selesai |
 | Filter rentang tanggal | ✓ Selesai |
 | Pemilih bulan Januari–Desember | ✓ Selesai |
-| Filter Departemen | ✓ Selesai |
+| Filter Departemen dari master `departments` | ✓ Selesai |
 | Filter JOB | ✓ Selesai |
 | Multi-select karyawan | ✓ Selesai |
 | Pencarian nama dalam picker | ✓ Selesai |
@@ -357,11 +357,21 @@ Perlu dipertimbangkan apakah master JOB sebaiknya dimuat terpisah agar filter le
 
 ### 11.4 Data Demo
 
-Fallback data demo masih digunakan untuk kebutuhan pengembangan.
+Fallback data demo **sudah dihapus** dari Web UI Production.
 
-Sebelum produksi, perilaku fallback perlu ditinjau agar pengguna tidak menganggap data demo sebagai data aktual.
+Jika Supabase belum dikonfigurasi atau query Supabase gagal, aplikasi menampilkan kondisi error dan tidak mengganti data aktual dengan data demo.
 
-### 11.5 Authentication dan RLS
+Keputusan ini didokumentasikan pada `docs/Dokumentasi_Perubahan_dan_Audit_Web_UI.md`.
+
+### 11.5 Sumber Departemen
+
+Dropdown Departemen pada Web UI Production sekarang membaca `public.departments` melalui Supabase Client.
+
+Query hanya mengambil departemen aktif (`aktif = true`) dan mengurutkan berdasarkan `nama_departemen`.
+
+Daftar FARM/HATCHERY tidak lagi ditulis sebagai opsi hardcode pada Web UI.
+
+### 11.6 Authentication dan RLS
 
 RLS sudah diaktifkan pada tabel utama database, tetapi policy final untuk aplikasi belum ditentukan.
 
@@ -547,6 +557,8 @@ Riwayat berikut mempertahankan milestone penting tanpa mengulang daftar fitur da
 | v1.0 | Pemilih bulan Januari–Desember dan perbaikan kalender lokal | Selesai |
 | v1.0 | Toggle Tampilkan Job / Sembunyikan Job | Selesai |
 | v1.0 | Penanda visual header hari Minggu | Selesai |
+| v1.1 | Penghapusan fallback data demo dari Web UI | Selesai |
+| v1.1 | Dropdown Departemen membaca master `departments` | Selesai |
 | Saat ini | Stabilisasi Web UI v1 | Sedang dikerjakan |
 
 ---
@@ -580,3 +592,5 @@ Informasi penting tetap dipertahankan dalam bentuk yang lebih ringkas, terutama:
 
 **Milestone saat ini:**  
 **Online Web UI + Supabase Integration + Penyempurnaan Web UI v1 — SEDANG DIKERJAKAN.**
+
+Perubahan Production terbaru dan keputusan audit dicatat pada `docs/Dokumentasi_Perubahan_dan_Audit_Web_UI.md`.
