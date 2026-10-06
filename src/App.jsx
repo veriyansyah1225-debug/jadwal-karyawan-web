@@ -37,6 +37,13 @@ function App() {
 
   const totalDays = useMemo(() => daysInMonth(month, year), [month, year])
 
+  const visibleDays = useMemo(() => (
+    Array.from({ length: totalDays }, (_, index) => {
+      const date = new Date(year, month - 1, index + 1)
+      return { index, day: index + 1, date, isWeekend: date.getDay() === 0 || date.getDay() === 6 }
+    }).filter((item) => showAllDays || !item.isWeekend)
+  ), [totalDays, year, month, showAllDays])
+
   function changeMonth(offset) {
     const next = new Date(year, month - 1 + offset, 1)
     setYear(next.getFullYear())
@@ -108,6 +115,7 @@ function App() {
         if (!grouped.has(key)) {
           grouped.set(key, {
             department: item.nama_departemen,
+            employeeId: item.employee_id,
             job: item.nama_job_master || '',
             jobs: new Set(item.nama_job_master ? [item.nama_job_master] : []),
             name: item.nama_karyawan,
@@ -214,13 +222,13 @@ function App() {
           {!loading && !error && filteredRows.length > 0 && (
             <div className="wrap">
               <table>
-                <thead><tr><th className="sticky-job">JOB</th><th className="sticky-name">Nama Karyawan</th>{Array.from({ length: totalDays }, (_, i) => { const date = new Date(year, month - 1, i + 1); return <th key={i} className={!showAllDays && date.getDay() === 0 ? 'weekend-column' : ''}>{i + 1}<br /><span>{DAYS[date.getDay()]}</span></th> })}</tr></thead>
-                <tbody>{filteredRows.map((row) => <tr key={row.name}><td className="sticky-job group">{row.job || '—'}</td><td className="sticky-name">{row.name}</td>{row.codes.slice(0, totalDays).map((code, i) => { const assignment = row.assignmentDays?.has(i); const detail = row.details?.[i]; return <td key={i} className={!showAllDays && new Date(year, month - 1, i + 1).getDay() === 0 ? 'weekend-column' : ''}><button type="button" className={code ? assignment ? 'cell-button assignment' : `cell-button ${code}` : 'cell-button empty'} onClick={() => setSelectedCell({ row, day: i + 1, detail })} title="Klik untuk melihat detail">{code || '—'}</button></td> })}</tr>)}</tbody>
+                <thead><tr><th className="sticky-job">JOB</th><th className="sticky-name">Nama Karyawan</th>{visibleDays.map(({ day, date, isWeekend }) => <th key={day} className={isWeekend ? 'weekend-column' : ''}>{day}<br /><span>{DAYS[date.getDay()]}</span></th>)}</tr></thead>
+                <tbody>{filteredRows.map((row) => <tr key={row.employeeId || row.name}><td className="sticky-job group">{row.job || '—'}</td><td className="sticky-name">{row.name}</td>{visibleDays.map(({ index, day, isWeekend }) => { const code = row.codes[index]; const assignment = row.assignmentDays?.has(index); const detail = row.details?.[index]; return <td key={day} className={isWeekend ? 'weekend-column' : ''}><button type="button" className={code ? assignment ? 'cell-button assignment' : `cell-button ${code}` : 'cell-button empty'} onClick={() => setSelectedCell({ row, day, detail })} title="Klik untuk melihat detail">{code || '—'}</button></td> })}</tr>)}</tbody>
               </table>
             </div>
           )}
 
-          <div className="note">Data produksi berasal dari <b>v_jadwal_karyawan</b>. Jika pada tanggal tertentu terdapat penempatan JOB, JOB tersebut ditampilkan pada sel tanggal.</div>
+          <div className="note">Data produksi berasal dari <b>v_jadwal_karyawan</b>. Jika pada tanggal tertentu terdapat penempatan JOB, JOB tersebut ditampilkan pada sel tanggal. {showAllDays ? 'Tampilan menampilkan seluruh hari.' : 'Tampilan ringkas menyembunyikan Sabtu dan Minggu; data jadwal tetap tersimpan.'}</div>
         </section>
 
         <section className="card">
