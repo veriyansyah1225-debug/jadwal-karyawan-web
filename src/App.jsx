@@ -75,6 +75,7 @@ function App() {
   const [selectedCell, setSelectedCell] = useState(null)
   const [focusMode, setFocusMode] = useState(false)
   const [monthPickerOpen, setMonthPickerOpen] = useState(false)
+  const [showJobColumn, setShowJobColumn] = useState(false)
 
   const dateRange = useMemo(() => getDateRange(startDate, endDate), [startDate, endDate])
   const invalidRange = Boolean(startDate && endDate && startDate > endDate)
@@ -316,7 +317,7 @@ function App() {
               <button className="focus-toggle" type="button" onClick={() => setFocusMode((value) => !value)}>
                 {focusMode ? 'Kembalikan Tampilan' : 'Perbesar Jadwal'}
               </button>
-              <div className="badge">Total Karyawan: {filteredRows.length}</div>
+              <button className={`employee-count-toggle${showJobColumn ? " active" : ""}`} type="button" onClick={() => setShowJobColumn((value) => !value)} title={showJobColumn ? "Sembunyikan JOB" : "Tampilkan JOB"}>Total Karyawan: {filteredRows.length}</button>
             </div>
           </div>
 
@@ -327,13 +328,13 @@ function App() {
           {!loading && !error && !invalidRange && filteredRows.length > 0 && (
             <div className="wrap">
               <table>
-                <thead><tr><th className="sticky-job">JOB</th><th className="sticky-name">Nama Karyawan</th>{dateRange.map(({ value, day, dayName }) => <th key={value}>{day}<br /><span>{dayName}</span></th>)}</tr></thead>
-                <tbody>{filteredRows.map((row) => <tr key={row.employeeId || row.name}><td className="sticky-job group">{row.job || '—'}</td><td className="sticky-name">{row.name}</td>{dateRange.map(({ value }) => { const code = row.codes?.[value] || ''; const assignment = row.assignmentDays?.has(value); const detail = row.details?.[value]; return <td key={value}><button type="button" className={code ? assignment ? 'cell-button assignment' : `cell-button ${code}` : 'cell-button empty'} onClick={() => setSelectedCell({ row, date: value, detail })} title="Klik untuk melihat detail">{code || '—'}</button></td> })}</tr>)}</tbody>
+                <thead><tr>{showJobColumn && <th className="sticky-job">JOB</th>}<th className={showJobColumn ? "sticky-name" : "sticky-name no-job"}>Nama Karyawan</th>{dateRange.map(({ value, day, dayName }) => <th key={value}>{day}<br /><span>{dayName}</span></th>)}</tr></thead>
+                <tbody>{filteredRows.map((row) => <tr key={row.employeeId || row.name}>{showJobColumn && <td className="sticky-job group">{row.job || '—'}</td>}<td className={showJobColumn ? "sticky-name" : "sticky-name no-job"}>{row.name}</td>{dateRange.map(({ value }) => { const code = row.codes?.[value] || ''; const assignment = row.assignmentDays?.has(value); const detail = row.details?.[value]; return <td key={value}><button type="button" className={code ? assignment ? 'cell-button assignment' : `cell-button ${code}` : 'cell-button empty'} onClick={() => setSelectedCell({ row, date: value, detail })} title="Klik untuk melihat detail">{code || '—'}</button></td> })}</tr>)}</tbody>
               </table>
             </div>
           )}
 
-          <div className="note">Data produksi berasal dari <b>v_jadwal_karyawan</b>. Filter tanggal dan pemilihan karyawan hanya mengatur tampilan; jadwal tetap tersimpan per tanggal di database. Jika rentang melewati bulan, tabel dapat digeser secara horizontal.</div>
+          <div className="note">Data produksi berasal dari <b>v_jadwal_karyawan</b>. Filter tanggal, pemilihan karyawan, dan tampilan JOB hanya mengatur tampilan; jadwal tetap tersimpan per tanggal di database. Jika rentang melewati bulan, tabel dapat digeser secara horizontal.</div>
         </section>
 
         <section className="card">
