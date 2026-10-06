@@ -1,21 +1,22 @@
 # Dokumentasi Progres Pengembangan Web UI — Jadwal Karyawan
 
 **Status:** Draft / Progress Development  
-**Versi:** 0.1  
+**Versi:** 0.3  
 **Tanggal:** 2026-10-06  
-**Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`
+**Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
+**Database:** `database-jadwal-karyawan` / PostgreSQL 17 / Supabase
 
 ---
 
 ## 1. Tujuan Dokumen
 
-Dokumen ini mencatat progres nyata pengembangan **Web UI Jadwal Karyawan** yang telah dilakukan setelah fondasi database PostgreSQL/Supabase tersedia.
+Dokumen ini mencatat progres nyata pengembangan **Web UI Jadwal Karyawan** yang terhubung dengan database PostgreSQL/Supabase.
 
-Dokumen ini berbeda dengan **Roadmap Pengembangan Web UI — Database Jadwal Karyawan**. Roadmap digunakan sebagai acuan rencana pekerjaan, sedangkan dokumen ini digunakan untuk mencatat pekerjaan yang telah dilaksanakan, hasil yang diperoleh, keputusan yang telah dibuat, serta bagian yang masih dalam proses.
+Dokumen ini berbeda dengan **Roadmap Pengembangan Web UI — Database Jadwal Karyawan**. Roadmap digunakan sebagai acuan rencana pekerjaan, sedangkan dokumen ini mencatat pekerjaan yang benar-benar telah dilaksanakan, hasil pengujian, keputusan yang telah dibuat, dan bagian yang masih terbuka.
 
 Dokumen ini bersifat **living document** dan akan diperbarui setiap kali terdapat milestone baru.
 
-Tidak semua keputusan dalam dokumen ini dianggap final. Struktur UI, teknologi frontend, alur pengguna, fitur, dan detail implementasi masih dapat disesuaikan berdasarkan hasil pengujian dan kebutuhan operasional.
+Tidak semua keputusan di dalamnya dianggap final. Struktur UI, aturan bisnis, keamanan, dan fitur masih dapat disesuaikan berdasarkan hasil pengujian dan kebutuhan operasional.
 
 ---
 
@@ -23,15 +24,13 @@ Tidak semua keputusan dalam dokumen ini dianggap final. Struktur UI, teknologi f
 
 Pengembangan Web UI dilakukan setelah database Jadwal & Absensi Karyawan mempunyai fondasi PostgreSQL online melalui Supabase.
 
-Project database dibuat secara terpisah dari sistem lain dengan nama:
+Project database dibuat secara terpisah dengan nama:
 
 `database-jadwal-karyawan`
 
 Database tersebut menjadi sumber data untuk aplikasi Web UI.
 
-Pada fase database telah tersedia tabel utama untuk departemen, JOB, karyawan, kode jadwal, jadwal karyawan, dan absensi. Selain tabel, telah dibuat view `v_jadwal_karyawan` untuk memudahkan aplikasi membaca data jadwal dalam bentuk yang telah digabungkan.
-
-Database saat ini telah memiliki data:
+Komponen database yang telah tersedia:
 
 | Komponen | Kondisi |
 |---|---:|
@@ -43,7 +42,7 @@ Database saat ini telah memiliki data:
 | Data absensi | 0 record |
 | View `v_jadwal_karyawan` | Tersedia |
 
-Data tersebut menjadi dasar untuk merancang tampilan Web UI.
+Data awal tersebut menjadi dasar pengembangan dan pengujian Web UI.
 
 ---
 
@@ -51,25 +50,19 @@ Data tersebut menjadi dasar untuk merancang tampilan Web UI.
 
 ## Tujuan
 
-Web UI dibuat dalam repository GitHub tersendiri agar pengembangan aplikasi tidak tercampur dengan repository sistem lain.
+Web UI dibuat pada repository GitHub tersendiri agar pengembangan aplikasi tidak tercampur dengan repository sistem lain.
 
 ## Yang Dilakukan
 
-Telah dibuat repository:
+Repository yang digunakan:
 
 `veriyansyah1225-debug/jadwal-karyawan-web`
 
-Repository tersebut digunakan khusus untuk pengembangan aplikasi Web UI Jadwal Karyawan.
-
-Repository lain yang sudah ada tidak digunakan sebagai tempat pengembangan aplikasi ini.
-
-## Hasil
-
-Repository Web UI telah tersedia dengan branch utama:
+Branch utama:
 
 `main`
 
-Pada tahap awal repository berisi dokumentasi proyek dan prototype UI.
+Repository lain tidak digunakan sebagai tempat pengembangan aplikasi ini.
 
 ## Status
 
@@ -79,29 +72,20 @@ Pada tahap awal repository berisi dokumentasi proyek dan prototype UI.
 
 # 4. Dokumentasi Dasar Repository
 
-## Tujuan
-
-Sebelum kode aplikasi dikembangkan lebih jauh, repository diberi dokumentasi dasar agar tujuan proyek dan kondisi awal dapat dipahami kembali.
-
-## Yang Dilakukan
-
-Telah dibuat file:
+Telah dibuat dan diperbarui:
 
 `README.md`
 
-README menjelaskan antara lain:
+README menjelaskan:
 
 - tujuan proyek;
-- gambaran arsitektur;
 - hubungan Web UI dengan PostgreSQL/Supabase;
 - kondisi database;
-- roadmap pengembangan;
-- status aplikasi;
-- prinsip bahwa desain masih dapat berkembang.
-
-## Hasil
-
-Repository mempunyai dokumentasi awal yang dapat digunakan sebagai pintu masuk untuk memahami proyek.
+- struktur frontend;
+- cara menjalankan aplikasi;
+- environment variable;
+- prinsip keamanan;
+- status pengembangan.
 
 ## Status
 
@@ -111,21 +95,11 @@ Repository mempunyai dokumentasi awal yang dapat digunakan sebagai pintu masuk u
 
 # 5. Analisis Kebutuhan Tampilan Jadwal
 
-## Tujuan
+Format jadwal sumber diperlakukan sebagai **referensi tampilan**, bukan struktur database.
 
-Menentukan bentuk halaman yang paling sesuai dengan format jadwal karyawan yang digunakan saat ini.
+Konsep utama Web UI:
 
-Format sumber menunjukkan pola tabel dengan karyawan, JOB, tanggal dalam satu bulan, serta kode jadwal pada masing-masing tanggal.
-
-Namun format tersebut diperlakukan sebagai **referensi tampilan**, bukan sebagai struktur database.
-
-Database menyimpan jadwal berdasarkan record tanggal sehingga Web UI nantinya harus membentuk tampilan kalender bulanan dari data tersebut.
-
-## Keputusan
-
-Konsep utama Web UI ditetapkan sebagai:
-
-```text
+```
 Jadwal Karyawan
        |
        +-- Bulan
@@ -142,40 +116,21 @@ Tabel Jadwal Bulanan
        +-- Tanggal 1 ... akhir bulan
 ```
 
-Konsep ini memungkinkan satu halaman digunakan untuk berbagai departemen dan periode.
-
 ## Status
 
-**Selesai sebagai rancangan awal.**
+**Selesai sebagai baseline desain awal.**
 
 ---
 
-# 6. Penetapan Konsep Halaman Tunggal Jadwal Bulanan
-
-## Tujuan
-
-Menghindari pembuatan halaman yang terpisah untuk setiap departemen.
-
-## Keputusan
+# 6. Penetapan Konsep Halaman Tunggal
 
 Web UI menggunakan satu halaman utama:
 
 **Jadwal Karyawan**
 
-Departemen seperti FARM dan HATCHERY dipilih melalui filter.
+FARM dan HATCHERY dipilih melalui filter Departemen.
 
-Dengan pendekatan ini, aplikasi tidak perlu mempunyai halaman berbeda seperti:
-
-```text
-/farm
-/hatchery
-```
-
-Sebaliknya, satu halaman dapat menampilkan data sesuai filter yang dipilih.
-
-## Alasan
-
-Pendekatan ini lebih mudah dikembangkan karena struktur tabel dan interaksi jadwal tetap sama, sedangkan departemen merupakan parameter data.
+Tidak dibuat halaman terpisah seperti `/farm` dan `/hatchery`.
 
 ## Status
 
@@ -183,181 +138,28 @@ Pendekatan ini lebih mudah dikembangkan karena struktur tabel dan interaksi jadw
 
 ---
 
-# 7. Perancangan Filter
+# 7. Prototype UI v1
 
-## Tujuan
+Prototype HTML statis telah dibuat pada:
 
-Memungkinkan pengguna mempersempit data jadwal tanpa harus membuat halaman berbeda.
+`prototype/index.html`
 
-## Filter yang telah dirancang
+Prototype v1 mencakup:
 
-1. Bulan
-2. Tahun
-3. Departemen
-4. JOB
-5. Pencarian nama karyawan
-
-Contoh penggunaan:
-
-```text
-Bulan      : Oktober
-Tahun      : 2026
-Departemen : FARM
-JOB        : SECURITY
-Karyawan   : Yusuf
-```
-
-Hasil yang diharapkan adalah tabel jadwal yang hanya menampilkan data sesuai kombinasi filter tersebut.
-
-## Kondisi Saat Ini
-
-Filter sudah tersedia secara visual pada prototype, tetapi belum melakukan query ke database.
-
-## Status
-
-**UI selesai sebagai prototype. Logika/filter database belum diimplementasikan.**
-
----
-
-# 8. Perancangan Tabel Jadwal Bulanan
-
-## Tujuan
-
-Membuat tampilan yang familiar dengan format jadwal yang digunakan saat ini sekaligus tetap sesuai dengan struktur database relasional.
-
-## Struktur tampilan
-
-Prototype menggunakan konsep:
-
-```text
-JOB | Nama Karyawan | 1 | 2 | 3 | ... | 31
-```
-
-Pada bagian tanggal ditampilkan pula singkatan hari.
-
-Contohnya:
-
-```text
-1
-KM
-
-2
-JM
-
-3
-SB
-```
-
-Tanggal dan jumlah hari nantinya akan dibuat dinamis berdasarkan bulan yang dipilih.
-
-Dengan demikian Februari tidak dipaksa mempunyai 31 kolom.
-
-## Sticky Column
-
-Pada desktop, kolom:
-
-- JOB
-- Nama Karyawan
-
-dirancang tetap terlihat ketika tabel digeser secara horizontal.
-
-Hal ini diperlukan karena tabel bulanan mempunyai banyak kolom tanggal.
-
-## Status
-
-**Selesai sebagai desain prototype.**
-
----
-
-# 9. Pengelompokan Karyawan Berdasarkan JOB
-
-## Tujuan
-
-Memudahkan pengguna membaca jadwal berdasarkan kelompok pekerjaan.
-
-Prototype menampilkan JOB pada sisi kiri tabel dan mengelompokkan baris berdasarkan JOB.
-
-Contoh:
-
-```text
-SECURITY
-  Yusuf
-  Ahmadi
-
-POS 1
-  Alvi
-
-MEKANIK
-  Wasto
-
-LONDRY
-  Anisah
-```
-
-JOB juga tetap disediakan sebagai filter.
-
-## Status
-
-**Selesai sebagai konsep UI.**
-
----
-
-# 10. Perancangan Kode Warna Jadwal
-
-## Tujuan
-
-Membantu pengguna membaca pola shift/libur dengan cepat tanpa harus membaca teks pada setiap sel.
-
-Prototype memberikan warna berbeda untuk:
-
-| Kode | Makna sementara |
-|---|---|
-| P | Shift Pagi |
-| S | Shift Sore |
-| M | Shift Malam |
-| L | Libur |
-| OFF | Libur |
-| CT | Cuti |
-
-Makna tersebut mengikuti dokumentasi database saat ini dan masih dapat dikonfirmasi kembali, terutama perbedaan antara `L` dan `OFF`.
-
-## Status
-
-**Selesai sebagai rancangan visual; aturan bisnis kode masih dapat berubah.**
-
----
-
-# 11. Pembuatan Prototype UI v1
-
-## Tujuan
-
-Menguji rancangan halaman sebelum masuk ke pengembangan frontend sebenarnya.
-
-## Yang Dibuat
-
-Telah dibuat prototype HTML statis yang menampilkan:
-
-- sidebar navigasi;
-- judul halaman;
+- sidebar;
 - filter bulan;
 - filter tahun;
 - filter departemen;
 - filter JOB;
-- input pencarian karyawan;
+- pencarian karyawan;
 - tombol tampilkan;
-- tabel jadwal bulanan;
+- tabel jadwal;
 - sticky column;
-- warna kode jadwal;
-- legenda kode jadwal;
-- desain responsif dasar.
+- kode warna;
+- legenda;
+- responsive dasar.
 
-Prototype menggunakan data demonstrasi untuk menguji layout.
-
-## Hasil
-
-Prototype berhasil memberikan gambaran awal bagaimana jadwal FARM/HATCHERY dapat ditampilkan dalam aplikasi web.
-
-Prototype belum menggunakan query database dan belum dianggap sebagai aplikasi produksi.
+Prototype menggunakan data demonstrasi dan belum terhubung ke database.
 
 ## Status
 
@@ -365,50 +167,29 @@ Prototype belum menggunakan query database dan belum dianggap sebagai aplikasi p
 
 ---
 
-# 12. Penyimpanan Prototype ke Repository
+# 8. Review Prototype UI v1
 
-Prototype UI v1 kemudian dimasukkan ke repository GitHub pada:
+Prototype v1 direview sebagai dasar untuk implementasi berikutnya.
 
-`prototype/index.html`
+Hasil review:
 
-File tersebut menjadi artefak awal yang dapat digunakan untuk review dan iterasi desain berikutnya.
-
-## Status
-
-**Selesai.**
-
----
-
-# 13. Review Prototype UI v1
-
-## Tujuan
-
-Memastikan konsep dasar sudah sesuai sebelum membangun frontend yang terhubung dengan database.
-
-## Hasil Review
-
-Prototype dinilai sudah memenuhi kebutuhan dasar tampilan:
-
-- struktur halaman jelas;
+- struktur halaman sudah jelas;
 - filter sudah tersedia;
 - tabel jadwal sesuai konsep;
 - sticky column membantu penggunaan desktop;
 - kode warna membantu pembacaan;
-- legenda sudah tersedia.
+- legenda tersedia.
 
-Namun beberapa bagian masih perlu dikembangkan:
+Bagian yang masih perlu dikembangkan:
 
-1. filter belum aktif;
-2. pencarian belum terhubung ke data;
-3. data masih dummy;
-4. jumlah tanggal masih berupa contoh/static;
-5. belum ada koneksi Supabase;
-6. belum ada autentikasi;
-7. responsive/mobile masih perlu diuji lebih lanjut.
-
-## Kesimpulan
-
-Prototype v1 dianggap cukup sebagai **baseline untuk iterasi berikutnya**, tetapi belum siap digunakan sebagai aplikasi operasional.
+- filter aktif;
+- pencarian aktif;
+- data aktual;
+- jumlah tanggal dinamis;
+- koneksi Supabase;
+- loading/error state;
+- responsive/mobile lebih lanjut;
+- authentication.
 
 ## Status
 
@@ -416,127 +197,371 @@ Prototype v1 dianggap cukup sebagai **baseline untuk iterasi berikutnya**, tetap
 
 ---
 
-# 14. Status Integrasi Supabase
+# 9. Prototype UI v2
 
-Sampai dokumentasi ini dibuat, Web UI **belum terhubung ke Supabase**.
+Setelah review v1, dibuat Prototype UI v2 pada:
 
-Database sudah menyediakan view:
+`prototype/index-v2.html`
 
-`public.v_jadwal_karyawan`
+Prototype v2 memperbaiki dan menambahkan:
 
-View tersebut menyatukan informasi dari:
+- jumlah hari dinamis berdasarkan bulan;
+- label hari dinamis;
+- filter bulan;
+- filter tahun;
+- filter departemen;
+- filter JOB;
+- pencarian nama secara langsung;
+- jumlah hasil;
+- empty state;
+- konsep loading state;
+- konsep error state;
+- responsive/mobile;
+- demo data;
+- struktur tampilan yang lebih siap dijadikan baseline frontend.
 
-- employees;
-- departments;
-- jobs;
-- schedule_codes;
-- employee_schedules.
+Prototype v2 telah direview dan untuk saat ini dianggap cukup baik sebagai **baseline desain sementara**.
 
-View tersebut dirancang agar aplikasi dapat membaca jadwal dengan query yang lebih sederhana.
+Prototype v2 tetap bukan aplikasi produksi dan belum menjadi sumber data utama.
 
-## Rencana Integrasi
+## Status
 
-Pada tahap frontend berikutnya, aplikasi akan membaca data dari database dan membentuk tampilan jadwal berdasarkan:
+**Selesai — Baseline UI sementara.**
 
-```text
+---
+
+# 10. Setup Frontend Project
+
+Setelah Prototype v2 disetujui sebagai baseline sementara, repository dikembangkan menjadi aplikasi frontend sebenarnya.
+
+Teknologi yang digunakan:
+
+- React 19;
+- React DOM 19;
+- Vite 7;
+- `@supabase/supabase-js`;
+- CSS custom.
+
+File utama yang dibuat:
+
+```
+package.json
+index.html
+vite.config.js
+.env.example
+.gitignore
+src/
+  main.jsx
+  App.jsx
+  styles.css
+  lib/
+    supabase.js
+```
+
+## Prinsip konfigurasi
+
+Aplikasi membaca:
+
+```
+VITE_SUPABASE_URL
+VITE_SUPABASE_ANON_KEY
+```
+
+dari environment variable.
+
+Tidak ada credential sensitif yang disimpan di repository.
+
+## Status
+
+**Selesai — Fondasi frontend.**
+
+---
+
+# 11. Implementasi UI React
+
+Prototype v2 kemudian diimplementasikan ke React.
+
+Fungsi yang sudah dibuat:
+
+- halaman Jadwal Karyawan;
+- pemilihan bulan;
+- pemilihan tahun;
+- pemilihan departemen;
+- pemilihan JOB;
+- pencarian nama;
+- jumlah karyawan hasil filter;
+- tabel tanggal dinamis;
+- label hari;
+- sticky kolom JOB/nama;
+- legenda kode jadwal;
+- loading state;
+- error state;
+- empty state;
+- fallback data demo untuk kebutuhan pengujian prototype.
+
+## Status
+
+**Selesai — Implementasi UI frontend awal.**
+
+---
+
+# 12. Integrasi Supabase
+
+Frontend kemudian dihubungkan dengan Supabase menggunakan `@supabase/supabase-js`.
+
+Sumber data aplikasi:
+
+`v_jadwal_karyawan`
+
+Query aplikasi menggunakan periode tanggal yang dipilih dan filter departemen, kemudian data diurutkan berdasarkan JOB, nama karyawan, dan tanggal.
+
+Alur data:
+
+```
+Browser
+   |
+   v
+React
+   |
+   v
+Supabase Client
+   |
+   v
 v_jadwal_karyawan
-        |
-        v
-Filter bulan/tahun
-        |
-        v
-Filter departemen
-        |
-        v
-Filter JOB
-        |
-        v
-Pencarian karyawan
-        |
-        v
-Tabel Jadwal Bulanan
+   |
+   v
+PostgreSQL
+```
+
+Data dari database kemudian dikelompokkan kembali oleh frontend menjadi bentuk tabel bulanan.
+
+## Status
+
+**Selesai — Integrasi dasar.**
+
+---
+
+# 13. Pengujian Awal Integrasi Supabase
+
+Pada deployment pertama, aplikasi berhasil terbuka tetapi muncul:
+
+```
+Gagal memuat data Supabase: Invalid API key
+```
+
+Hal ini menunjukkan:
+
+- Vercel berhasil menjalankan aplikasi;
+- React berhasil berjalan;
+- tetapi konfigurasi API key belum benar.
+
+Masalah kemudian ditelusuri pada konfigurasi environment variable Vercel.
+
+## Perbaikan
+
+Environment variable frontend disesuaikan:
+
+```
+VITE_SUPABASE_URL
+VITE_SUPABASE_ANON_KEY
+```
+
+Keduanya digunakan sebagai konfigurasi yang dapat tersedia pada bundle frontend.
+
+Untuk `VITE_SUPABASE_ANON_KEY`, nilai yang digunakan adalah **Supabase Publishable Key**, bukan service-role/secret key.
+
+Service-role/secret key tidak boleh dimasukkan ke frontend.
+
+## Status
+
+**Selesai — Error API key berhasil diperbaiki.**
+
+---
+
+# 14. Deployment Online melalui Vercel
+
+Repository `jadwal-karyawan-web` kemudian dideploy ke Vercel.
+
+Konfigurasi deployment:
+
+- Repository: `veriyansyah1225-debug/jadwal-karyawan-web`
+- Branch: `main`
+- Framework: Vite
+- Environment: Production
+
+Website hasil deployment:
+
+`https://jadwal-karyawan-web.vercel.app`
+
+Vercel berhasil melakukan build dan deployment.
+
+## Status
+
+**Selesai — Website online untuk pengujian.**
+
+---
+
+# 15. Pengujian Website dari Browser
+
+Website kemudian dibuka langsung melalui browser menggunakan URL deployment Vercel.
+
+Hasil pengujian:
+
+- halaman Web UI dapat dibuka;
+- sidebar tampil;
+- filter tampil;
+- tabel jadwal tampil;
+- data Supabase berhasil dimuat;
+- tidak lagi muncul error `Invalid API key`.
+
+Dengan demikian alur berikut telah berhasil diuji:
+
+```
+Browser
+   |
+   v
+Vercel
+   |
+   v
+React
+   |
+   v
+Supabase
+   |
+   v
+PostgreSQL
+   |
+   v
+v_jadwal_karyawan
 ```
 
 ## Status
 
-**Belum dimulai.**
+**Selesai — Integrasi online berhasil diuji.**
 
 ---
 
-# 15. Status Frontend Project
+# 16. Validasi Data FARM Oktober 2026
 
-Pada tahap dokumentasi ini, yang tersedia adalah prototype HTML.
+Pada pengujian browser digunakan:
 
-Belum dilakukan finalisasi framework frontend seperti React atau Next.js sebagai implementasi produksi.
+```
+Bulan      : Oktober
+Tahun      : 2026
+Departemen : FARM
+```
 
-Pemilihan teknologi frontend masih mengikuti roadmap dan dapat ditentukan setelah prototype UI disepakati.
+Website menampilkan:
+
+**Jadwal FARM — Oktober 2026**
+
+dan data aktual dari database.
+
+Hasil pengujian database menunjukkan untuk FARM Oktober 2026 terdapat:
+
+- 17 karyawan pada schedule yang belum memiliki `job_id` pada record schedule;
+- 1 karyawan pada JOB KANTIN;
+- 2 karyawan pada JOB LONDRY.
+
+Total karyawan yang muncul pada tampilan saat pengujian:
+
+**20 karyawan.**
+
+## Catatan
+
+Sebagian baris pada tabel menampilkan JOB sebagai:
+
+`—`
+
+Hal ini bukan error koneksi. Ini terjadi karena struktur saat ini memungkinkan `employee_schedules.job_id` kosong, sementara JOB juga tersimpan pada master karyawan.
+
+Masalah ini **belum boleh langsung diperbaiki dengan asumsi**. Aturan bisnis perlu ditentukan terlebih dahulu:
+
+- apakah JOB pada jadwal harus mengikuti JOB master karyawan;
+- atau apakah JOB pada jadwal boleh berbeda dari JOB master;
+- atau apakah keduanya memiliki fungsi berbeda.
 
 ## Status
 
-**Belum final.**
+**Pengujian berhasil; aturan bisnis JOB masih terbuka.**
 
 ---
 
-# 16. Fitur yang Sudah Dibuat
+# 17. Fitur yang Sudah Dikerjakan
 
 | Fitur/Komponen | Status |
 |---|---|
 | Repository GitHub khusus | ✓ Selesai |
 | README proyek | ✓ Selesai |
-| Prototype halaman Jadwal | ✓ Selesai |
-| Filter Bulan | ✓ Prototype |
-| Filter Tahun | ✓ Prototype |
-| Filter Departemen | ✓ Prototype |
-| Filter JOB | ✓ Prototype |
-| Search Karyawan | ✓ Prototype |
-| Tabel jadwal bulanan | ✓ Prototype |
-| Sticky JOB/Nama | ✓ Prototype |
-| Kode warna jadwal | ✓ Prototype |
-| Legenda | ✓ Prototype |
-| Responsive dasar | ✓ Prototype |
-| Query Supabase | Belum |
-| Filter database | Belum |
+| Prototype UI v1 | ✓ Selesai |
+| Review Prototype v1 | ✓ Selesai |
+| Prototype UI v2 | ✓ Selesai |
+| Implementasi React | ✓ Selesai |
+| Vite frontend | ✓ Selesai |
+| Environment configuration | ✓ Selesai |
+| Integrasi Supabase Client | ✓ Selesai |
+| Query `v_jadwal_karyawan` | ✓ Selesai |
+| Loading state | ✓ Selesai |
+| Error state | ✓ Selesai |
+| Empty state | ✓ Selesai |
+| Filter Bulan | ✓ Selesai |
+| Filter Tahun | ✓ Selesai |
+| Filter Departemen | ✓ Selesai |
+| Filter JOB | ✓ Selesai |
+| Search Karyawan | ✓ Selesai |
+| Tabel jadwal bulanan | ✓ Selesai |
+| Tanggal dinamis | ✓ Selesai |
+| Label hari | ✓ Selesai |
+| Sticky JOB/Nama | ✓ Selesai |
+| Kode warna jadwal | ✓ Selesai |
+| Legenda | ✓ Selesai |
+| Responsive dasar | ✓ Selesai |
+| Deployment Vercel | ✓ Selesai |
+| Pengujian browser online | ✓ Selesai |
+| Pembacaan data PostgreSQL aktual | ✓ Selesai |
 | Authentication | Belum |
+| RLS policy final | Belum |
 | Input/Edit jadwal | Belum |
 | Modul absensi | Belum |
 | Laporan | Belum |
-| Deployment online | Belum |
+| Export Excel/PDF | Belum |
+| Audit/histori perubahan | Belum |
 
 ---
 
-# 17. Fitur yang Belum Dikerjakan
+# 18. Hal yang Masih Belum Dikerjakan
 
-Fitur berikut belum menjadi bagian dari implementasi Web UI saat ini:
+## 18.1 Authentication
 
-## 17.1 Integrasi Database
-
-- koneksi frontend ke Supabase;
-- membaca `v_jadwal_karyawan`;
-- query berdasarkan periode;
-- filter database;
-- penanganan loading/error.
-
-## 17.2 Authentication
+Belum dibuat:
 
 - login;
 - session;
 - role;
-- hak akses;
-- integrasi RLS.
+- hak akses pengguna.
 
-## 17.3 Pengelolaan Jadwal
+## 18.2 RLS / Keamanan Final
+
+RLS telah diaktifkan pada tabel utama database, tetapi policy final untuk penggunaan aplikasi belum ditentukan.
+
+Sebelum aplikasi digunakan oleh pengguna nyata, model akses harus ditetapkan.
+
+## 18.3 Pengelolaan Jadwal
+
+Belum dibuat:
 
 - tambah jadwal;
 - edit jadwal;
-- hapus/koreksi jadwal;
-- validasi jadwal;
+- koreksi jadwal;
+- hapus jadwal;
+- validasi perubahan;
 - histori perubahan.
 
-## 17.4 Absensi
+## 18.4 Modul Absensi
 
-Modul absensi belum dikembangkan pada Web UI.
+Database telah memiliki `attendance_records`, tetapi Web UI absensi belum dikembangkan.
 
-## 17.5 Laporan
+## 18.5 Laporan dan Export
 
 Belum dibuat:
 
@@ -545,184 +570,197 @@ Belum dibuat:
 - export PDF;
 - pencetakan format final.
 
-## 17.6 Deployment
+## 18.6 Domain
 
-Web UI belum dipublikasikan sebagai aplikasi produksi.
+Website masih menggunakan domain Vercel.
 
----
-
-# 18. Prinsip Teknis yang Dipertahankan
-
-Selama pengembangan Web UI, beberapa prinsip dari rancangan database tetap dipertahankan.
-
-### 18.1 Database sebagai sumber data
-
-PostgreSQL/Supabase menjadi sumber data utama.
-
-### 18.2 Tabel UI bukan struktur database
-
-Tampilan tanggal 1–31 hanya merupakan representasi visual. Database tetap menyimpan jadwal berdasarkan tanggal.
-
-### 18.3 Satu halaman untuk berbagai departemen
-
-FARM dan HATCHERY menggunakan halaman jadwal yang sama.
-
-### 18.4 JOB tetap menjadi bagian penting
-
-JOB digunakan sebagai informasi identitas pekerjaan sekaligus filter.
-
-### 18.5 Data kosong tidak boleh diisi berdasarkan asumsi
-
-Web UI harus menampilkan data yang tersedia dari database dan tidak membuat jadwal berdasarkan dugaan.
-
-### 18.6 Desain masih dapat berubah
-
-Prototype digunakan untuk validasi dan bukan dianggap sebagai desain final.
+Custom domain belum ditentukan.
 
 ---
 
-# 19. Catatan Keamanan
+# 19. Temuan dan Keputusan yang Masih Terbuka
+
+Temuan penting setelah aplikasi benar-benar terhubung ke data:
+
+### 19.1 JOB pada schedule
+
+Sebagian schedule memiliki `job_id` kosong sehingga UI menampilkan `—`.
+
+Ini perlu keputusan bisnis sebelum perubahan struktur atau view.
+
+### 19.2 L dan OFF
+
+Makna `L` dan `OFF` masih perlu dikonfirmasi agar tidak hanya menjadi dua kode dengan makna visual yang sama.
+
+### 19.3 Filter JOB
+
+Saat ini daftar JOB pada frontend dapat bergantung pada data yang sedang dimuat. Pada tahap berikutnya perlu dipertimbangkan apakah master JOB sebaiknya dimuat secara terpisah agar filter lebih konsisten.
+
+### 19.4 Data demo
+
+Fallback data demo masih ada untuk kebutuhan pengembangan. Sebelum aplikasi dianggap produksi, perilaku fallback perlu ditinjau agar pengguna tidak keliru menganggap data demo sebagai data aktual.
+
+---
+
+# 20. Prinsip Teknis yang Dipertahankan
+
+1. PostgreSQL/Supabase menjadi sumber data utama.
+2. Web UI tidak mengakses PostgreSQL secara langsung.
+3. Database dan UI tetap dipisahkan.
+4. Tampilan tanggal 1–31 hanya representasi visual.
+5. Jadwal tetap disimpan berdasarkan record tanggal.
+6. FARM dan HATCHERY menggunakan halaman jadwal yang sama.
+7. Data kosong tidak boleh diisi berdasarkan asumsi.
+8. Publishable key boleh digunakan pada frontend, sedangkan secret/service-role key tidak boleh.
+9. RLS dan authentication harus diselesaikan sebelum penggunaan publik.
+10. Prototype dan struktur UI masih dapat berubah.
+11. Aturan bisnis yang belum dikonfirmasi tidak boleh dipaksakan ke database.
+
+---
+
+# 21. Keamanan dan Environment Variable
 
 Repository GitHub Web UI bersifat publik.
 
-Oleh karena itu, informasi sensitif tidak boleh dimasukkan ke repository, termasuk:
+Karena itu tidak boleh terdapat:
 
 - password database;
-- Supabase service role key;
+- service-role key;
 - secret key;
-- token;
+- token pribadi;
 - credential pengguna.
 
-Ketika integrasi Supabase dilakukan, konfigurasi sensitif harus dikelola melalui environment variable atau mekanisme konfigurasi yang sesuai.
+Frontend menggunakan:
 
-Selain itu, database saat ini masih mempunyai konfigurasi keamanan yang belum final. RLS telah diaktifkan pada tabel utama, tetapi policy final dan authentication belum ditentukan.
+```
+VITE_SUPABASE_URL
+VITE_SUPABASE_ANON_KEY
+```
 
-Karena itu aplikasi belum boleh dianggap siap untuk penggunaan publik/produksi hanya berdasarkan prototype saat ini.
+Nilai `VITE_SUPABASE_ANON_KEY` pada implementasi saat ini adalah Supabase Publishable Key.
 
----
+Environment variable tersebut dikonfigurasi di Vercel untuk Production dan Preview.
 
-# 20. Keputusan yang Sudah Dibuat
-
-Keputusan sementara yang telah menjadi baseline:
-
-1. Web UI dibuat pada repository terpisah.
-2. Repository yang digunakan adalah `jadwal-karyawan-web`.
-3. Web UI menggunakan satu halaman utama Jadwal Karyawan.
-4. FARM/HATCHERY dipilih melalui filter Departemen.
-5. Tabel menampilkan JOB, nama karyawan, dan tanggal dalam bulan.
-6. JOB dan nama karyawan dibuat sticky pada desktop.
-7. Jadwal menggunakan kode warna.
-8. Filter menjadi bagian utama halaman.
-9. Prototype dibuat sebelum implementasi frontend produksi.
-10. Integrasi database dilakukan setelah rancangan UI cukup tervalidasi.
-11. Fitur absensi, laporan, export, approval, dan automation belum menjadi fokus tahap prototype.
-
----
-
-# 21. Keputusan yang Masih Terbuka
-
-Beberapa keputusan belum dianggap final:
-
-- framework frontend;
-- desain mobile final;
-- bentuk detail jadwal ketika sel diklik;
-- model authentication;
-- role pengguna;
-- policy RLS;
-- aturan `L` dan `OFF`;
-- kebutuhan input/edit jadwal;
-- kebutuhan export;
-- kebutuhan laporan;
-- format final untuk pencetakan;
-- apakah sidebar tetap digunakan pada versi final.
+**Catatan penting:** Publishable key bukan pengganti RLS. Keamanan data tetap harus ditentukan melalui authentication dan RLS policy.
 
 ---
 
 # 22. Kondisi Proyek Saat Ini
 
-Secara umum proyek Web UI berada pada kondisi:
+Kondisi aktual:
 
-```text
+```
 DATABASE
    |
-   |  PostgreSQL/Supabase sudah tersedia
-   |  Data jadwal Oktober 2026 tersedia
+   | PostgreSQL/Supabase
+   | Data Oktober 2026
+   | View v_jadwal_karyawan
    v
 DESAIN UI
    |
-   |  Konsep halaman sudah ditentukan
-   |  Filter sudah dirancang
-   |  Tabel sudah dirancang
+   | Prototype v1
+   | Prototype v2
    v
-PROTOTYPE
+FRONTEND
    |
-   |  Prototype UI v1 selesai
-   |  Sudah direview
+   | React + Vite
+   | Supabase Client
    v
-NEXT
+DEPLOYMENT
    |
-   +--> Prototype UI v2 / penyempurnaan
+   | Vercel
+   v
+BROWSER
    |
-   +--> Setup frontend project
-   |
-   +--> Integrasi Supabase
-   |
-   +--> Tampilkan data aktual
-   |
-   +--> Aktifkan filter & pencarian
-   |
-   +--> Testing
-   |
-   +--> Deployment
+   | Data aktual berhasil tampil
+   v
+TESTING BERHASIL
 ```
+
+Dengan demikian proyek **sudah melewati tahap prototype lokal dan integrasi online dasar**.
 
 ---
 
-# 23. Next Step yang Direkomendasikan
+# 23. Roadmap Setelah Milestone Deployment
 
-Tahap berikutnya bukan langsung menambahkan banyak fitur.
+Urutan berikutnya yang direkomendasikan:
 
-Urutan yang direkomendasikan:
+### Tahap 1 — Validasi aturan bisnis
 
-### Tahap 1 — Prototype UI v2
+Fokus pada:
 
-Menyempurnakan hasil review prototype v1, terutama:
+- JOB master vs JOB pada schedule;
+- arti L dan OFF;
+- aturan schedule code;
+- validasi data Oktober 2026.
 
-- struktur tabel;
-- tampilan filter;
-- responsif/mobile;
-- visual hierarchy;
-- kemungkinan interaksi dasar.
+### Tahap 2 — Penyempurnaan data/view
 
-### Tahap 2 — Finalisasi baseline UI
+Setelah aturan bisnis disepakati:
 
-Setelah Prototype v2 direview, struktur tampilan dijadikan acuan implementasi frontend.
+- perbaiki view bila diperlukan;
+- pastikan JOB yang tampil benar;
+- pastikan filter menggunakan sumber data yang konsisten.
 
-### Tahap 3 — Setup Frontend
+### Tahap 3 — Authentication
 
-Membuat struktur aplikasi frontend sebenarnya pada repository `jadwal-karyawan-web`.
+Implementasi:
 
-### Tahap 4 — Integrasi Supabase
+- login;
+- session;
+- role;
+- hak akses.
 
-Menghubungkan frontend dengan database PostgreSQL/Supabase dan membaca `v_jadwal_karyawan`.
+### Tahap 4 — RLS final
 
-### Tahap 5 — Implementasi Jadwal Bulanan
+Menentukan siapa yang boleh:
 
-Mengubah data record tanggal menjadi tampilan kalender/tabel bulanan.
+- melihat jadwal;
+- membuat jadwal;
+- mengubah jadwal;
+- mengelola master.
 
-### Tahap 6 — Filter dan Search
+### Tahap 5 — Interaksi Jadwal
 
-Mengaktifkan:
+Menambahkan:
 
-- bulan;
-- tahun;
-- departemen;
+- klik sel;
+- detail jadwal;
+- detail karyawan;
+- kemungkinan edit jadwal.
+
+### Tahap 6 — Master Data
+
+Mengembangkan halaman:
+
+- Karyawan;
+- Departemen;
 - JOB;
-- karyawan.
+- Kode Jadwal.
 
-### Tahap 7 — Testing
+### Tahap 7 — Absensi
 
-Menguji hasil aplikasi terhadap data Oktober 2026 yang sudah tersedia.
+Mengembangkan modul absensi berdasarkan `attendance_records`.
+
+### Tahap 8 — Laporan dan Export
+
+Mengembangkan:
+
+- laporan jadwal;
+- laporan absensi;
+- Excel;
+- PDF;
+- pencetakan.
+
+### Tahap 9 — Audit dan Operasional
+
+Menambahkan:
+
+- histori perubahan;
+- audit;
+- validasi;
+- backup/operasional;
+- custom domain jika diperlukan.
 
 ---
 
@@ -732,14 +770,26 @@ Menguji hasil aplikasi terhadap data Oktober 2026 yang sudah tersedia.
 |---|---|---|
 | v0.1 | Repository Web UI dibuat | Selesai |
 | v0.1 | README proyek dibuat | Selesai |
-| v0.1 | Konsep halaman Jadwal Bulanan ditentukan | Selesai |
+| v0.1 | Konsep halaman Jadwal Bulanan | Selesai |
 | v0.1 | Filter dirancang | Selesai |
-| v0.1 | Prototype UI v1 dibuat | Selesai |
-| v0.1 | Prototype disimpan ke GitHub | Selesai |
+| v0.1 | Prototype UI v1 | Selesai |
 | v0.1 | Review Prototype v1 | Selesai |
-| v0.2 | Prototype UI v2 | Belum |
-| v0.2 | Setup frontend produksi | Belum |
-| v0.2 | Integrasi Supabase | Belum |
+| v0.2 | Prototype UI v2 | Selesai |
+| v0.2 | Frontend React + Vite | Selesai |
+| v0.2 | Supabase Client | Selesai |
+| v0.2 | Query `v_jadwal_karyawan` | Selesai |
+| v0.2 | Filter dan search aktual | Selesai |
+| v0.2 | Loading/error/empty state | Selesai |
+| v0.3 | Deployment Vercel | Selesai |
+| v0.3 | Konfigurasi environment variable | Selesai |
+| v0.3 | Perbaikan Invalid API Key | Selesai |
+| v0.3 | Pengujian browser online | Selesai |
+| v0.3 | Validasi data FARM Oktober 2026 | Selesai |
+| v0.3 | Authentication | Belum |
+| v0.3 | RLS policy final | Belum |
+| v0.3 | Input/Edit jadwal | Belum |
+| v0.3 | Absensi | Belum |
+| v0.3 | Laporan/Export | Belum |
 
 ---
 
@@ -747,17 +797,21 @@ Menguji hasil aplikasi terhadap data Oktober 2026 yang sudah tersedia.
 
 Dokumen ini merupakan dokumentasi progres dan **bukan dokumen spesifikasi final**.
 
-Setiap perkembangan berikutnya akan dicatat dengan prinsip:
+Perkembangan dicatat berdasarkan pekerjaan yang benar-benar telah dilakukan.
+
+Setiap milestone berikutnya akan dicatat dengan prinsip:
 
 - apa yang dikerjakan;
 - tujuan pengerjaan;
 - hasil;
 - keputusan;
 - status;
-- catatan perubahan.
-
-Dengan demikian, dokumen ini dapat digunakan sebagai riwayat pembangunan Web UI Jadwal Karyawan dari prototype sampai aplikasi online.
+- temuan;
+- pekerjaan yang masih terbuka.
 
 **Status keseluruhan Web UI saat ini:**
 
-> **Prototype UI v1 selesai dan telah direview. Implementasi frontend produksi dan integrasi Supabase belum dimulai.**
+> **Frontend React + Vite sudah terhubung ke Supabase, dideploy melalui Vercel, dan berhasil menampilkan data PostgreSQL aktual dari browser. Authentication, RLS final, pengelolaan jadwal, absensi, laporan, dan aturan bisnis tertentu masih dalam pengembangan.**
+
+**Milestone saat ini:**  
+**Online Web UI + Supabase Integration + Browser Testing — BERHASIL.**
