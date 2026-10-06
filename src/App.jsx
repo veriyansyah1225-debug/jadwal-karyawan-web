@@ -21,7 +21,10 @@ function getMonthEnd(date = new Date()) {
 }
 
 function toInputDate(date) {
-  return date.toISOString().slice(0, 10)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 function formatDisplayDate(value) {
@@ -37,19 +40,21 @@ function getDateRange(startDate, endDate) {
   if (!startDate || !endDate || startDate > endDate) return []
 
   const dates = []
-  const cursor = new Date(`${startDate}T00:00:00Z`)
-  const end = new Date(`${endDate}T00:00:00Z`)
+  const [startYear, startMonth, startDay] = startDate.split('-').map(Number)
+  const [endYear, endMonth, endDay] = endDate.split('-').map(Number)
+  const cursor = new Date(startYear, startMonth - 1, startDay)
+  const end = new Date(endYear, endMonth - 1, endDay)
 
   while (cursor <= end) {
-    const value = cursor.toISOString().slice(0, 10)
-    const localDate = new Date(`${value}T00:00:00`)
+    const value = toInputDate(cursor)
+    const localDate = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate())
     dates.push({
       value,
       date: localDate,
       day: localDate.getDate(),
       dayName: DAYS[localDate.getDay()],
     })
-    cursor.setUTCDate(cursor.getUTCDate() + 1)
+    cursor.setDate(cursor.getDate() + 1)
   }
 
   return dates
