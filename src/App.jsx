@@ -32,6 +32,7 @@ function App() {
   const [rows, setRows] = useState(demoEmployees)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [selectedCell, setSelectedCell] = useState(null)
 
   const totalDays = useMemo(() => daysInMonth(month, year), [month, year])
 
@@ -110,6 +111,7 @@ function App() {
             jobs: new Set(item.nama_job_master ? [item.nama_job_master] : []),
             name: item.nama_karyawan,
             codes: Array(totalDays).fill(''),
+            details: Array.from({ length: totalDays }, () => null),
             assignmentDays: new Set(),
           })
         }
@@ -124,6 +126,12 @@ function App() {
           } else if (item.nama_job) {
             row.codes[day - 1] = item.nama_job
             row.assignmentDays.add(day - 1)
+          }
+          row.details[day - 1] = {
+            date: item.tanggal,
+            code: item.kode_jadwal || '',
+            assignment: item.nama_job || '',
+            note: item.keterangan || '',
           }
         }
       }
@@ -206,7 +214,7 @@ function App() {
             <div className="wrap">
               <table>
                 <thead><tr><th className="sticky-job">JOB</th><th className="sticky-name">Nama Karyawan</th>{Array.from({ length: totalDays }, (_, i) => { const date = new Date(year, month - 1, i + 1); return <th key={i}>{i + 1}<br /><span>{DAYS[date.getDay()]}</span></th> })}</tr></thead>
-                <tbody>{filteredRows.map((row) => <tr key={row.name}><td className="sticky-job group">{row.job || '—'}</td><td className="sticky-name">{row.name}</td>{row.codes.slice(0, totalDays).map((code, i) => { const assignment = row.assignmentDays?.has(i); return <td key={i} className={code ? assignment ? 'cell assignment' : `cell ${code}` : 'empty'}>{code || '—'}</td> })}</tr>)}</tbody>
+                <tbody>{filteredRows.map((row) => <tr key={row.name}><td className="sticky-job group">{row.job || '—'}</td><td className="sticky-name">{row.name}</td>{row.codes.slice(0, totalDays).map((code, i) => { const assignment = row.assignmentDays?.has(i); const detail = row.details?.[i]; return <td key={i} className={code ? assignment ? 'cell assignment clickable' : `cell ${code} clickable` : 'empty clickable'} onClick={() => setSelectedCell({ row, day: i + 1, detail })} title="Klik untuk melihat detail">{code || '—'}</td> })}</tr>)}</tbody>
               </table>
             </div>
           )}
@@ -219,6 +227,28 @@ function App() {
           <div className="legend">{[['P','Shift Pagi'],['S','Shift Sore'],['M','Shift Malam'],['L','Libur'],['OFF','Libur'],['CT','Cuti']].map(([code,label]) => <div key={code}><span className={code}>{code}</span>{label}</div>)}</div>
         </section>
       </main>
+
+      {selectedCell && (
+        <div className="modal-backdrop" onClick={() => setSelectedCell(null)}>
+          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="detail-title" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-head">
+              <div>
+                <div className="modal-kicker">Detail Jadwal</div>
+                <h2 id="detail-title">{selectedCell.row.name}</h2>
+              </div>
+              <button className="modal-close" type="button" onClick={() => setSelectedCell(null)} aria-label="Tutup">×</button>
+            </div>
+            <div className="detail-grid">
+              <div><span>Departemen</span><strong>{selectedCell.row.department}</strong></div>
+              <div><span>JOB</span><strong>{selectedCell.row.job || '—'}</strong></div>
+              <div><span>Tanggal</span><strong>{selectedCell.detail?.date || formatDate(year, month, selectedCell.day)}</strong></div>
+              <div><span>Status / Kode</span><strong>{selectedCell.detail?.code || selectedCell.detail?.assignment || 'Tidak ada jadwal'}</strong></div>
+              <div className="detail-wide"><span>Tugas / Penempatan</span><strong>{selectedCell.detail?.assignment || '—'}</strong></div>
+              <div className="detail-wide"><span>Keterangan</span><strong>{selectedCell.detail?.note || '—'}</strong></div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
