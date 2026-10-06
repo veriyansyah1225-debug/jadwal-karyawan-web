@@ -33,6 +33,7 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [selectedCell, setSelectedCell] = useState(null)
+  const [showAllDays, setShowAllDays] = useState(true)
 
   const totalDays = useMemo(() => daysInMonth(month, year), [month, year])
 
@@ -202,7 +203,7 @@ function App() {
               <button className="secondary nav-month" type="button" onClick={() => changeMonth(-1)} aria-label="Bulan sebelumnya">‹</button>
               <button className="secondary today" type="button" onClick={goToCurrentMonth}>Bulan Ini</button>
               <button className="secondary nav-month" type="button" onClick={() => changeMonth(1)} aria-label="Bulan berikutnya">›</button>
-              <div className="badge">Total Karyawan: {filteredRows.length}</div>
+              <div className="view-actions"><button className="secondary compact" type="button" onClick={() => setShowAllDays((value) => !value)}>{showAllDays ? 'Ringkas Hari' : 'Tampilkan Semua Hari'}</button><div className="badge">Total Karyawan: {filteredRows.length}</div></div>
             </div>
           </div>
 
@@ -213,8 +214,8 @@ function App() {
           {!loading && !error && filteredRows.length > 0 && (
             <div className="wrap">
               <table>
-                <thead><tr><th className="sticky-job">JOB</th><th className="sticky-name">Nama Karyawan</th>{Array.from({ length: totalDays }, (_, i) => { const date = new Date(year, month - 1, i + 1); return <th key={i}>{i + 1}<br /><span>{DAYS[date.getDay()]}</span></th> })}</tr></thead>
-                <tbody>{filteredRows.map((row) => <tr key={row.name}><td className="sticky-job group">{row.job || '—'}</td><td className="sticky-name">{row.name}</td>{row.codes.slice(0, totalDays).map((code, i) => { const assignment = row.assignmentDays?.has(i); const detail = row.details?.[i]; return <td key={i} className={code ? assignment ? 'cell assignment clickable' : `cell ${code} clickable` : 'empty clickable'} onClick={() => setSelectedCell({ row, day: i + 1, detail })} title="Klik untuk melihat detail">{code || '—'}</td> })}</tr>)}</tbody>
+                <thead><tr><th className="sticky-job">JOB</th><th className="sticky-name">Nama Karyawan</th>{Array.from({ length: totalDays }, (_, i) => { const date = new Date(year, month - 1, i + 1); return <th key={i} className={!showAllDays && date.getDay() === 0 ? 'weekend-column' : ''}>{i + 1}<br /><span>{DAYS[date.getDay()]}</span></th> })}</tr></thead>
+                <tbody>{filteredRows.map((row) => <tr key={row.name}><td className="sticky-job group">{row.job || '—'}</td><td className="sticky-name">{row.name}</td>{row.codes.slice(0, totalDays).map((code, i) => { const assignment = row.assignmentDays?.has(i); const detail = row.details?.[i]; return <td key={i} className={!showAllDays && new Date(year, month - 1, i + 1).getDay() === 0 ? 'weekend-column' : ''}><button type="button" className={code ? assignment ? 'cell-button assignment' : `cell-button ${code}` : 'cell-button empty'} onClick={() => setSelectedCell({ row, day: i + 1, detail })} title="Klik untuk melihat detail">{code || '—'}</button></td> })}</tr>)}</tbody>
               </table>
             </div>
           )}
