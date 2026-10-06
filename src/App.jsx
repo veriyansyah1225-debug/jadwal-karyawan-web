@@ -153,7 +153,7 @@ function App() {
     return () => {
       cancelled = true
     }
-  }, [department])
+  }, [])
 
   useEffect(() => {
     if (invalidRange) return
