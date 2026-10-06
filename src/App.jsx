@@ -57,6 +57,7 @@ function App() {
   const [startDate, setStartDate] = useState(toInputDate(getMonthStart(today)))
   const [endDate, setEndDate] = useState(toInputDate(getMonthEnd(today)))
   const [department, setDepartment] = useState('FARM')
+  const [departments, setDepartments] = useState([])
   const [job, setJob] = useState('')
   const [employeeSearch, setEmployeeSearch] = useState('')
   const [selectedEmployees, setSelectedEmployees] = useState([])
@@ -119,6 +120,40 @@ function App() {
     setSelectedEmployees([])
     setMonthPickerOpen(false)
   }
+
+  useEffect(() => {
+    if (!supabaseConfigured) return
+
+    let cancelled = false
+
+    async function loadDepartments() {
+      const { data, error: queryError } = await supabase
+        .from('departments')
+        .select('id,nama_departemen')
+        .eq('aktif', true)
+        .order('nama_departemen')
+
+      if (cancelled) return
+
+      if (queryError) {
+        setError(queryError.message)
+        return
+      }
+
+      const names = (data || []).map((item) => item.nama_departemen).filter(Boolean)
+      setDepartments(names)
+
+      if (names.length && !names.includes(department)) {
+        setDepartment(names[0])
+      }
+    }
+
+    loadDepartments()
+
+    return () => {
+      cancelled = true
+    }
+  }, [department])
 
   useEffect(() => {
     if (invalidRange) return
@@ -246,7 +281,7 @@ function App() {
           <div className="filters">
             <div><label>Dari Tanggal</label><input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></div>
             <div><label>Sampai Tanggal</label><input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} /></div>
-            <div><label>Departemen</label><select value={department} onChange={(e) => { setDepartment(e.target.value); setJob(''); setSelectedEmployees([]) }}><option>FARM</option><option>HATCHERY</option></select></div>
+            <div><label>Departemen</label><select value={department} onChange={(e) => { setDepartment(e.target.value); setJob(''); setSelectedEmployees([]) }}>{departments.map((item) => <option key={item} value={item}>{item}</option>)}</select></div>
             <div><label>JOB</label><select value={job} onChange={(e) => { setJob(e.target.value); setSelectedEmployees([]) }}><option value="">Semua</option>{jobs.map((item) => <option key={item}>{item}</option>)}</select></div>
             <div className="employee-filter">
               <label>Pilih Karyawan</label>
