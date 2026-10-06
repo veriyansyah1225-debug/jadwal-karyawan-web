@@ -1,45 +1,49 @@
 # Jadwal Karyawan Web
 
-Web UI untuk sistem Jadwal & Absensi Karyawan.
+Web UI untuk sistem **Jadwal & Absensi Karyawan** berbasis PostgreSQL/Supabase.
 
 ## Status
 
-Prototype UI v1 / Draft — belum terhubung ke Supabase.
+- Prototype UI v1: selesai
+- Prototype UI v2: selesai dan menjadi baseline desain sementara
+- Frontend React/Vite: fondasi awal dibuat
+- Supabase client: fondasi konfigurasi dibuat
+- Integrasi data: fondasi query ke `v_jadwal_karyawan` sudah disiapkan
+- Authentication, input/edit jadwal, absensi, laporan, dan deployment: belum diimplementasikan
 
-## Arsitektur
+## Struktur
 
-- **GitHub**: source code, dokumentasi, dan database migrations.
-- **Supabase/PostgreSQL**: data operasional.
-- **Web UI**: antarmuka pengguna.
+```
+.
+├── docs/
+├── prototype/
+├── src/
+│   ├── lib/
+│   │   └── supabase.js
+│   ├── App.jsx
+│   ├── main.jsx
+│   └── styles.css
+├── .env.example
+├── .gitignore
+├── index.html
+├── package.json
+└── vite.config.js
+```
 
-## Database
+## Menjalankan Lokal
 
-Project Supabase yang digunakan adalah `database-jadwal-karyawan`.
+1. Install Node.js.
+2. Jalankan `npm install`.
+3. Salin `.env.example` menjadi `.env.local`.
+4. Isi `VITE_SUPABASE_URL` dan `VITE_SUPABASE_ANON_KEY` bila ingin mengaktifkan koneksi Supabase.
+5. Jalankan `npm run dev`.
 
-Fondasi database saat ini mencakup:
+Jika environment Supabase belum tersedia, aplikasi tetap dapat dijalankan menggunakan data demo.
 
-- departments
-- jobs
-- employees
-- schedule_codes
-- employee_schedules
-- attendance_records
-- v_jadwal_karyawan
+## Keamanan
 
-## Roadmap
-
-1. Prototype UI
-2. Setup frontend
-3. Integrasi Supabase
-4. Halaman jadwal bulanan
-5. Filter & pencarian
-6. Detail/interaksi jadwal
-7. Authentication & hak akses
-8. Input/edit jadwal
-9. Responsive/mobile
-10. Testing
-11. Deployment
+Jangan commit file `.env.local` atau secret/service-role key ke repository. Repository ini bersifat publik.
 
 ## Catatan
 
-Desain UI dan struktur aplikasi masih dapat berubah sesuai kebutuhan operasional.
+Prototype tetap dipertahankan sebagai riwayat desain. Struktur aplikasi produksi masih dapat berubah sesuai kebutuhan operasional.
