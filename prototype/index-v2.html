@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jadwal Karyawan — Prototype v2</title>
+<style>
+:root{--nav:#14243a;--blue:#1976e8;--bg:#f4f7fb;--line:#dfe5ee;--muted:#68758a;--p:#c9f2cf;--s:#cbe2fb;--m:#ffe9a8;--l:#ffd0d0;--off:#ffdcdc;--ct:#ded0ff}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:#142033}.app{min-height:100vh}.side{width:230px;background:var(--nav);color:#fff;padding:20px 12px;position:fixed;inset:0 auto 0 0}.brand{font-weight:800;padding:8px 12px 24px;border-bottom:1px solid #344257}.brand small{display:block;color:#aebbd0;font-weight:400;margin-top:4px}.nav div{padding:12px 14px;border-radius:9px;margin:6px 0;color:#dbe4f2}.nav .active{background:var(--blue);color:#fff;font-weight:700}.main{margin-left:230px;padding:30px;max-width:1700px}h1{margin:0;font-size:30px}.sub{color:var(--muted);margin:5px 0 22px}.card{background:#fff;border:1px solid #e5eaf1;border-radius:14px;padding:18px;margin-bottom:18px;box-shadow:0 5px 20px #1928460d}.filters{display:grid;grid-template-columns:1fr .7fr 1fr 1fr 1.3fr auto;gap:12px;align-items:end}label{font-size:12px;font-weight:700;display:block;margin-bottom:6px}select,input,button{height:42px;border:1px solid #d7dee9;border-radius:8px;padding:0 12px;background:#fff;font:inherit;width:100%}button{background:var(--blue);color:#fff;border:0;font-weight:700;cursor:pointer}button.secondary{background:#eef3f8;color:#25364d}.title{display:flex;justify-content:space-between;align-items:center;gap:16px}.title h2{font-size:21px;margin:0}.badge{background:#e9f3ff;color:#1265c5;padding:8px 12px;border-radius:8px;font-weight:700;white-space:nowrap}.meta{font-size:13px;color:var(--muted);margin:7px 0 14px}.wrap{overflow:auto;border:1px solid var(--line);border-radius:10px;max-height:65vh}table{border-collapse:separate;border-spacing:0;min-width:1480px;width:max-content}th,td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);text-align:center;height:43px;min-width:48px;font-size:13px}th{background:#f4f7fb;position:sticky;top:0;z-index:4;height:50px}th .day{font-size:11px;color:var(--muted);font-weight:600}.sticky-job,.sticky-name{position:sticky;z-index:5;text-align:left;padding-left:12px}.sticky-job{left:0;min-width:155px;background:#fff}.sticky-name{left:155px;min-width:190px;background:#fff}.group{font-weight:800;background:#f6f8fb!important}.P{background:var(--p)}.S{background:var(--s)}.M{background:var(--m)}.L{background:var(--l)}.OFF{background:var(--off)}.CT{background:var(--ct)}.cell{font-weight:800}.empty{color:#a4afbd}.legend{display:flex;gap:20px;flex-wrap:wrap}.legend span{display:inline-grid;place-items:center;min-width:34px;height:28px;border-radius:5px;font-weight:800;margin-right:7px;padding:0 5px}.note{font-size:12px;color:var(--muted);margin-top:10px}.state{padding:22px;text-align:center;color:var(--muted);border:1px dashed #ccd5e1;border-radius:10px}.hidden{display:none}.footer-note{font-size:12px;color:var(--muted);margin-top:12px}.mobile-bar{display:none}
+@media(max-width:900px){.side{display:none}.main{margin-left:0;padding:16px}.filters{grid-template-columns:1fr 1fr}.title{align-items:flex-start;flex-direction:column}.mobile-bar{display:block}.desktop-only{display:none}h1{font-size:25px}.wrap{max-height:70vh}table{min-width:1250px}}
+@media(max-width:560px){.filters{grid-template-columns:1fr}.card{padding:14px}.badge{white-space:normal}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="side">
+  <div class="brand">▣ Jadwal Karyawan<small>Database Jadwal & Absensi</small></div>
+  <div class="nav">
+    <div class="active">⌂ &nbsp; Jadwal Karyawan</div>
+    <div>♟ &nbsp; Karyawan</div><div>▦ &nbsp; Departemen</div><div>▣ &nbsp; JOB</div>
+    <div>☷ &nbsp; Kode Jadwal</div><div>◷ &nbsp; Absensi</div><div>▥ &nbsp; Laporan</div>
+    <div style="margin-top:20px;border-top:1px solid #344257;padding-top:16px">⚙ &nbsp; Pengaturan</div>
+  </div>
+</aside>
+<main class="main">
+  <h1>Jadwal Karyawan</h1>
+  <div class="sub">Prototype UI v2 — interaksi lokal, belum terhubung ke Supabase</div>
+
+  <section class="card">
+    <div class="filters">
+      <div><label for="month">Bulan</label><select id="month"><option value="10">Oktober</option><option value="11">November</option></select></div>
+      <div><label for="year">Tahun</label><select id="year"><option>2026</option></select></div>
+      <div><label for="dept">Departemen</label><select id="dept"><option value="FARM">FARM</option><option value="HATCHERY">HATCHERY</option></select></div>
+      <div><label for="job">JOB</label><select id="job"><option value="">Semua</option><option>SECURITY</option><option>POS 1</option><option>MEKANIK</option><option>LONDRY</option></select></div>
+      <div><label for="search">Cari Karyawan</label><input id="search" placeholder="Nama karyawan..." autocomplete="off"></div>
+      <div><label>&nbsp;</label><button id="apply">Tampilkan</button></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="title">
+      <div><h2 id="tableTitle">Jadwal FARM — Oktober 2026</h2><div class="meta" id="resultMeta">Menampilkan data demonstrasi</div></div>
+      <div class="badge" id="totalBadge">Total Karyawan: 5</div>
+    </div>
+    <div id="emptyState" class="state hidden">Tidak ada karyawan yang sesuai dengan filter.</div>
+    <div class="wrap" id="tableWrap"><table><thead id="head"></thead><tbody id="body"></tbody></table></div>
+    <div class="footer-note">Data di atas adalah data demonstrasi untuk menguji layout dan interaksi. Integrasi berikutnya akan membaca <b>v_jadwal_karyawan</b>.</div>
+  </section>
+
+  <section class="card">
+    <h3>Legenda Kode Jadwal</h3>
+    <div class="legend">
+      <div><span class="P">P</span>Shift Pagi</div><div><span class="S">S</span>Shift Sore</div>
+      <div><span class="M">M</span>Shift Malam</div><div><span class="L">L</span>Libur</div>
+      <div><span class="OFF">OFF</span>Libur</div><div><span class="CT">CT</span>Cuti</div>
+    </div>
+  </section>
+</main>
+</div>
+<script>
+const employees=[
+ {dept:'FARM',job:'SECURITY',name:'Yusuf',codes:['S','OFF','M','S','M','S','S','M','S','OFF','M','S','S','M','OFF','M','S','OFF','M','S','M','S','OFF','M','S','M','S','OFF','M','S','M']},
+ {dept:'FARM',job:'SECURITY',name:'Ahmadi',codes:['M','S','S','OFF','M','M','S','M','OFF','M','S','S','M','OFF','S','M','S','OFF','M','S','M','S','OFF','M','S','M','S','OFF','M','S','S']},
+ {dept:'FARM',job:'POS 1',name:'Alvi',codes:['OFF','S','P','S','P','S','OFF','P','S','P','S','P','S','P','S','P','S','OFF','P','S','P','S','OFF','P','S','P','S','OFF','P','S','OFF']},
+ {dept:'FARM',job:'MEKANIK',name:'Wasto',codes:['','','','OFF','','','','','','','OFF','','','','','OFF','','','','','OFF','','','','','OFF','','','','','OFF','','']},
+ {dept:'FARM',job:'LONDRY',name:'Anisah',codes:['','','','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT']}
+];
+const months=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const days=['MG','SN','SL','RB','KM','JM','SB'];
+function daysInMonth(m,y){return new Date(y,m,0).getDate()}
+function render(){
+ const m=+document.getElementById('month').value, y=+document.getElementById('year').value;
+ const dept=document.getElementById('dept').value, job=document.getElementById('job').value, q=document.getElementById('search').value.trim().toLowerCase();
+ const filtered=employees.filter(e=>(!dept||e.dept===dept)&&(!job||e.job===job)&&(!q||e.name.toLowerCase().includes(q)));
+ const totalDays=daysInMonth(m,y);
+ document.getElementById('tableTitle').textContent='Jadwal '+dept+' — '+months[m-1]+' '+y;
+ document.getElementById('totalBadge').textContent='Total Karyawan: '+filtered.length;
+ document.getElementById('resultMeta').textContent=filtered.length+' karyawan • '+totalDays+' hari • data demonstrasi';
+ const head=document.getElementById('head'), body=document.getElementById('body');
+ head.innerHTML='<tr><th class="sticky-job">JOB</th><th class="sticky-name">Nama Karyawan</th>'+Array.from({length:totalDays},(_,i)=>{const d=new Date(y,m-1,i+1);return '<th>'+(i+1)+'<br><span class="day">'+days[d.getDay()]+'</span></th>'}).join('')+'</tr>';
+ body.innerHTML=filtered.map(e=>'<tr><td class="sticky-job group">'+e.job+'</td><td class="sticky-name">'+e.name+'</td>'+Array.from({length:totalDays},(_,i)=>{const c=e.codes[i]||'';return '<td class="'+(c?'cell '+c:'empty')+'">'+(c||'—')+'</td>'}).join('')+'</tr>').join('');
+ document.getElementById('emptyState').classList.toggle('hidden',filtered.length!==0);
+ document.getElementById('tableWrap').classList.toggle('hidden',filtered.length===0);
+}
+document.getElementById('apply').addEventListener('click',render);
+document.getElementById('search').addEventListener('input',render);
+['month','year','dept','job'].forEach(id=>document.getElementById(id).addEventListener('change',render));
+render();
+</script>
+</body>
+</html>
