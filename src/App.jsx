@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase, supabaseConfigured } from './lib/supabase'
 
 const DAYS = ['MG', 'SN', 'SL', 'RB', 'KM', 'JM', 'SB']
+const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
 
 const demoEmployees = [
   { department: 'FARM', job: 'SECURITY', jobs: ['SECURITY'], name: 'Yusuf', codes: ['S','OFF','M','S','M','S','S','M','S','OFF','M','S','S','M','OFF','M','S','OFF','M','S','M','S','OFF','M','S','M','S','OFF','M','S','M'] },
@@ -68,6 +69,7 @@ function App() {
   const [error, setError] = useState('')
   const [selectedCell, setSelectedCell] = useState(null)
   const [focusMode, setFocusMode] = useState(false)
+  const [monthPickerOpen, setMonthPickerOpen] = useState(false)
 
   const dateRange = useMemo(() => getDateRange(startDate, endDate), [startDate, endDate])
   const invalidRange = Boolean(startDate && endDate && startDate > endDate)
@@ -110,12 +112,14 @@ function App() {
     setSelectedEmployees([])
   }
 
-  function goToCurrentMonth() {
-    const now = new Date()
-    setStartDate(toInputDate(getMonthStart(now)))
-    setEndDate(toInputDate(getMonthEnd(now)))
+  function selectMonth(monthIndex) {
+    const year = Number(startDate.slice(0, 4))
+    const selectedDate = new Date(year, monthIndex, 1)
+    setStartDate(toInputDate(getMonthStart(selectedDate)))
+    setEndDate(toInputDate(getMonthEnd(selectedDate)))
     setJob('')
     setSelectedEmployees([])
+    setMonthPickerOpen(false)
   }
 
   useEffect(() => {
@@ -287,7 +291,23 @@ function App() {
               <div className="meta">{supabaseConfigured ? 'Sumber: Supabase / v_jadwal_karyawan' : 'Mode demo — Supabase belum dikonfigurasi'}</div>
             </div>
             <div className="title-actions">
-              <button className="secondary today" type="button" onClick={goToCurrentMonth}>Bulan Ini</button>
+              <div className="month-picker">
+                <button className="secondary today" type="button" onClick={() => setMonthPickerOpen((open) => !open)}>Pilih Bulan ▾</button>
+                {monthPickerOpen && (
+                  <div className="month-picker-menu">
+                    {MONTHS.map((month, index) => (
+                      <button
+                        type="button"
+                        key={month}
+                        className={new Date(`${startDate}T00:00:00`).getMonth() === index ? 'month-option active' : 'month-option'}
+                        onClick={() => selectMonth(index)}
+                      >
+                        {month}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button className="focus-toggle" type="button" onClick={() => setFocusMode((value) => !value)}>
                 {focusMode ? 'Kembalikan Tampilan' : 'Perbesar Jadwal'}
               </button>
