@@ -4,14 +4,6 @@ import { supabase, supabaseConfigured } from './lib/supabase'
 const DAYS = ['MG', 'SN', 'SL', 'RB', 'KM', 'JM', 'SB']
 const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
 
-const demoEmployees = [
-  { department: 'FARM', job: 'SECURITY', jobs: ['SECURITY'], name: 'Yusuf', codes: ['S','OFF','M','S','M','S','S','M','S','OFF','M','S','S','M','OFF','M','S','OFF','M','S','M','S','OFF','M','S','M','S','OFF','M','S','M'] },
-  { department: 'FARM', job: 'SECURITY', jobs: ['SECURITY'], name: 'Ahmadi', codes: ['M','S','S','OFF','M','M','S','M','OFF','M','S','S','M','OFF','S','M','S','OFF','M','S','M','S','OFF','M','S','M','S','OFF','M','S','S'] },
-  { department: 'FARM', job: 'POS 1', jobs: ['POS 1'], name: 'Alvi', codes: ['OFF','S','P','S','P','S','OFF','P','S','P','S','P','S','P','S','P','S','OFF','P','S','P','S','OFF','P','S','P','S','OFF','P','S','OFF'] },
-  { department: 'FARM', job: 'MEKANIK', jobs: ['MEKANIK'], name: 'Wasto', codes: ['','','','OFF','','','','','','','OFF','','','','','OFF','','','','','OFF','','','','','OFF','','','','','OFF','',''] },
-  { department: 'FARM', job: 'LONDRY', jobs: ['LONDRY'], name: 'Anisah', codes: ['','','','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT','CT'] },
-]
-
 function getMonthStart(date = new Date()) {
   return new Date(date.getFullYear(), date.getMonth(), 1)
 }
@@ -69,8 +61,8 @@ function App() {
   const [employeeSearch, setEmployeeSearch] = useState('')
   const [selectedEmployees, setSelectedEmployees] = useState([])
   const [employeePickerOpen, setEmployeePickerOpen] = useState(false)
-  const [rows, setRows] = useState(demoEmployees)
-  const [loading, setLoading] = useState(false)
+  const [rows, setRows] = useState([])
+  const [loading, setLoading] = useState(supabaseConfigured)
   const [error, setError] = useState('')
   const [selectedCell, setSelectedCell] = useState(null)
   const [focusMode, setFocusMode] = useState(false)
@@ -129,7 +121,14 @@ function App() {
   }
 
   useEffect(() => {
-    if (!supabaseConfigured || invalidRange) return
+    if (invalidRange) return
+
+    if (!supabaseConfigured) {
+      setRows([])
+      setError('Supabase belum dikonfigurasi. Silakan periksa environment variable aplikasi.')
+      setLoading(false)
+      return
+    }
 
     let cancelled = false
 
@@ -222,10 +221,6 @@ function App() {
     setSelectedEmployees((current) => current.filter((id) => validIds.has(id)))
   }, [rows])
 
-  function resetToDemo() {
-    setRows(demoEmployees.map((row, index) => ({ ...row, employeeId: `demo-${index}` })))
-    setError('')
-  }
 
   return (
     <div className={`app${focusMode ? ' focus-mode' : ''}`}>
@@ -294,7 +289,7 @@ function App() {
           <div className="title">
             <div>
               <h2>Jadwal {department} — {formatDisplayDate(startDate)}{startDate !== endDate ? ` – ${formatDisplayDate(endDate)}` : ''}</h2>
-              <div className="meta">{supabaseConfigured ? 'Sumber: Supabase / v_jadwal_karyawan' : 'Mode demo — Supabase belum dikonfigurasi'}</div>
+              <div className="meta">{supabaseConfigured ? 'Sumber: Supabase / v_jadwal_karyawan' : 'Supabase belum dikonfigurasi'}</div>
             </div>
             <div className="title-actions">
               <div className="month-picker">
@@ -322,7 +317,7 @@ function App() {
           </div>
 
           {loading && <div className="state">Memuat jadwal...</div>}
-          {error && <div className="state error">Gagal memuat data Supabase: {error}<button className="secondary" onClick={resetToDemo}>Gunakan data demo</button></div>}
+          {error && <div className="state error">Gagal memuat data Supabase: {error}</div>}
           {!loading && !error && !invalidRange && filteredRows.length === 0 && <div className="state">Tidak ada karyawan yang sesuai dengan filter.</div>}
 
           {!loading && !error && !invalidRange && filteredRows.length > 0 && (
