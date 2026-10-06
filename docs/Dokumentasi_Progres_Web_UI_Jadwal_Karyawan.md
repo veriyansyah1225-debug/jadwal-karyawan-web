@@ -1,7 +1,7 @@
 # Dokumentasi Progres Pengembangan Web UI — Jadwal Karyawan
 
 **Status:** Draft / Progress Development  
-**Versi:** 0.7  
+**Versi:** 0.9  
 **Tanggal:** 2026-10-06  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Database:** `database-jadwal-karyawan` / PostgreSQL 17 / Supabase
@@ -834,7 +834,7 @@ Setiap milestone berikutnya akan dicatat dengan prinsip:
 > **Frontend React + Vite sudah terhubung ke Supabase, dideploy melalui Vercel, dan berhasil menampilkan data PostgreSQL aktual dari browser. Authentication, RLS final, pengelolaan jadwal, absensi, laporan, dan aturan bisnis tertentu masih dalam pengembangan.**
 
 **Milestone saat ini:**  
-**Online Web UI + Supabase Integration + JOB Display Correction — SELESAI.**
+**Online Web UI + Supabase Integration + Penyempurnaan Web UI v1 — SEDANG DIKERJAKAN.**
 
 
 ---
@@ -994,3 +994,182 @@ Pekerjaan Web UI yang telah diselesaikan:
 Pekerjaan berikutnya tetap berada dalam milestone Web UI v1 sampai baseline UI dianggap stabil.
 
 **Authentication, RLS final, perubahan aturan bisnis JOB, input/edit jadwal, absensi, dan laporan belum dimulai pada tahap ini.**
+
+
+---
+
+# 35. Penyempurnaan Web UI — Filter Rentang Tanggal
+
+Konsep filter periode kemudian diubah dari pemilihan bulan/tahun menjadi **rentang tanggal langsung**.
+
+Perubahan:
+
+- filter **Dari Tanggal**;
+- filter **Sampai Tanggal**;
+- rentang dapat melewati pergantian bulan, misalnya 28 Oktober 2026 sampai 5 November 2026;
+- tabel hanya menampilkan tanggal dalam rentang yang dipilih;
+- query Supabase menggunakan batas tanggal awal dan akhir;
+- rentang tanggal yang tidak valid ditolak oleh UI;
+- tombol **Bulan Ini** tetap tersedia sebagai shortcut untuk mengembalikan periode ke bulan berjalan;
+- rentang panjang tetap dapat digeser secara horizontal.
+
+Perubahan ini hanya mengubah cara data ditampilkan dan diambil berdasarkan periode; tidak mengubah struktur tabel database.
+
+## Status
+
+**Selesai — Filter rentang tanggal.**
+
+---
+
+# 36. Penyempurnaan Web UI — Pemilihan Banyak Karyawan
+
+Pencarian karyawan kemudian diubah menjadi kontrol **Pilih Karyawan** berbentuk multi-select.
+
+Fungsi yang tersedia:
+
+- memilih satu atau beberapa karyawan;
+- pencarian nama di dalam daftar pilihan;
+- **Pilih Semua**;
+- **Hapus Semua**;
+- ringkasan jumlah karyawan yang dipilih;
+- jika tidak ada karyawan dipilih, semua karyawan ditampilkan;
+- daftar pilihan mengikuti filter Departemen dan JOB;
+- perubahan Departemen atau JOB mengosongkan pilihan karyawan agar tidak membawa filter lama yang tidak relevan.
+
+Pemilihan menggunakan employee_id sehingga tidak bergantung pada nama karyawan.
+
+Filter ini bersifat **client-side terhadap data yang sudah dimuat** dan tidak mengubah data jadwal di database.
+
+## Status
+
+**Selesai — Multi-select karyawan.**
+
+---
+
+# 37. Penyempurnaan Web UI — Mode Perbesar Jadwal
+
+Tombol **Tampilkan** yang sebelumnya hanya berfungsi menutup dropdown pemilihan karyawan kemudian diganti menjadi fungsi yang lebih berguna, yaitu **Perbesar Jadwal**.
+
+Saat mode aktif:
+
+- sidebar disembunyikan;
+- header halaman dan bagian yang tidak diperlukan untuk pembacaan tabel disembunyikan;
+- kartu jadwal menggunakan area halaman yang lebih luas;
+- tinggi area tabel diperbesar sehingga lebih banyak baris dapat dilihat;
+- tabel tetap menggunakan scroll horizontal untuk periode tanggal yang panjang;
+- tombol berubah menjadi **Kembalikan Tampilan** untuk keluar dari mode fokus.
+
+Mode ini hanya memengaruhi presentasi Web UI. Data, filter, dan database tidak berubah.
+
+## Status
+
+**Selesai — Mode Perbesar Jadwal.**
+
+---
+
+# 38. Pembaruan Daftar Fitur Web UI
+
+Daftar fitur Web UI yang saat ini sudah tersedia diperbarui menjadi:
+
+| Fitur/Komponen | Status |
+|---|---|
+| Repository GitHub khusus | ✓ Selesai |
+| README proyek | ✓ Selesai |
+| Prototype UI v1 | ✓ Selesai |
+| Prototype UI v2 | ✓ Selesai |
+| Implementasi React + Vite | ✓ Selesai |
+| Integrasi Supabase | ✓ Selesai |
+| Query v_jadwal_karyawan | ✓ Selesai |
+| Loading / Error / Empty state | ✓ Selesai |
+| Filter rentang tanggal | ✓ Selesai |
+| Shortcut Bulan Ini | ✓ Selesai |
+| Filter Departemen | ✓ Selesai |
+| Filter JOB | ✓ Selesai |
+| Multi-select karyawan | ✓ Selesai |
+| Tabel jadwal | ✓ Selesai |
+| Tanggal dinamis | ✓ Selesai |
+| Label hari | ✓ Selesai |
+| Sticky JOB/Nama | ✓ Selesai |
+| Kode warna jadwal | ✓ Selesai |
+| Legenda kode jadwal | ✓ Selesai |
+| Detail jadwal per sel | ✓ Selesai |
+| Responsive dasar | ✓ Selesai |
+| Mode Perbesar Jadwal | ✓ Selesai |
+| Deployment Vercel | ✓ Selesai |
+| Pengujian browser online | ✓ Selesai |
+| Authentication | Belum |
+| RLS policy final | Belum |
+| Input/Edit jadwal | Belum |
+| Modul absensi | Belum |
+| Laporan | Belum |
+| Export Excel/PDF | Belum |
+| Audit/histori perubahan | Belum |
+
+---
+
+# 39. Catatan Koreksi terhadap Fitur Lama
+
+Dokumentasi sebelumnya mencatat adanya **Mode Ringkas Hari** yang menyembunyikan Sabtu/Minggu.
+
+Fitur tersebut **tidak lagi menjadi desain UI saat ini**. Konsep tersebut telah digantikan oleh filter rentang tanggal, sehingga pengguna dapat menentukan sendiri tanggal awal dan akhir yang ingin ditampilkan.
+
+Dengan demikian:
+
+- tidak ada lagi kebutuhan untuk mode khusus menyembunyikan weekend;
+- Sabtu/Minggu tetap dapat ditampilkan jika masuk dalam rentang tanggal;
+- pengguna dapat membuat rentang pendek maupun panjang sesuai kebutuhan.
+
+Bagian dokumentasi lama mengenai Mode Ringkas Hari dipertahankan sebagai **riwayat pengembangan**, bukan sebagai spesifikasi UI saat ini.
+
+---
+
+# 40. Kondisi Web UI Saat Ini
+
+Alur penggunaan Web UI saat ini:
+
+1. Pengguna memilih **Dari Tanggal** dan **Sampai Tanggal**.
+2. Pengguna memilih **Departemen**.
+3. Pengguna dapat memilih **JOB**.
+4. Pengguna dapat membuka **Pilih Karyawan** untuk memilih satu atau beberapa karyawan.
+5. Tabel jadwal menampilkan data sesuai filter.
+6. Sel jadwal dapat diklik untuk melihat detail.
+7. Jika membutuhkan area kerja yang lebih besar, pengguna memilih **Perbesar Jadwal**.
+8. Untuk kembali ke tampilan normal, pengguna memilih **Kembalikan Tampilan**.
+
+Filter dan mode tampilan tersebut tidak mengubah data yang tersimpan di PostgreSQL.
+
+---
+
+# 41. Riwayat Perubahan Web UI Terbaru
+
+| Perubahan | Status |
+|---|---|
+| Penggantian Ringkas Hari dengan filter rentang tanggal | Selesai |
+| Dukungan rentang lintas bulan | Selesai |
+| Penggantian Search Karyawan menjadi Pilih Karyawan | Selesai |
+| Multi-select karyawan | Selesai |
+| Pencarian nama di dalam picker | Selesai |
+| Pilih Semua / Hapus Semua | Selesai |
+| Pengelompokan filter berdasarkan employee_id | Selesai |
+| Penggantian tombol Tampilkan menjadi Perbesar Jadwal | Selesai |
+| Mode fokus untuk memperbesar tabel | Selesai |
+| Tombol Kembalikan Tampilan | Selesai |
+
+---
+
+# 42. Status Dokumen Setelah Update Terbaru
+
+Dokumen ini tetap merupakan **living document** dan belum menjadi spesifikasi final.
+
+Perubahan terbaru menunjukkan bahwa Web UI sudah berkembang dari prototype tabel bulanan menjadi antarmuka yang lebih fleksibel untuk pekerjaan operasional:
+
+- periode dapat ditentukan dengan rentang tanggal;
+- karyawan dapat dipilih secara individual atau massal;
+- detail jadwal dapat dibuka dari sel;
+- tabel dapat diperbesar untuk penggunaan layar besar.
+
+Fokus pengembangan tetap pada **Web UI v1** sampai baseline penggunaan dianggap stabil. Tahap Authentication, RLS final, pengelolaan jadwal, absensi, laporan, dan penyelesaian aturan bisnis tetap belum menjadi bagian dari implementasi saat ini.
+
+**Status keseluruhan saat ini:**
+
+> **Web UI React + Vite sudah online, terhubung ke Supabase/PostgreSQL, mampu menampilkan jadwal berdasarkan rentang tanggal, memfilter karyawan secara multi-select, membuka detail jadwal, dan menyediakan mode Perbesar Jadwal.**
