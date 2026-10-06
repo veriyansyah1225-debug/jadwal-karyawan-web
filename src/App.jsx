@@ -35,6 +35,20 @@ function App() {
 
   const totalDays = useMemo(() => daysInMonth(month, year), [month, year])
 
+  function changeMonth(offset) {
+    const next = new Date(year, month - 1 + offset, 1)
+    setYear(next.getFullYear())
+    setMonth(next.getMonth() + 1)
+    setJob('')
+  }
+
+  function goToCurrentMonth() {
+    const now = new Date()
+    setYear(now.getFullYear())
+    setMonth(now.getMonth() + 1)
+    setJob('')
+  }
+
   const jobs = useMemo(
     () => [...new Set(rows.flatMap((row) => row.jobs || (row.job ? [row.job] : [])))].sort(),
     [rows],
@@ -166,7 +180,7 @@ function App() {
             <div><label>Departemen</label><select value={department} onChange={(e) => { setDepartment(e.target.value); setJob('') }}><option>FARM</option><option>HATCHERY</option></select></div>
             <div><label>JOB</label><select value={job} onChange={(e) => setJob(e.target.value)}><option value="">Semua</option>{jobs.map((item) => <option key={item}>{item}</option>)}</select></div>
             <div><label>Cari Karyawan</label><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nama karyawan..." /></div>
-            <div><label>&nbsp;</label><button type="button" onClick={() => setSearch(search.trim())}>Tampilkan</button></div>
+            <div className="filter-actions"><label>&nbsp;</label><button type="button" onClick={() => setSearch(search.trim())}>Tampilkan</button></div>
           </div>
         </section>
 
@@ -176,7 +190,12 @@ function App() {
               <h2>Jadwal {department} — {MONTHS[month - 1]} {year}</h2>
               <div className="meta">{supabaseConfigured ? 'Sumber: Supabase / v_jadwal_karyawan' : 'Mode demo — Supabase belum dikonfigurasi'}</div>
             </div>
-            <div className="badge">Total Karyawan: {filteredRows.length}</div>
+            <div className="title-actions">
+              <button className="secondary nav-month" type="button" onClick={() => changeMonth(-1)} aria-label="Bulan sebelumnya">‹</button>
+              <button className="secondary today" type="button" onClick={goToCurrentMonth}>Bulan Ini</button>
+              <button className="secondary nav-month" type="button" onClick={() => changeMonth(1)} aria-label="Bulan berikutnya">›</button>
+              <div className="badge">Total Karyawan: {filteredRows.length}</div>
+            </div>
           </div>
 
           {loading && <div className="state">Memuat jadwal...</div>}
