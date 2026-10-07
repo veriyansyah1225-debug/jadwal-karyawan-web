@@ -643,6 +643,16 @@ Export harus menghasilkan file yang tidak hanya dapat dibuka, tetapi juga layak 
 - Verifikasi: kode sudah diterapkan pada main; hasil cetak fisik perlu diuji setelah deployment.
 
 
+### 4.13 Penyederhanaan label tombol PDF
+
+- Tanggal: 2026-10-07
+- Status: Production code
+- Commit: 3aeaabcf902d95970dc63f4f0b4a702357a53723
+- Perubahan: label tombol export di Web UI diubah dari `PDF A3` menjadi `PDF`.
+- Fungsi tetap sama: export menggunakan format A3 landscape dengan seluruh tanggal dalam rentang pada satu blok horizontal.
+- Tidak ada perubahan pada data, database, atau format isi PDF.
+
+
 ## 10. Status Dokumen
 
 Dokumen ini bersifat **living document**.
