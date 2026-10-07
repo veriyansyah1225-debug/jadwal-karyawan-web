@@ -993,12 +993,28 @@ function App() {
     setUserResendLoadingId(user.user_id)
     setUserManagementError('')
 
+    // Pastikan token Admin yang dikirim ke Edge Function masih segar.
+    const { data: refreshedSession, error: refreshError } = await supabase.auth.refreshSession()
+    if (refreshError || !refreshedSession.session) {
+      setUserManagementError('Sesi Admin sudah berakhir. Silakan login kembali.')
+      setUserResendLoadingId('')
+      return
+    }
+    setSession(refreshedSession.session)
+
     const { data, error: functionError } = await supabase.functions.invoke('admin-resend-user-invite', {
       body: { user_id: user.user_id },
     })
 
     if (functionError) {
-      setUserManagementError(functionError.message || 'Gagal mengirim ulang undangan.')
+      let detail = ''
+      try {
+        const body = await functionError.context?.json?.()
+        detail = body?.error || ''
+      } catch {
+        // Abaikan jika response bukan JSON.
+      }
+      setUserManagementError(detail || functionError.message || 'Gagal mengirim ulang undangan.')
       setUserResendLoadingId('')
       return
     }
