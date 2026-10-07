@@ -1,7 +1,7 @@
 # Dokumentasi Progres Pengembangan Web UI — Jadwal Karyawan
 
 **Status:** Draft / Living Document  
-**Versi:** 2.13  
+**Versi:** 2.14  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Database:** `database-jadwal-karyawan` / PostgreSQL 17 / Supabase
@@ -1000,3 +1000,27 @@ Perubahan:
 **Status:** code sudah masuk `main`; deployment Vercel sedang diproses.
 
 **Commit:** `0011e1c86ca79abdee8e99a21e2b8ff3ebc755d4`
+
+### 11.17 Perbaikan Build Vercel — JSX Error pada Detail Jadwal
+
+Pada 2026-10-07, deployment Vercel setelah penempatan tombol **Hapus Jadwal** langsung pada form **Edit Jadwal** gagal pada proses npm run build.
+
+Build log menunjuk ke src/App.jsx sekitar baris 1015 pada bagian error message **Detail Jadwal**. Pemeriksaan kode menemukan ekspresi JSX berikut belum ditutup dengan kurung kurawal penutup setelah elemen `<div>`:
+
+```jsx
+{adminDeleteError && <div className="state error detail-action-error">{adminDeleteError}</div>
+```
+
+Seharusnya ekspresi ditutup menjadi:
+
+```jsx
+{adminDeleteError && <div className="state error detail-action-error">{adminDeleteError}</div>}
+```
+
+Perbaikan hanya menyentuh sintaks JSX dan tidak mengubah database, RLS, data jadwal, atau aturan fitur hapus.
+
+**Status:** perbaikan sudah masuk main; deployment Vercel untuk commit perbaikan sedang diproses.
+
+**Commit:** 473a1f10873b846cc1afddf36ccc890f56f92786
+
+**Verifikasi berikutnya:** pastikan build Vercel berstatus berhasil, kemudian uji ulang form Edit Jadwal dan tombol Hapus Jadwal pada Production.
