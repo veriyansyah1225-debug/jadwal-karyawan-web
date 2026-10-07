@@ -81,3 +81,55 @@
 .excel-filter-empty{padding:16px 12px;text-align:center;color:var(--muted);font-size:12px}
 .excel-filter-footer{padding:8px 12px;border-top:1px solid var(--line);background:#f8fafc;color:var(--muted);font-size:11px;font-weight:600}
 @media(max-width:700px){.excel-filter-menu{position:fixed;left:14px;right:14px;top:145px;width:auto}}
+
+/* Mobile-safe schedule improvements
+   Only applies to compact screens; desktop layout above remains unchanged. */
+@media(max-width:700px){
+  .main{padding:12px}
+  .main>.card{margin-bottom:12px}
+  .filters{grid-template-columns:1fr;gap:10px}
+  .title{gap:12px}
+  .title-actions{width:100%;display:grid;grid-template-columns:1fr;gap:8px}
+  .title-actions .download-menu,
+  .title-actions .download-trigger,
+  .title-actions .focus-toggle,
+  .title-actions .employee-count-toggle{width:100%;min-width:0}
+  .download-menu-list{left:0;right:0;min-width:0}
+  .wrap{max-width:100%;max-height:62vh;overflow:auto;-webkit-overflow-scrolling:touch}
+  .wrap table{min-width:1180px}
+  .sticky-job{min-width:125px}
+  .sticky-name{left:125px;min-width:165px}
+  .sticky-name.no-job{left:0;min-width:165px}
+  th,td{min-width:44px;height:40px}
+  th{height:46px}
+  .cell-button{min-height:39px}
+  .legend{gap:10px}
+}
+
+@media(max-width:700px) and (orientation:landscape){
+  .focus-mode .main{padding:8px}
+  .focus-mode .main>.card{min-height:calc(100vh - 16px);padding:8px}
+  .focus-mode .title{align-items:center}
+  .focus-mode .title-actions{display:flex;flex-direction:row;justify-content:flex-end;width:auto}
+  .focus-mode .title-actions .download-menu,
+  .focus-mode .title-actions .focus-toggle,
+  .focus-mode .title-actions .employee-count-toggle{width:auto}
+  .focus-mode .wrap{
+    height:calc(100vh - 108px);
+    max-height:calc(100vh - 108px);
+  }
+  .focus-mode .wrap table{min-width:0}
+  .focus-mode th,.focus-mode td{min-width:38px;height:34px;font-size:11px}
+  .focus-mode th{height:40px}
+  .focus-mode .cell-button{min-height:33px;font-size:11px}
+  .focus-mode .sticky-job{min-width:105px}
+  .focus-mode .sticky-name{left:105px;min-width:145px}
+  .focus-mode .sticky-name.no-job{left:0;min-width:145px}
+}
+
+/* On phones, preserve normal browsing if the browser cannot lock orientation. */
+@media(max-width:700px) and (orientation:portrait){
+  .focus-mode .wrap{
+    max-height:calc(100vh - 160px);
+  }
+}
