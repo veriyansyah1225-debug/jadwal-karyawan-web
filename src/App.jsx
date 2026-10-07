@@ -305,6 +305,7 @@ function App() {
   const [selectedCell, setSelectedCell] = useState(null)
   const [focusMode, setFocusMode] = useState(false)
   const [monthPickerOpen, setMonthPickerOpen] = useState(false)
+  const [downloadMenuOpen, setDownloadMenuOpen] = useState(false)
   const [showJobColumn, setShowJobColumn] = useState(false)
   const [session, setSession] = useState(null)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -1070,8 +1071,17 @@ function App() {
               <h2>Jadwal {department} — {formatDisplayDate(startDate)}{startDate !== endDate ? ` – ${formatDisplayDate(endDate)}` : ''}</h2>
             </div>
             <div className="title-actions">
-              <button className="secondary export-button" type="button" onClick={() => exportExcel(filteredRows, dateRange, department, showJobColumn, startDate, endDate)} disabled={loading || filteredRows.length === 0}>Excel</button>
-              <button className="secondary export-button" type="button" onClick={() => exportPdf(filteredRows, dateRange, department, showJobColumn, startDate, endDate)} disabled={loading || filteredRows.length === 0}>PDF</button>
+              <div className="download-menu">
+                <button className="secondary download-trigger" type="button" onClick={() => setDownloadMenuOpen((open) => !open)} disabled={loading || filteredRows.length === 0}>
+                  Download Jadwal <span>⌄</span>
+                </button>
+                {downloadMenuOpen && (
+                  <div className="download-menu-list">
+                    <button type="button" onClick={() => { exportExcel(filteredRows, dateRange, department, showJobColumn, startDate, endDate); setDownloadMenuOpen(false) }}>Excel</button>
+                    <button type="button" onClick={() => { exportPdf(filteredRows, dateRange, department, showJobColumn, startDate, endDate); setDownloadMenuOpen(false) }}>PDF</button>
+                  </div>
+                )}
+              </div>
               <button className="focus-toggle" type="button" onClick={() => setFocusMode((value) => !value)}>
                 {focusMode ? 'Kembalikan Tampilan' : 'Perbesar Jadwal'}
               </button>
