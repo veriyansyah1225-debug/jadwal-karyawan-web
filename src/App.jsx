@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { publicSupabase, supabase, supabaseConfigured } from './lib/supabase'
+import { supabase, supabase, supabaseConfigured } from './lib/supabase'
 import jsPDF from 'jspdf'
 import * as XLSX from 'xlsx-js-style'
 
@@ -552,7 +552,7 @@ function App() {
     let cancelled = false
 
     async function loadDepartments() {
-      const { data, error: queryError } = await publicSupabase
+      const { data, error: queryError } = await supabase
         .from('departments')
         .select('id,nama_departemen')
         .eq('aktif', true)
@@ -587,12 +587,12 @@ function App() {
 
     async function loadAdminMasterData() {
       const [{ data: employeeData, error: employeeError }, { data: codeData, error: codeError }] = await Promise.all([
-        publicSupabase
+        supabase
           .from('employees')
           .select('id,nama,aktif,department_id,departments(nama_departemen)')
           .eq('aktif', true)
           .order('nama'),
-        publicSupabase
+        supabase
           .from('schedule_codes')
           .select('id,kode,nama,keterangan')
           .eq('aktif', true)
@@ -620,22 +620,22 @@ function App() {
   }, [isAdmin, department])
 
   useEffect(() => {
-    if (!supabaseConfigured || !publicSupabase) return
+    if (!supabaseConfigured || !supabase) return
 
     let cancelled = false
 
     async function loadEmployeeMaster() {
       const [{ data: employeeData, error: employeeError }, { data: departmentData, error: departmentError }, { data: jobData, error: jobError }] = await Promise.all([
-        publicSupabase
+        supabase
           .from('employees')
           .select('id,kode_karyawan,nama,aktif,department_id,job_id,tanggal_masuk,tanggal_keluar,keterangan,departments(id,nama_departemen),jobs(id,nama_job,department_id)')
           .order('nama'),
-        publicSupabase
+        supabase
           .from('departments')
           .select('id,nama_departemen')
           .eq('aktif', true)
           .order('nama_departemen'),
-        publicSupabase
+        supabase
           .from('jobs')
           .select('id,nama_job,department_id')
           .eq('aktif', true)
@@ -903,7 +903,13 @@ function App() {
   useEffect(() => {
     if (invalidRange) return
 
-    if (!supabaseConfigured) {
+    if (!session) {
+      setRows([])
+      setLoading(false)
+      return
+    }
+
+    if (!supabaseConfigured || !supabase) {
       setRows([])
       setError('Supabase belum dikonfigurasi. Silakan periksa environment variable aplikasi.')
       setLoading(false)
@@ -917,12 +923,12 @@ function App() {
       setError('')
 
       const [{ data: employeeData, error: employeeError }, { data: scheduleData, error: scheduleError }] = await Promise.all([
-        publicSupabase
+        supabase
           .from('employees')
           .select('id,nama,aktif,departments(nama_departemen),jobs(nama_job)')
           .eq('aktif', true)
           .order('nama'),
-        publicSupabase
+        supabase
           .from('v_jadwal_karyawan')
           .select('employee_id,tanggal,nama_departemen,nama_job,nama_job_master,nama_karyawan,kode_jadwal,keterangan')
           .gte('tanggal', startDate)
@@ -1007,7 +1013,7 @@ function App() {
     return () => {
       cancelled = true
     }
-  }, [department, startDate, endDate, invalidRange, scheduleRefresh])
+  }, [session?.user?.id, department, startDate, endDate, invalidRange, scheduleRefresh])
 
   useEffect(() => {
     const validIds = new Set(rows.map((row) => String(row.employeeId)))
