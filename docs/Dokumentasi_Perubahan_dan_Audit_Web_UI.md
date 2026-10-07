@@ -900,3 +900,37 @@ Kode sudah berada di branch `main`. Verifikasi browser Production perlu memastik
 3. form terisi dengan data yang benar;
 4. perubahan kode/keterangan dapat disimpan;
 5. tabel langsung menampilkan hasil perubahan setelah simpan.
+
+
+### 4.22 Penambahan Hapus Jadwal Admin melalui Detail
+
+- **Tanggal:** 2026-10-07
+- **Status:** Implemented on main / verifikasi browser Production belum selesai
+- **Commit Web UI:** `08be2601ba08933b0f51515743cc912ed8d520f4`
+- **Commit styling:** `ee0caab6c988eb83c24fe62d2163881cb001cec5`
+
+#### Perubahan
+
+Admin sekarang dapat menghapus record jadwal langsung dari **Detail Jadwal**.
+
+Penghapusan hanya tersedia jika sel memiliki schedule code. Sebelum DELETE dijalankan, browser meminta konfirmasi pengguna.
+
+Operasi database:
+- tabel: `employee_schedules`;
+- kondisi: `employee_id` dan `tanggal`;
+- menggunakan client Supabase authenticated;
+- RLS DELETE Admin yang sudah ada tetap menjadi pengaman operasi.
+
+Setelah DELETE berhasil:
+- detail ditutup;
+- tabel jadwal dimuat ulang;
+- sel menjadi `—`;
+- tidak ada record kosong yang dibuat.
+
+#### Batas
+
+Master karyawan, JOB, schedule_codes, dan struktur database tidak diubah. Audit/history perubahan belum tersedia.
+
+#### Verifikasi yang diperlukan
+
+Gunakan data uji yang sudah ada pada ARIF tanggal 4 Oktober 2026. Karena data tersebut saat ini memiliki kode `L` dan keterangan `Ganti Libur`, pengujian Hapus dapat memastikan record benar-benar hilang dan sel kembali menjadi `—`. Jika hasil pengujian menghapus data uji tersebut, jadwal ARIF tanggal 4 perlu dibuat kembali melalui fitur Tambah Jadwal untuk mengembalikan kondisi data sebelum pengujian.
