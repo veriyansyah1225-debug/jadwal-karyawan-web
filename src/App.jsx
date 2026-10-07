@@ -306,6 +306,13 @@ function App() {
   const [focusMode, setFocusMode] = useState(false)
   const [monthPickerOpen, setMonthPickerOpen] = useState(false)
   const [showJobColumn, setShowJobColumn] = useState(false)
+  const [session, setSession] = useState(null)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [adminLoginOpen, setAdminLoginOpen] = useState(false)
+  const [adminEmail, setAdminEmail] = useState('')
+  const [adminPassword, setAdminPassword] = useState('')
+  const [authLoading, setAuthLoading] = useState(false)
+  const [authError, setAuthError] = useState('')
 
   const dateRange = useMemo(() => getDateRange(startDate, endDate), [startDate, endDate])
   const invalidRange = Boolean(startDate && endDate && startDate > endDate)
@@ -356,6 +363,98 @@ function App() {
     setJob('')
     setSelectedEmployees([])
     setMonthPickerOpen(false)
+  }
+
+  useEffect(() => {
+    if (!supabaseConfigured || !supabase) return
+
+    let cancelled = false
+
+    async function checkAdmin(userId) {
+      const { data, error: queryError } = await supabase
+        .from('admin_users')
+        .select('user_id,role')
+        .eq('user_id', userId)
+        .eq('aktif', true)
+        .maybeSingle()
+
+      if (cancelled) return
+
+      if (queryError || !data || data.role !== 'admin') {
+        setIsAdmin(false)
+        return
+      }
+
+      setIsAdmin(true)
+    }
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (cancelled) return
+      setSession(data.session || null)
+      if (data.session?.user?.id) checkAdmin(data.session.user.id)
+    })
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (cancelled) return
+      setSession(nextSession || null)
+      if (nextSession?.user?.id) {
+        setTimeout(() => checkAdmin(nextSession.user.id), 0)
+      } else {
+        setIsAdmin(false)
+      }
+    })
+
+    return () => {
+      cancelled = true
+      listener.subscription.unsubscribe()
+    }
+  }, [])
+
+  async function handleAdminLogin(event) {
+    event.preventDefault()
+    if (!supabase) return
+
+    setAuthLoading(true)
+    setAuthError('')
+
+    const { data, error: loginError } = await supabase.auth.signInWithPassword({
+      email: adminEmail.trim(),
+      password: adminPassword,
+    })
+
+    if (loginError) {
+      setAuthError(loginError.message)
+      setAuthLoading(false)
+      return
+    }
+
+    const { data: adminData, error: roleError } = await supabase
+      .from('admin_users')
+      .select('user_id,role')
+      .eq('user_id', data.user.id)
+      .eq('aktif', true)
+      .maybeSingle()
+
+    if (roleError || !adminData || adminData.role !== 'admin') {
+      await supabase.auth.signOut()
+      setIsAdmin(false)
+      setAuthError('Akun berhasil login, tetapi belum terdaftar sebagai Admin.')
+      setAuthLoading(false)
+      return
+    }
+
+    setSession(data.session)
+    setIsAdmin(true)
+    setAdminPassword('')
+    setAdminLoginOpen(false)
+    setAuthLoading(false)
+  }
+
+  async function handleAdminLogout() {
+    if (!supabase) return
+    await supabase.auth.signOut()
+    setSession(null)
+    setIsAdmin(false)
   }
 
   useEffect(() => {
@@ -583,6 +682,11 @@ function App() {
                 )}
               </div>
               <button className="secondary export-button" type="button" onClick={() => exportExcel(filteredRows, dateRange, department, showJobColumn, startDate, endDate)} disabled={loading || filteredRows.length === 0}>Excel</button>
+              {isAdmin ? (
+                <button className="admin-status-button" type="button" onClick={handleAdminLogout}>Admin · Keluar</button>
+              ) : (
+                <button className="secondary export-button" type="button" onClick={() => { setAuthError(''); setAdminLoginOpen(true) }}>Admin</button>
+              )}
               <button className="secondary export-button" type="button" onClick={() => exportPdf(filteredRows, dateRange, department, showJobColumn, startDate, endDate)} disabled={loading || filteredRows.length === 0}>PDF</button>
               <button className="focus-toggle" type="button" onClick={() => setFocusMode((value) => !value)}>
                 {focusMode ? 'Kembalikan Tampilan' : 'Perbesar Jadwal'}
@@ -611,6 +715,29 @@ function App() {
           <div className="legend">{[['P','Shift Pagi'],['S','Shift Sore'],['M','Shift Malam'],['L','Libur'],['CT','Cuti']].map(([code,label]) => <div key={code}><span className={code}>{code}</span>{label}</div>)}</div>
         </section>
       </main>
+
+      {adminLoginOpen && (
+        <div className="modal-backdrop" onClick={() => !authLoading && setAdminLoginOpen(false)}>
+          <div className="modal admin-login-modal" role="dialog" aria-modal="true" aria-labelledby="admin-login-title" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-head">
+              <div>
+                <div className="modal-kicker">Akses Terbatas</div>
+                <h2 id="admin-login-title">Login Admin</h2>
+              </div>
+              <button className="modal-close" type="button" onClick={() => !authLoading && setAdminLoginOpen(false)} aria-label="Tutup">×</button>
+            </div>
+            <form className="admin-login-form" onSubmit={handleAdminLogin}>
+              <label>Email Admin<input type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} autoComplete="username" required /></label>
+              <label>Password<input type="password" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} autoComplete="current-password" required /></label>
+              {authError && <div className="state error">{authError}</div>}
+              <div className="admin-login-actions">
+                <button className="secondary" type="button" onClick={() => setAdminLoginOpen(false)} disabled={authLoading}>Batal</button>
+                <button className="focus-toggle" type="submit" disabled={authLoading}>{authLoading ? 'Memeriksa...' : 'Login'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {selectedCell && (
         <div className="modal-backdrop" onClick={() => setSelectedCell(null)}>
