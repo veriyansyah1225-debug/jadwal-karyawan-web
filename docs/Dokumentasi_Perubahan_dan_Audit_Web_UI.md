@@ -1,7 +1,7 @@
 # Dokumentasi Perubahan dan Audit Web UI — Jadwal Karyawan
 
 **Status:** Living Document  
-**Versi:** 1.0  
+**Versi:** 1.1  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Branch produksi:** `main`  
@@ -153,6 +153,38 @@ Setelah verifikasi, perubahan dipindahkan ke `main` dan berhasil digunakan pada 
 
 ---
 
+### 4.3 Penetapan JOB Master HATCHERY dan Penempatan Deta/Alda
+
+**Status:** Production / Database aktif  
+**Tanggal:** 2026-10-07
+
+#### Keputusan
+
+Untuk tahap stabilisasi awal, Departemen HATCHERY menggunakan satu JOB master saja, yaitu HATCHERY.
+
+Perubahan yang diterapkan pada database:
+
+- menambahkan JOB master HATCHERY pada Departemen HATCHERY;
+- menetapkan seluruh karyawan HATCHERY menggunakan JOB master HATCHERY;
+- memastikan Deta dan Alda tercatat pada Departemen HATCHERY dengan JOB master HATCHERY;
+- assignment harian Deta dan Alda seperti KANTIN, LONDRY, dan OFF tetap dipertahankan;
+- tidak membuat duplikasi karyawan di Departemen FARM.
+
+#### Hasil verifikasi
+
+- 15 karyawan berada di Departemen HATCHERY;
+- 15 karyawan tersebut menggunakan JOB master HATCHERY;
+- Deta memiliki 27 record jadwal dan Alda memiliki 26 record jadwal;
+- assignment harian mereka tetap tersimpan;
+- total employee_schedules tetap 401;
+- tidak ditemukan duplikasi employee_id dan tanggal.
+
+#### Dampak UI
+
+Saat filter Departemen HATCHERY digunakan, Deta dan Alda akan tampil sebagai karyawan HATCHERY. Assignment harian seperti KANTIN/LONDRY tetap dapat muncul pada tabel karena assignment tersebut berasal dari record jadwal, bukan perubahan identitas master karyawan.
+
+Detail pembagian JOB internal HATCHERY ditunda sampai database stabil.
+
 ## 5. Kondisi Production Saat Ini
 
 ### Web UI
@@ -267,6 +299,12 @@ Dropdown Departemen menggunakan data aktif dari `public.departments`.
 **Keputusan:** disetujui.
 
 Setelah sebuah fitur diperbaiki, ditambahkan, dihilangkan, atau sebuah audit menghasilkan perubahan yang telah disepakati untuk digunakan, dokumentasi perubahan dan dokumen terkait diperbarui tanpa memerlukan persetujuan dokumentasi tambahan.
+
+### Keputusan D-004 — Baseline JOB HATCHERY
+
+**Keputusan:** disetujui dan diterapkan pada database.
+
+Untuk tahap awal, seluruh karyawan Departemen HATCHERY menggunakan satu JOB master, yaitu HATCHERY. Penugasan harian lintas pekerjaan tetap dicatat sebagai assignment pada jadwal dan tidak memindahkan identitas master karyawan ke Departemen FARM.
 
 ---
 
