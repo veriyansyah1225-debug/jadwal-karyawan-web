@@ -362,3 +362,42 @@ Pengguna dapat melihat jadwal
 ```
 
 Fitur perubahan data dan authentication sengaja belum dibangun agar pondasi sistem dapat divalidasi terlebih dahulu.
+
+## 15. Perluasan RLS untuk Admin
+
+Pada 2026-10-07, sistem mulai beralih dari read-only murni ke model **publik read-only + Admin write**.
+
+### 15.1 Policy employee_schedules
+
+`public.employee_schedules` sekarang memiliki policy:
+
+| Policy | Role | Operasi |
+|---|---|---|
+| `anon_read_employee_schedules` | anon | SELECT |
+| `admin_insert_employee_schedules` | authenticated | INSERT |
+| `admin_update_employee_schedules` | authenticated | UPDATE |
+| `admin_delete_employee_schedules` | authenticated | DELETE |
+
+Policy write hanya mengizinkan user authenticated yang memiliki record aktif dengan `role = 'admin'` pada `public.admin_users`.
+
+### 15.2 Unique jadwal per karyawan per tanggal
+
+Database sudah memiliki unique index:
+
+`employee_schedules_employee_date_unique`
+
+pada:
+
+`(employee_id, tanggal)`
+
+Tujuannya menjaga aturan dasar bahwa satu karyawan memiliki paling banyak satu record jadwal pada satu tanggal.
+
+### 15.3 Status keamanan
+
+Model akses saat ini menjadi:
+- pengguna publik: membaca jadwal;
+- Admin terautentikasi: dapat menulis jadwal;
+- akun authenticated biasa yang tidak terdaftar sebagai Admin: tidak memperoleh policy write;
+- `admin_users` tetap tidak dapat ditulis oleh client.
+
+Pengujian end-to-end penyimpanan dari browser masih menjadi langkah verifikasi berikutnya.
