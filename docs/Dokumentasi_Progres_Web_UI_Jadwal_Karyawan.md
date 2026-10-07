@@ -752,9 +752,14 @@ Fokus saat ini tetap pada penyelesaian dan stabilisasi **master data + Web UI v1
 | v2.1 | Koreksi tanggal libur IB dan penambahan ARIF pada JOB MEKANIK | Selesai |
 | v2.2 | Penambahan export Excel dan PDF berdasarkan filter aktif | Selesai |
 | v2.3 | Penyempurnaan format Excel dan keterbacaan PDF untuk hasil cetak | Selesai |
-| v2.4 | Perbesar font dan pertegas border PDF | Selesai |\n| v2.5 | PDF A4 landscape dan F4 landscape untuk cetak langsung | Selesai |
+| v2.4 | Perbesar font dan pertegas border PDF | Selesai |\n| v2.5 | Evaluasi A4/F4 dan pengembalian PDF ke A3 satu tampilan penuh | Selesai |
 
 ---
+
+### v2.5 — PDF kembali ke A3
+
+Format A4/F4 sudah dievaluasi, tetapi untuk laporan bulanan 1–31 pembagian tanggal menjadi beberapa blok tidak sesuai kebutuhan. Export PDF dikembalikan ke A3 landscape. Seluruh tanggal pada rentang yang dipilih ditampilkan dalam satu blok horizontal; jika jumlah karyawan terlalu banyak, halaman hanya terbagi secara vertikal.
+
 
 ## 18. Status Dokumen
 
