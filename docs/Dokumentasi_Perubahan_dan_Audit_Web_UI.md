@@ -676,6 +676,17 @@ Export harus menghasilkan file yang tidak hanya dapat dibuka, tetapi juga layak 
 - Verifikasi: struktur tabel dan policy berhasil diverifikasi di PostgreSQL; build/deployment Web UI belum diverifikasi independen pada tahap ini.
 
 
+### 4.16 Penempatan akses Admin di Pengaturan
+
+- Tanggal: 2026-10-07
+- Status: Production code
+- Commit Web UI: 0a197f00bcd0f50c785f26e5452d7c207978aa8b dan 9326f6425ee6c300f8f01fa2d7f388d16990f9b2
+- Perubahan: tombol akses Admin di area tabel dihapus.
+- Perubahan: akses Admin dipindahkan ke menu **Pengaturan** pada sidebar.
+- Pengaturan sekarang menampilkan status Admin dan tombol Login Admin / keluar.
+- Dampak: area tabel tetap fokus pada filter, navigasi periode, export, dan jadwal.
+
+
 ## 10. Status Dokumen
 
 Dokumen ini bersifat **living document**.
