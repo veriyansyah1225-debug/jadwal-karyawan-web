@@ -170,19 +170,22 @@ function exportExcel(rows, dateRange, department, includeJob, startDate, endDate
   XLSX.writeFile(workbook, 'jadwal-karyawan-' + startDate + '-' + endDate + '.xlsx')
 }
 
-function exportPdf(rows, dateRange, department, includeJob, startDate, endDate) {
+function exportPdf(rows, dateRange, department, includeJob, startDate, endDate, paper = 'A4') {
   if (!rows.length || !dateRange.length) return
 
-  const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3' })
-  const margin = 10
+  const isF4 = paper === 'F4'
+  const pageFormat = isF4 ? [330, 216] : 'a4'
+  const paperLabel = isF4 ? 'F4' : 'A4'
+  const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: pageFormat })
+  const margin = 8
   const pageWidth = pdf.internal.pageSize.getWidth()
   const pageHeight = pdf.internal.pageSize.getHeight()
   const titleHeight = 18
   const headerHeight = 12
   const rowHeight = 10
-  const nameWidth = includeJob ? 72 : 82
-  const jobWidth = includeJob ? 30 : 0
-  const datesPerPage = 16
+  const nameWidth = includeJob ? 58 : 66
+  const jobWidth = includeJob ? 24 : 0
+  const datesPerPage = isF4 ? 10 : 8
   const dateChunks = []
   for (let index = 0; index < dateRange.length; index += datesPerPage) {
     dateChunks.push(dateRange.slice(index, index + datesPerPage))
@@ -206,30 +209,30 @@ function exportPdf(rows, dateRange, department, includeJob, startDate, endDate) 
   let pageNumber = 0
 
   for (const dateChunk of dateChunks) {
-    const dateWidth = Math.max(14, Math.min(19, (pageWidth - (margin * 2) - nameWidth - jobWidth) / dateChunk.length))
+    const dateWidth = (pageWidth - (margin * 2) - nameWidth - jobWidth) / dateChunk.length
     const tableWidth = nameWidth + jobWidth + (dateWidth * dateChunk.length)
     const left = (pageWidth - tableWidth) / 2
 
     for (const rowChunk of rowChunks) {
-      if (pageNumber > 0) pdf.addPage('a3', 'landscape')
+      if (pageNumber > 0) pdf.addPage(pageFormat, 'landscape')
       pageNumber += 1
 
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(16)
+      pdf.setFontSize(15)
       pdf.text('Jadwal Karyawan', margin, margin + 3)
       pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(9)
+      pdf.setFontSize(8.5)
       pdf.text('Departemen: ' + department + ' | Periode: ' + startDate + ' s/d ' + endDate, margin, margin + 10)
-      pdf.text('Tanggal ' + dateChunk[0].day + '–' + dateChunk[dateChunk.length - 1].day + ' | Halaman ' + pageNumber + '/' + totalPages, pageWidth - margin, margin + 10, { align: 'right' })
+      pdf.text(paperLabel + ' | Tanggal ' + dateChunk[0].day + '–' + dateChunk[dateChunk.length - 1].day + ' | Halaman ' + pageNumber + '/' + totalPages, pageWidth - margin, margin + 10, { align: 'right' })
 
       let y = margin + titleHeight
       let x = left
       pdf.setFillColor(239, 244, 250)
       pdf.rect(x, y, tableWidth, headerHeight, 'F')
-      pdf.setDrawColor(120, 132, 148)
-      pdf.setLineWidth(0.35)
+      pdf.setDrawColor(95, 108, 125)
+      pdf.setLineWidth(0.45)
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(9.5)
+      pdf.setFontSize(8.8)
 
       if (includeJob) {
         pdf.rect(x, y, jobWidth, headerHeight)
@@ -244,14 +247,14 @@ function exportPdf(rows, dateRange, department, includeJob, startDate, endDate) 
       for (const item of dateChunk) {
         pdf.rect(x, y, dateWidth, headerHeight)
         pdf.text(String(item.day), x + dateWidth / 2, y + 5.2, { align: 'center' })
-        pdf.setFontSize(7.2)
+        pdf.setFontSize(7)
         pdf.text(item.dayName, x + dateWidth / 2, y + 9.0, { align: 'center' })
-        pdf.setFontSize(9.5)
+        pdf.setFontSize(8.8)
         x += dateWidth
       }
 
       y += headerHeight
-      pdf.setFontSize(9)
+      pdf.setFontSize(8.5)
 
       for (const row of rowChunk) {
         x = left
@@ -260,12 +263,12 @@ function exportPdf(rows, dateRange, department, includeJob, startDate, endDate) 
 
         if (includeJob) {
           pdf.rect(x, y, jobWidth, rowHeight)
-          pdf.text(String(row.job || ''), x + 2.5, y + 6.7, { maxWidth: jobWidth - 5 })
+          pdf.text(String(row.job || ''), x + 2, y + 6.7, { maxWidth: jobWidth - 4 })
           x += jobWidth
         }
 
         pdf.rect(x, y, nameWidth, rowHeight)
-        pdf.text(String(row.name || ''), x + 2.5, y + 6.7, { maxWidth: nameWidth - 5 })
+        pdf.text(String(row.name || ''), x + 2, y + 6.7, { maxWidth: nameWidth - 4 })
         x += nameWidth
 
         for (const item of dateChunk) {
@@ -278,9 +281,9 @@ function exportPdf(rows, dateRange, department, includeJob, startDate, endDate) 
           pdf.rect(x, y, dateWidth, rowHeight)
           if (code) {
             pdf.setFont('helvetica', 'bold')
-            pdf.setFontSize(code.length > 1 ? 8.5 : 10)
+            pdf.setFontSize(code.length > 1 ? 8.2 : 10)
             pdf.text(code, x + dateWidth / 2, y + 6.7, { align: 'center' })
-            pdf.setFontSize(9)
+            pdf.setFontSize(8.5)
           }
           x += dateWidth
         }
@@ -289,7 +292,7 @@ function exportPdf(rows, dateRange, department, includeJob, startDate, endDate) 
     }
   }
 
-  pdf.save('jadwal-karyawan-' + startDate + '-' + endDate + '.pdf')
+  pdf.save('jadwal-karyawan-' + paperLabel.toLowerCase() + '-' + startDate + '-' + endDate + '.pdf')
 }
 
 function App() {
