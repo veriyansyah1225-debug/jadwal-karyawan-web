@@ -766,6 +766,11 @@ Format A4/F4 sudah dievaluasi, tetapi untuk laporan bulanan 1–31 pembagian tan
 Label tombol pada Web UI sekarang ditampilkan sebagai **PDF** agar lebih sederhana. Format teknis file tetap A3 landscape dan tidak berubah.
 
 
+### Penyederhanaan tampilan informasi
+
+Teks informasi internal mengenai sumber Supabase dan catatan penggunaan filter dihapus dari halaman jadwal agar area kerja lebih ringkas. Informasi tersebut tetap tercatat di dokumentasi teknis, bukan pada tampilan operasional utama.
+
+
 ## 18. Status Dokumen
 
 Dokumen ini adalah **dokumentasi progres**, bukan spesifikasi final.
