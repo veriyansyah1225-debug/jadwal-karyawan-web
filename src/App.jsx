@@ -375,6 +375,12 @@ function App() {
   const [userManagementLoading, setUserManagementLoading] = useState(false)
   const [userManagementError, setUserManagementError] = useState('')
   const [userResendLoadingId, setUserResendLoadingId] = useState('')
+  const [inviteActivation, setInviteActivation] = useState(false)
+  const [invitePassword, setInvitePassword] = useState('')
+  const [invitePasswordConfirm, setInvitePasswordConfirm] = useState('')
+  const [inviteActivationLoading, setInviteActivationLoading] = useState(false)
+  const [inviteActivationError, setInviteActivationError] = useState('')
+  const [inviteActivationSuccess, setInviteActivationSuccess] = useState('')
 
   const dateRange = useMemo(() => getDateRange(startDate, endDate), [startDate, endDate])
   const invalidRange = Boolean(startDate && endDate && startDate > endDate)
@@ -463,37 +469,61 @@ function App() {
     async function handleInviteCallback() {
       const params = new URLSearchParams(window.location.search)
       const code = params.get('code')
-      if (!code) return false
+      const tokenHash = params.get('token_hash')
+      const type = params.get('type')
+      const isInviteLink = Boolean(code || (tokenHash && type === 'invite'))
+
+      if (!isInviteLink) {
+        const pendingInvite = window.sessionStorage.getItem('jadwal_invite_activation') === '1'
+        if (pendingInvite) setInviteActivation(true)
+        return false
+      }
 
       setAuthReady(false)
       setAuthError('Memproses undangan akun...')
 
-      // Jika link undangan dibuka pada browser yang masih menyimpan sesi
-      // Admin, keluarkan sesi lama terlebih dahulu agar sesi pengguna baru
-      // tidak tertukar dengan sesi Admin.
+      // Undangan harus menggantikan sesi browser yang mungkin masih login
+      // sebagai Admin atau pengguna lain.
       await supabase.auth.signOut()
 
-      const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
-      if (exchangeError || !data.session?.user?.id) {
+      let authData = null
+      let authError = null
+
+      if (code) {
+        const result = await supabase.auth.exchangeCodeForSession(code)
+        authData = result.data
+        authError = result.error
+      } else {
+        const result = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: 'invite',
+        })
+        authData = result.data
+        authError = result.error
+      }
+
+      if (authError || !authData?.session?.user?.id) {
         setSession(null)
         setUserProfile(null)
         setIsAdmin(false)
-        setAuthError(exchangeError?.message || 'Link undangan tidak dapat diproses.')
+        setAuthError(authError?.message || 'Link undangan tidak dapat diproses.')
         setAuthReady(true)
         return true
       }
 
+      window.sessionStorage.setItem('jadwal_invite_activation', '1')
       window.history.replaceState({}, document.title, window.location.pathname)
 
       const { data: profile, error: profileError } = await supabase
         .from('user_profiles')
         .select('user_id,nama,role,aktif,employee_id')
-        .eq('user_id', data.session.user.id)
+        .eq('user_id', authData.session.user.id)
         .eq('aktif', true)
         .maybeSingle()
 
       if (profileError || !profile) {
         await supabase.auth.signOut()
+        window.sessionStorage.removeItem('jadwal_invite_activation')
         setSession(null)
         setUserProfile(null)
         setIsAdmin(false)
@@ -502,9 +532,14 @@ function App() {
         return true
       }
 
-      setSession(data.session)
+      setSession(authData.session)
       setUserProfile(profile)
       setIsAdmin(profile.role === 'admin')
+      setInviteActivation(true)
+      setInvitePassword('')
+      setInvitePasswordConfirm('')
+      setInviteActivationError('')
+      setInviteActivationSuccess('')
       setAuthError('')
       setAuthReady(true)
       return true
@@ -561,6 +596,44 @@ function App() {
       listener.subscription.unsubscribe()
     }
   }, [])
+
+  async function handleInviteActivation(event) {
+    event.preventDefault()
+    if (!supabase) return
+
+    const password = invitePassword
+    const confirmation = invitePasswordConfirm
+
+    if (password.length < 8) {
+      setInviteActivationError('Password minimal 8 karakter.')
+      return
+    }
+
+    if (password !== confirmation) {
+      setInviteActivationError('Konfirmasi password tidak sama.')
+      return
+    }
+
+    setInviteActivationLoading(true)
+    setInviteActivationError('')
+    setInviteActivationSuccess('')
+
+    const { error: updateError } = await supabase.auth.updateUser({ password })
+
+    if (updateError) {
+      setInviteActivationError(updateError.message)
+      setInviteActivationLoading(false)
+      return
+    }
+
+    await supabase.auth.refreshSession()
+    window.sessionStorage.removeItem('jadwal_invite_activation')
+    setInvitePassword('')
+    setInvitePasswordConfirm('')
+    setInviteActivation(false)
+    setInviteActivationSuccess('Akun berhasil diaktifkan.')
+    setInviteActivationLoading(false)
+  }
 
   async function handleLogin(event) {
     event.preventDefault()
@@ -1252,6 +1325,52 @@ function App() {
           <div className="modal-kicker">Jadwal Karyawan</div>
           <h1>Memuat sistem...</h1>
           <p>Memeriksa sesi pengguna.</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (inviteActivation && session) {
+    return (
+      <div className="auth-page">
+        <div className="auth-card">
+          <div className="auth-brand">
+            <div className="modal-kicker">Aktivasi Akun</div>
+            <h1>Aktifkan Akun Anda</h1>
+            <p>
+              Selamat datang{userProfile?.nama ? ', ' + userProfile.nama : ''}.
+              Silakan buat password untuk menyelesaikan aktivasi akun.
+            </p>
+          </div>
+          <form className="admin-login-form" onSubmit={handleInviteActivation}>
+            <label>Password Baru
+              <input
+                type="password"
+                value={invitePassword}
+                onChange={(e) => setInvitePassword(e.target.value)}
+                autoComplete="new-password"
+                placeholder="Minimal 8 karakter"
+                minLength={8}
+                required
+              />
+            </label>
+            <label>Konfirmasi Password
+              <input
+                type="password"
+                value={invitePasswordConfirm}
+                onChange={(e) => setInvitePasswordConfirm(e.target.value)}
+                autoComplete="new-password"
+                placeholder="Ulangi password"
+                minLength={8}
+                required
+              />
+            </label>
+            {inviteActivationError && <div className="state error">{inviteActivationError}</div>}
+            <button className="focus-toggle auth-submit" type="submit" disabled={inviteActivationLoading}>
+              {inviteActivationLoading ? 'Mengaktifkan...' : 'Aktifkan Akun'}
+            </button>
+          </form>
+          <p className="auth-help">Hak akses akun sudah ditentukan oleh sistem. Anda tidak perlu memilih posisi atau role.</p>
         </div>
       </div>
     )
