@@ -374,6 +374,7 @@ function App() {
   const [userFormSuccess, setUserFormSuccess] = useState('')
   const [userManagementLoading, setUserManagementLoading] = useState(false)
   const [userManagementError, setUserManagementError] = useState('')
+  const [userResendLoadingId, setUserResendLoadingId] = useState('')
 
   const dateRange = useMemo(() => getDateRange(startDate, endDate), [startDate, endDate])
   const invalidRange = Boolean(startDate && endDate && startDate > endDate)
@@ -857,6 +858,35 @@ function App() {
     }
 
     setManagedUsers((current) => current.map((item) => item.user_id === user.user_id ? { ...item, aktif: nextActive } : item))
+  }
+
+  async function resendManagedUserInvite(user) {
+    if (!supabase || !isAdmin || !user || user.user_id === session?.user?.id) return
+
+    setUserResendLoadingId(user.user_id)
+    setUserManagementError('')
+
+    const { data, error: functionError } = await supabase.functions.invoke('admin-resend-user-invite', {
+      body: { user_id: user.user_id },
+    })
+
+    if (functionError) {
+      setUserManagementError(functionError.message || 'Gagal mengirim ulang undangan.')
+      setUserResendLoadingId('')
+      return
+    }
+
+    if (data?.error) {
+      setUserManagementError(data.error)
+      setUserResendLoadingId('')
+      return
+    }
+
+    setUserManagementError('')
+    setUserResendLoadingId('')
+    setUserManagementOpen(true)
+    setScheduleRefresh((value) => value + 1)
+    window.alert(data?.message || 'Undangan baru berhasil dikirim.')
   }
 
   async function handleTransferSave(event) {
@@ -1518,9 +1548,19 @@ function App() {
                         <td>{user.aktif ? 'Aktif' : 'Nonaktif'}</td>
                         <td>
                           {user.user_id !== session?.user?.id && (
-                            <button type="button" className="secondary" onClick={() => toggleManagedUser(user)}>
-                              {user.aktif ? 'Nonaktifkan' : 'Aktifkan'}
-                            </button>
+                            <div className="detail-actions-group">
+                              <button
+                                type="button"
+                                className="secondary"
+                                onClick={() => resendManagedUserInvite(user)}
+                                disabled={userResendLoadingId === user.user_id}
+                              >
+                                {userResendLoadingId === user.user_id ? 'Mengirim...' : 'Kirim Ulang Undangan'}
+                              </button>
+                              <button type="button" className="secondary" onClick={() => toggleManagedUser(user)}>
+                                {user.aktif ? 'Nonaktifkan' : 'Aktifkan'}
+                              </button>
+                            </div>
                           )}
                         </td>
                       </tr>
