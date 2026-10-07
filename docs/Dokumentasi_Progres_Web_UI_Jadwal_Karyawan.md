@@ -1,7 +1,7 @@
 # Dokumentasi Progres Pengembangan Web UI — Jadwal Karyawan
 
 **Status:** Draft / Living Document  
-**Versi:** 2.8  
+**Versi:** 2.9  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Database:** `database-jadwal-karyawan` / PostgreSQL 17 / Supabase
@@ -604,6 +604,25 @@ Implementasi berikutnya perlu mengubah sumber pembentukan baris jadwal agar tida
 
 **Status:** keputusan desain disepakati; implementasi Web UI belum dilakukan.
 
+### 11.13 Tampilan Bulan Tanpa Jadwal — Implementasi
+
+Keputusan desain pada versi 2.8 sekarang sudah diimplementasikan pada `src/App.jsx`.
+
+Perubahan utama:
+- Web UI sekarang membaca karyawan aktif dari master `employees` untuk membentuk baris tabel;
+- data jadwal tetap dibaca berdasarkan rentang tanggal yang dipilih;
+- data jadwal kemudian digabungkan ke baris master karyawan berdasarkan `employee_id`;
+- jika suatu karyawan tidak memiliki record jadwal pada tanggal tertentu, sel ditampilkan sebagai `—`;
+- jika seluruh bulan belum memiliki record `employee_schedules`, seluruh karyawan aktif pada departemen tersebut tetap tampil;
+- tidak ada record kosong yang dibuat ke database;
+- kode `L` tetap berarti Libur, sedangkan `—` berarti belum ada jadwal.
+
+Query master karyawan dan jadwal dijalankan secara paralel untuk menjaga alur pemuatan tetap sederhana dan efisien.
+
+Sumber baris tidak lagi hanya bergantung pada `v_jadwal_karyawan`, karena view tersebut tidak dapat menghasilkan baris untuk karyawan yang belum mempunyai jadwal pada periode yang dipilih.
+
+**Status:** kode sudah masuk `main`; verifikasi browser setelah deployment diperlukan.
+
 ### 11.12 Authentication dan RLS
 
 RLS sudah diaktifkan pada tabel utama database, tetapi policy final untuk aplikasi belum ditentukan.
@@ -807,7 +826,7 @@ Fokus saat ini tetap pada penyelesaian dan stabilisasi **master data + Web UI v1
 | v2.2 | Penambahan export Excel dan PDF berdasarkan filter aktif | Selesai |
 | v2.3 | Penyempurnaan format Excel dan keterbacaan PDF untuk hasil cetak | Selesai |
 | v2.4 | Perbesar font dan pertegas border PDF | Selesai |\n| v2.5 | Evaluasi A4/F4 dan pengembalian PDF ke A3 satu tampilan penuh | Selesai |
-| v2.6 | Pondasi Admin Login + role admin + RLS dasar | Selesai |
+| v2.6 | Pondasi Admin Login + role admin + RLS dasar | Selesai |\n| v2.9 | Tampilan bulan tanpa jadwal menggunakan master karyawan sebagai basis baris | Production code / menunggu verifikasi browser |
 
 ---
 
