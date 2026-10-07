@@ -838,3 +838,30 @@ Tahap ini belum membuka pengelolaan master karyawan/JOB/kode jadwal dan belum me
 - **Batas keamanan:** perubahan hanya untuk SELECT. INSERT/UPDATE/DELETE `employee_schedules` tetap khusus Admin aktif.
 - **Verifikasi:** kelima policy SELECT sudah diverifikasi memiliki roles `{anon,authenticated}`.
 - **Dampak:** tidak ada data jadwal atau master yang diubah.
+
+
+### 4.20 Audit Perbaikan Build Vercel — Struktur JSX Modal Pengaturan
+
+- **Tanggal:** 2026-10-07
+- **Status:** Perbaikan diterapkan / deployment Vercel menunggu hasil
+- **Commit Web UI:** `88dbb7680414851bcda54e4806898d98e69eecb2`
+
+#### Temuan
+
+Deployment Production pada commit `39e825316f9ef42b25982d4d9a4df05ac65d7db0` gagal dengan pesan:
+
+`Command "npm run build" exited with 1`
+
+Build log menunjukkan esbuild berhenti pada struktur JSX `App.jsx` sekitar baris 846. Pemeriksaan kode menemukan satu penutupan `</div>` berlebih setelah bagian **Akses Admin** pada modal **Pengaturan**.
+
+#### Perbaikan
+
+Struktur modal diperbaiki dengan merapikan bagian **Akses Admin** menjadi `settings-section` yang memiliki pasangan pembuka/penutup yang benar. Tidak ada perubahan pada PostgreSQL, RLS, master data, atau record jadwal.
+
+#### Verifikasi
+
+Commit perbaikan sudah masuk branch `main` dan Vercel sudah menerima deployment baru dengan status **Pending** saat dokumentasi ini diperbarui. Hasil build dan verifikasi browser Production masih harus dikonfirmasi.
+
+#### Dampak
+
+Perbaikan hanya menyentuh sintaks/struktur JSX agar proses Vite/esbuild dapat dilanjutkan. Fungsionalitas yang dirancang sebelumnya untuk menampilkan master karyawan pada bulan tanpa jadwal tidak diubah.
