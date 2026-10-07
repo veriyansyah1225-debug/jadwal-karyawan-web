@@ -1,7 +1,7 @@
 # Dokumentasi Perubahan dan Audit Web UI — Jadwal Karyawan
 
 **Status:** Living Document  
-**Versi:** 1.3  
+**Versi:** 1.4  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Branch produksi:** `main`  
@@ -271,7 +271,7 @@ PostgreSQL/Supabase tetap menjadi sumber data utama.
 Perubahan terakhir pada master data:
 
 - JOB Kandang tersedia pada FARM;
-- HERI sudah ditambahkan sebagai karyawan FARM / Kandang.
+- seluruh 17 karyawan Kandang sudah ditambahkan sebagai karyawan FARM / Kandang.
 
 Tidak ada perubahan pada 401 record jadwal yang sudah ada.
 
@@ -295,13 +295,13 @@ Bagian yang perlu dijaga konsistensinya:
 
 ### Hasil audit
 
-Dokumentasi progres diperbarui dari versi 1.4 menjadi versi 1.5 untuk mencatat:
+Dokumentasi progres diperbarui dari versi 1.5 menjadi versi 1.6 untuk mencatat:
 
-- jumlah karyawan menjadi 31;
-- HERI sudah menjadi karyawan FARM;
-- HERI menggunakan JOB Kandang;
-- 16 nama Kandang lainnya masih belum dimasukkan;
-- proses pemasukan karyawan FARM dilakukan bertahap satu per satu.
+- jumlah karyawan menjadi 47;
+- seluruh 17 karyawan Kandang sudah menjadi karyawan FARM;
+- seluruh 17 karyawan menggunakan JOB Kandang;
+- jadwal Oktober dari sumber gambar belum dimasukkan;
+- penambahan master Kandang untuk daftar yang diterima selesai.
 
 ---
 
@@ -386,7 +386,13 @@ Untuk tahap awal, seluruh karyawan Departemen HATCHERY menggunakan satu JOB mast
 
 **Keputusan:** disetujui dan sedang diterapkan.
 
-Data karyawan FARM dari sumber baru dimasukkan secara bertahap per JOB dan per karyawan. JOB master harus tersedia lebih dahulu, kemudian setiap karyawan diverifikasi sebelum dimasukkan. Jadwal sumber tidak otomatis dimasukkan bersamaan dengan master karyawan.
+Data karyawan FARM dari sumber baru dimasukkan per JOB. JOB master harus tersedia lebih dahulu, kemudian daftar karyawan diverifikasi sebelum dimasukkan. Jadwal sumber tidak otomatis dimasukkan bersamaan dengan master karyawan.
+
+### Keputusan D-006 — Seluruh 17 karyawan Kandang dimasukkan
+
+**Keputusan:** diterapkan pada database.
+
+Seluruh 17 nama dari daftar JOB Kandang dimasukkan ke master `employees` sebagai FARM / Kandang. Jadwal Oktober pada sumber gambar tetap belum dimasukkan sampai proses jadwal dilakukan terpisah.
 
 ---
 
