@@ -1,7 +1,7 @@
 # Dokumentasi Progres Pengembangan Web UI — Jadwal Karyawan
 
 **Status:** Draft / Living Document  
-**Versi:** 2.4  
+**Versi:** 2.8  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Database:** `database-jadwal-karyawan` / PostgreSQL 17 / Supabase
@@ -550,6 +550,60 @@ Perubahan format tidak mengubah sumber data maupun filter export.
 
 
 
+
+### 11.13 Tampilan Bulan yang Belum Memiliki Jadwal
+
+Keputusan desain baru untuk pengelolaan jadwal:
+
+**Bulan yang belum memiliki record jadwal tetap harus dapat ditampilkan pada Web UI.**
+
+Web UI tidak boleh menganggap bahwa tidak adanya record pada `employee_schedules` berarti karyawan tidak perlu ditampilkan. Daftar karyawan harus berasal dari master `employees`, sedangkan `employee_schedules` digunakan untuk mengisi tanggal yang memang sudah memiliki jadwal.
+
+Contoh ketika November 2026 belum memiliki jadwal:
+
+```
+                    NOVEMBER 2026
+
+Nama Karyawan       1   2   3   4   5   6 ... 30
+--------------------------------------------------
+Karyawan 1          -   -   -   -   -   - ...  -
+Karyawan 2          -   -   -   -   -   - ...  -
+Karyawan 3          -   -   -   -   -   - ...  -
+...
+```
+
+Sel kosong/`-` memiliki arti **belum ada jadwal**, bukan Libur. Kode `L` tetap menjadi satu-satunya kode yang berarti **Libur**.
+
+### Prinsip penyimpanan
+
+Sistem **tidak membuat record kosong untuk seluruh tanggal dalam bulan**.
+
+Contoh, jika hanya Karyawan 1 yang mendapat jadwal L pada 3 November:
+
+```
+employee_schedules
+--------------------------------
+Karyawan 1 | 2026-11-03 | L
+```
+
+Tidak dibuat record NULL untuk tanggal 1, 2, 4, 5, dan seterusnya.
+
+Dengan demikian:
+
+- master `employees` menentukan siapa yang ditampilkan;
+- rentang tanggal menentukan kolom yang ditampilkan;
+- `employee_schedules` menentukan tanggal yang sudah diisi;
+- tidak ada record berarti **belum diisi**, bukan otomatis Libur;
+- tidak diperlukan pembuatan 30/31 record kosong untuk setiap karyawan.
+
+### Pertimbangan performa
+
+Pendekatan ini tidak diperkirakan membebani Web UI secara berarti untuk skala data saat ini. Web UI memang tetap merender tabel karyawan × tanggal yang dipilih, tetapi database hanya mengirim data master karyawan dan record jadwal yang benar-benar ada.
+
+Implementasi berikutnya perlu mengubah sumber pembentukan baris jadwal agar tidak hanya bergantung pada `v_jadwal_karyawan`, karena view jadwal dapat tidak memiliki baris ketika suatu bulan benar-benar belum mempunyai record.
+
+**Status:** keputusan desain disepakati; implementasi Web UI belum dilakukan.
+
 ### 11.12 Authentication dan RLS
 
 RLS sudah diaktifkan pada tabel utama database, tetapi policy final untuk aplikasi belum ditentukan.
@@ -819,6 +873,10 @@ Perubahan Production terbaru dan keputusan audit dicatat pada `docs/Dokumentasi_
 - Jadwal IB Oktober 2026: 48 record kode L untuk 12 karyawan, pada tanggal 4, 11, 18, 25
 - ARIF: karyawan FARM / MEKANIK dengan 4 record L pada 1, 8, 15, 22 Oktober 2026
 - Standar kode libur: `L` saja untuk input dan tampilan; `OFF` nonaktif/historis\n### v2.5 — PDF A4 dan F4\n\nExport PDF sekarang menyediakan dua pilihan ukuran kertas: **A4 landscape** dan **F4 landscape**. Pembagian tanggal disesuaikan dengan lebar masing-masing kertas agar font dan border tetap terbaca.\n\n- A4: 8 tanggal per blok horizontal.\n- F4: 10 tanggal per blok horizontal.\n- Tinggi baris: 10 mm.\n- Border tabel dibuat lebih tegas.\n- Jumlah halaman menyesuaikan jumlah tanggal dan karyawan.\n
+
+### v2.8 — Keputusan tampilan bulan tanpa jadwal
+
+Bulan tanpa record `employee_schedules` tetap harus menampilkan seluruh karyawan aktif yang sesuai filter, dengan sel kosong/`-` sebagai tanda belum ada jadwal. Record kosong tidak dibuat ke database. Implementasi berikutnya akan menggabungkan master `employees` dengan record jadwal pada rentang tanggal yang dipilih.
 
 ### v2.7 — Admin Tambah Jadwal
 
