@@ -1,7 +1,7 @@
 # Dokumentasi Perubahan dan Audit Web UI — Jadwal Karyawan
 
 **Status:** Living Document  
-**Versi:** 1.1  
+**Versi:** 1.2  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Branch produksi:** `main`  
@@ -185,6 +185,58 @@ Saat filter Departemen HATCHERY digunakan, Deta dan Alda akan tampil sebagai kar
 
 Detail pembagian JOB internal HATCHERY ditunda sampai database stabil.
 
+---
+
+### 4.4 Penambahan JOB Master Kandang
+
+**Status:** Production / Database aktif  
+**Tanggal:** 2026-10-07
+
+#### Perubahan
+
+JOB master `Kandang` ditambahkan ke Departemen FARM.
+
+Hasil verifikasi database:
+
+- JOB `Kandang` tersedia;
+- Departemen = FARM;
+- status aktif = true;
+- ID JOB = 10.
+
+#### Batas perubahan
+
+Penambahan ini **belum memasukkan karyawan** dari daftar Kandang ke tabel `employees`.
+
+Daftar sumber yang diterima berisi 17 nama:
+
+1. HERI
+2. REHAN
+3. ANDRE YUNUS MENO
+4. JUMADI
+5. AGUS DWI LAKSONO
+6. RICO KRISMUNTO
+7. RIDWAN
+8. FERRY GUNAWAN
+9. GANDI SEPTIO
+10. ADITIA SRI ANDANA
+11. FEBRI DWI SAPUTRA
+12. ELVIS NUR HIDAYAT
+13. ADITIA
+14. URAY IMAY INNUDDIN
+15. JEPRI APO
+16. TEGUH ARI WIBOWO
+17. MARNO
+
+Nama-nama tersebut akan dimasukkan **satu per satu** sesuai arahan pengguna.
+
+#### Keputusan
+
+Penambahan master JOB dilakukan lebih dahulu agar setiap karyawan yang nanti dimasukkan sudah memiliki referensi JOB yang jelas.
+
+Jadwal Oktober pada gambar **belum dimasukkan** pada tahap ini. Data master karyawan dan data jadwal sengaja dipisahkan untuk mencegah kesalahan pemasukan data.
+
+---
+
 ## 5. Kondisi Production Saat Ini
 
 ### Web UI
@@ -202,7 +254,7 @@ Web UI Production:
 
 PostgreSQL/Supabase tetap menjadi sumber data utama.
 
-Tidak ada perubahan isi data jadwal yang dilakukan sebagai bagian dari dua perubahan di atas.
+Perubahan terakhir hanya menambahkan master JOB `Kandang`. Tidak ada perubahan pada 401 record jadwal yang sudah ada.
 
 ---
 
@@ -217,15 +269,19 @@ Bagian yang perlu dijaga konsistensinya:
 - sumber daftar Departemen;
 - status deployment;
 - fitur yang sudah Production;
-- fitur yang masih Preview atau belum dibuat.
+- fitur yang masih Preview atau belum dibuat;
+- jumlah master JOB;
+- status pemasukan karyawan FARM.
 
-### Temuan audit
+### Hasil audit
 
-Dokumentasi progres sebelumnya masih menyebut bahwa fallback data demo digunakan untuk kebutuhan pengembangan.
+Dokumentasi progres diperbarui dari versi 1.3 menjadi versi 1.4 untuk mencatat:
 
-Pernyataan tersebut **tidak lagi sesuai dengan kondisi Production** setelah penghapusan data demo.
-
-Karena itu, bagian tersebut harus dianggap usang dan diperbarui agar tidak menyesatkan pembaca dokumentasi.
+- jumlah JOB master menjadi 10;
+- JOB `Kandang` berada pada Departemen FARM;
+- 17 nama Kandang sudah diverifikasi dari sumber yang diberikan;
+- 17 nama tersebut belum dimasukkan sebagai karyawan;
+- proses pemasukan karyawan FARM dilakukan bertahap satu per satu.
 
 ---
 
@@ -237,7 +293,7 @@ Perubahan yang tercatat di dokumen ini **tidak berarti** bahwa fitur berikut sud
 - authentication;
 - CRUD jadwal;
 - pengelolaan master karyawan;
-- pengelolaan JOB;
+- pengelolaan JOB melalui Web UI;
 - pengelolaan kode jadwal;
 - absensi;
 - laporan;
@@ -305,6 +361,12 @@ Setelah sebuah fitur diperbaiki, ditambahkan, dihilangkan, atau sebuah audit men
 **Keputusan:** disetujui dan diterapkan pada database.
 
 Untuk tahap awal, seluruh karyawan Departemen HATCHERY menggunakan satu JOB master, yaitu HATCHERY. Penugasan harian lintas pekerjaan tetap dicatat sebagai assignment pada jadwal dan tidak memindahkan identitas master karyawan ke Departemen FARM.
+
+### Keputusan D-005 — Penambahan data FARM secara bertahap
+
+**Keputusan:** disetujui dan sedang diterapkan.
+
+Data karyawan FARM dari sumber baru dimasukkan secara bertahap per JOB dan per karyawan. JOB master harus tersedia lebih dahulu, kemudian setiap karyawan diverifikasi sebelum dimasukkan. Jadwal sumber tidak otomatis dimasukkan bersamaan dengan master karyawan.
 
 ---
 
