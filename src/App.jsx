@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase, supabaseConfigured } from './lib/supabase'
 import jsPDF from 'jspdf'
-import * as XLSX from 'xlsx'
+import * as XLSX from 'xlsx-js-style'
 
 const DAYS = ['MG', 'SN', 'SL', 'RB', 'KM', 'JM', 'SB']
 const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
@@ -74,70 +74,118 @@ function buildExportMatrix(rows, dateRange, includeJob) {
 function exportExcel(rows, dateRange, department, includeJob, startDate, endDate) {
   if (!rows.length || !dateRange.length) return
 
-  const title = [['Jadwal Karyawan'], [`Departemen: ${department}`], [`Periode: ${startDate} s/d ${endDate}`], []]
+  const title = [
+    ['Jadwal Karyawan'],
+    ['Departemen: ' + department],
+    ['Periode: ' + startDate + ' s/d ' + endDate],
+    [],
+  ]
   const matrix = [...title, ...buildExportMatrix(rows, dateRange, includeJob)]
   const worksheet = XLSX.utils.aoa_to_sheet(matrix)
-  const dataStartRow = title.length + 1
+  const headerRow = title.length
+  const lastColumn = (includeJob ? 2 : 1) + dateRange.length
+  const lastColumnLetter = XLSX.utils.encode_col(lastColumn - 1)
+  const border = {
+    top: { style: 'thin', color: { rgb: 'D7DEE9' } },
+    bottom: { style: 'thin', color: { rgb: 'D7DEE9' } },
+    left: { style: 'thin', color: { rgb: 'D7DEE9' } },
+    right: { style: 'thin', color: { rgb: 'D7DEE9' } },
+  }
+  const codeFill = { P: 'C9F2CF', S: 'CBE2FB', M: 'FFE9A8', L: 'FFD0D0', CT: 'DED0FF' }
 
-  worksheet['!freeze'] = { xSplit: includeJob ? 2 : 1, ySplit: dataStartRow }
-  worksheet['!cols'] = [
-    ...(includeJob ? [{ wch: 18 }] : []),
-    { wch: 28 },
-    ...dateRange.map(() => ({ wch: 9 })),
+  worksheet['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: lastColumn - 1 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: lastColumn - 1 } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: lastColumn - 1 } },
   ]
+  worksheet['!cols'] = [
+    ...(includeJob ? [{ wch: 22 }] : []),
+    { wch: 30 },
+    ...dateRange.map(() => ({ wch: 10 })),
+  ]
+  worksheet['!rows'] = [
+    { hpt: 24 }, { hpt: 20 }, { hpt: 20 }, { hpt: 8 }, { hpt: 28 },
+    ...rows.map(() => ({ hpt: 22 })),
+  ]
+  worksheet['!freeze'] = { xSplit: includeJob ? 2 : 1, ySplit: headerRow }
+  worksheet['!autofilter'] = { ref: 'A' + (headerRow + 1) + ':' + lastColumnLetter + (headerRow + rows.length + 1) }
+  worksheet['!pageSetup'] = { orientation: 'landscape', paperSize: 8, fitToWidth: 1, fitToHeight: 0 }
+  worksheet['!printHeader'] = [(headerRow + 1) + ':' + (headerRow + 1)]
+
+  const titleStyle = {
+    font: { name: 'Calibri', sz: 16, bold: true, color: { rgb: '142033' } },
+    alignment: { horizontal: 'left', vertical: 'center' },
+  }
+  const metaStyle = {
+    font: { name: 'Calibri', sz: 11, color: { rgb: '68758A' } },
+    alignment: { horizontal: 'left', vertical: 'center' },
+  }
+  const headerStyle = {
+    font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: '142033' } },
+    fill: { patternType: 'solid', fgColor: { rgb: 'EEF3F8' } },
+    alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+    border,
+  }
+  const nameStyle = {
+    font: { name: 'Calibri', sz: 10, color: { rgb: '142033' } },
+    alignment: { horizontal: 'left', vertical: 'center' },
+    border,
+  }
+  const codeStyle = {
+    font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: '142033' } },
+    alignment: { horizontal: 'center', vertical: 'center' },
+    border,
+  }
+
+  worksheet.A1.s = titleStyle
+  worksheet.A2.s = metaStyle
+  worksheet.A3.s = metaStyle
+
+  for (let col = 0; col < lastColumn; col += 1) {
+    const cell = worksheet[XLSX.utils.encode_cell({ r: headerRow, c: col })]
+    if (cell) cell.s = headerStyle
+  }
+
+  for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
+    const sheetRow = headerRow + 1 + rowIndex
+    for (let col = 0; col < lastColumn; col += 1) {
+      const cell = worksheet[XLSX.utils.encode_cell({ r: sheetRow, c: col })]
+      if (!cell) continue
+      const isCodeCell = col >= (includeJob ? 2 : 1)
+      if (isCodeCell) {
+        const code = String(cell.v || '')
+        cell.s = {
+          ...codeStyle,
+          fill: codeFill[code] ? { patternType: 'solid', fgColor: { rgb: codeFill[code] } } : undefined,
+        }
+      } else {
+        cell.s = nameStyle
+      }
+    }
+  }
 
   const workbook = XLSX.utils.book_new()
+  workbook.Props = { Title: 'Jadwal Karyawan', Subject: 'Jadwal ' + department, Author: 'Jadwal Karyawan Web UI' }
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Jadwal')
-  XLSX.writeFile(workbook, `jadwal-karyawan-${startDate}-${endDate}.xlsx`)
+  XLSX.writeFile(workbook, 'jadwal-karyawan-' + startDate + '-' + endDate + '.xlsx')
 }
 
 function exportPdf(rows, dateRange, department, includeJob, startDate, endDate) {
   if (!rows.length || !dateRange.length) return
 
   const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3' })
-  const margin = 8
+  const margin = 10
   const pageWidth = pdf.internal.pageSize.getWidth()
   const pageHeight = pdf.internal.pageSize.getHeight()
-  const titleHeight = 16
-  const headerHeight = 9
-  const rowHeight = 7
-  const nameWidth = includeJob ? 52 : 62
-  const jobWidth = includeJob ? 22 : 0
-  const dateWidth = Math.max(7, Math.min(11, (pageWidth - (margin * 2) - nameWidth - jobWidth) / dateRange.length))
-  const tableWidth = nameWidth + jobWidth + (dateWidth * dateRange.length)
-  const left = (pageWidth - tableWidth) / 2
-
-  const drawHeader = () => {
-    pdf.setFontSize(14)
-    pdf.setFont(undefined, 'bold')
-    pdf.text('Jadwal Karyawan', margin, margin + 2)
-    pdf.setFontSize(8)
-    pdf.setFont(undefined, 'normal')
-    pdf.text(`Departemen: ${department} | Periode: ${startDate} s/d ${endDate}`, margin, margin + 7)
-  }
-
-  const drawTableHeader = (y) => {
-    let x = left
-    pdf.setFillColor(239, 244, 250)
-    pdf.rect(x, y, tableWidth, headerHeight, 'F')
-    pdf.setFontSize(5.5)
-    pdf.setFont(undefined, 'bold')
-    if (includeJob) {
-      pdf.rect(x, y, jobWidth, headerHeight)
-      pdf.text('JOB', x + 1.5, y + 5.8)
-      x += jobWidth
-    }
-    pdf.rect(x, y, nameWidth, headerHeight)
-    pdf.text('Nama Karyawan', x + 1.5, y + 5.8)
-    x += nameWidth
-    for (const item of dateRange) {
-      pdf.rect(x, y, dateWidth, headerHeight)
-      pdf.text(String(item.day), x + dateWidth / 2, y + 3.8, { align: 'center' })
-      pdf.setFontSize(4.3)
-      pdf.text(item.dayName, x + dateWidth / 2, y + 7.2, { align: 'center' })
-      pdf.setFontSize(5.5)
-      x += dateWidth
-    }
+  const titleHeight = 18
+  const headerHeight = 12
+  const rowHeight = 8.5
+  const nameWidth = includeJob ? 68 : 76
+  const jobWidth = includeJob ? 28 : 0
+  const datesPerPage = 16
+  const dateChunks = []
+  for (let index = 0; index < dateRange.length; index += datesPerPage) {
+    dateChunks.push(dateRange.slice(index, index + datesPerPage))
   }
 
   const codeFill = {
@@ -148,52 +196,99 @@ function exportPdf(rows, dateRange, department, includeJob, startDate, endDate) 
     CT: [222, 208, 255],
   }
 
-  let y = margin + titleHeight
-  drawHeader()
-  drawTableHeader(y)
-  y += headerHeight
-
-  pdf.setFontSize(5.5)
-  for (const row of rows) {
-    if (y + rowHeight > pageHeight - margin) {
-      pdf.addPage('a3', 'landscape')
-      y = margin + titleHeight
-      drawHeader()
-      drawTableHeader(y)
-      y += headerHeight
-    }
-
-    let x = left
-    pdf.setFont(undefined, 'normal')
-    if (includeJob) {
-      pdf.rect(x, y, jobWidth, rowHeight)
-      pdf.text(String(row.job || ''), x + 1.5, y + 4.8, { maxWidth: jobWidth - 3 })
-      x += jobWidth
-    }
-
-    pdf.rect(x, y, nameWidth, rowHeight)
-    pdf.text(String(row.name || ''), x + 1.5, y + 4.8, { maxWidth: nameWidth - 3 })
-    x += nameWidth
-
-    for (const item of dateRange) {
-      const code = row.codes?.[item.value] || ''
-      const fill = codeFill[code]
-      if (fill) {
-        pdf.setFillColor(...fill)
-        pdf.rect(x, y, dateWidth, rowHeight, 'F')
-      }
-      pdf.rect(x, y, dateWidth, rowHeight)
-      if (code) {
-        pdf.setFont(undefined, 'bold')
-        pdf.text(code, x + dateWidth / 2, y + 4.8, { align: 'center' })
-      }
-      x += dateWidth
-    }
-
-    y += rowHeight
+  const rowsPerPage = Math.max(1, Math.floor((pageHeight - (margin * 2) - titleHeight - headerHeight - 14) / rowHeight))
+  const rowChunks = []
+  for (let index = 0; index < rows.length; index += rowsPerPage) {
+    rowChunks.push(rows.slice(index, index + rowsPerPage))
   }
 
-  pdf.save(`jadwal-karyawan-${startDate}-${endDate}.pdf`)
+  const totalPages = dateChunks.length * rowChunks.length
+  let pageNumber = 0
+
+  for (const dateChunk of dateChunks) {
+    const dateWidth = Math.max(14, Math.min(18, (pageWidth - (margin * 2) - nameWidth - jobWidth) / dateChunk.length))
+    const tableWidth = nameWidth + jobWidth + (dateWidth * dateChunk.length)
+    const left = (pageWidth - tableWidth) / 2
+
+    for (const rowChunk of rowChunks) {
+      if (pageNumber > 0) pdf.addPage('a3', 'landscape')
+      pageNumber += 1
+
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(16)
+      pdf.text('Jadwal Karyawan', margin, margin + 3)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(9)
+      pdf.text('Departemen: ' + department + ' | Periode: ' + startDate + ' s/d ' + endDate, margin, margin + 10)
+      pdf.text('Tanggal ' + dateChunk[0].day + '–' + dateChunk[dateChunk.length - 1].day + ' | Halaman ' + pageNumber + '/' + totalPages, pageWidth - margin, margin + 10, { align: 'right' })
+
+      let y = margin + titleHeight
+      let x = left
+      pdf.setFillColor(239, 244, 250)
+      pdf.rect(x, y, tableWidth, headerHeight, 'F')
+      pdf.setDrawColor(210, 218, 228)
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(7.5)
+
+      if (includeJob) {
+        pdf.rect(x, y, jobWidth, headerHeight)
+        pdf.text('JOB', x + jobWidth / 2, y + 7.5, { align: 'center' })
+        x += jobWidth
+      }
+
+      pdf.rect(x, y, nameWidth, headerHeight)
+      pdf.text('Nama Karyawan', x + nameWidth / 2, y + 7.5, { align: 'center' })
+      x += nameWidth
+
+      for (const item of dateChunk) {
+        pdf.rect(x, y, dateWidth, headerHeight)
+        pdf.text(String(item.day), x + dateWidth / 2, y + 5.2, { align: 'center' })
+        pdf.setFontSize(5.8)
+        pdf.text(item.dayName, x + dateWidth / 2, y + 9.2, { align: 'center' })
+        pdf.setFontSize(7.5)
+        x += dateWidth
+      }
+
+      y += headerHeight
+      pdf.setFontSize(7.2)
+
+      for (const row of rowChunk) {
+        x = left
+        pdf.setFont('helvetica', 'normal')
+        pdf.setTextColor(20, 32, 51)
+
+        if (includeJob) {
+          pdf.rect(x, y, jobWidth, rowHeight)
+          pdf.text(String(row.job || ''), x + 2, y + 5.8, { maxWidth: jobWidth - 4 })
+          x += jobWidth
+        }
+
+        pdf.rect(x, y, nameWidth, rowHeight)
+        pdf.text(String(row.name || ''), x + 2, y + 5.8, { maxWidth: nameWidth - 4 })
+        x += nameWidth
+
+        for (const item of dateChunk) {
+          const code = row.codes?.[item.value] || ''
+          const fill = codeFill[code]
+          if (fill) {
+            pdf.setFillColor(...fill)
+            pdf.rect(x, y, dateWidth, rowHeight, 'F')
+          }
+          pdf.rect(x, y, dateWidth, rowHeight)
+          if (code) {
+            pdf.setFont('helvetica', 'bold')
+            pdf.setFontSize(code.length > 1 ? 6.8 : 7.8)
+            pdf.text(code, x + dateWidth / 2, y + 5.8, { align: 'center' })
+            pdf.setFontSize(7.2)
+          }
+          x += dateWidth
+        }
+        y += rowHeight
+      }
+    }
+  }
+
+  pdf.save('jadwal-karyawan-' + startDate + '-' + endDate + '.pdf')
 }
 
 function App() {
