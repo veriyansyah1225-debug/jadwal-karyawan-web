@@ -1,7 +1,7 @@
 # Dokumentasi Progres Pengembangan Web UI — Jadwal Karyawan
 
 **Status:** Draft / Living Document  
-**Versi:** 1.9  
+**Versi:** 2.0  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Database:** `database-jadwal-karyawan` / PostgreSQL 17 / Supabase
@@ -29,16 +29,16 @@ Komponen yang tersedia saat Web UI mulai dikembangkan:
 | Komponen | Kondisi |
 |---|---:|
 | Departments | 2 |
-| JOB | 10 |
-| Karyawan | 47 |
+| JOB | 11 |
+| Karyawan | 59 |
 | Kode jadwal | 6 |
-| Jadwal Oktober 2026 | 470 record saat ini |
+| Jadwal Oktober 2026 | 518 record saat ini |
 | Data absensi | 0 record |
 | View `v_jadwal_karyawan` | Tersedia |
 
 Database PostgreSQL/Supabase menjadi sumber data utama Web UI.
 
-**Catatan master data terbaru:** JOB `Kandang` tersedia pada Departemen FARM. Seluruh **17 nama Kandang** dari daftar yang diberikan sudah dimasukkan ke master `employees` sebagai karyawan FARM dengan JOB Kandang. Jadwal Oktober JOB Kandang sudah dikoreksi berdasarkan tabel sumber terbaru: 68 record kode L dan 1 record CT untuk RIDWAN pada 1 Oktober 2026.
+**Catatan master data terbaru:** JOB `Kandang` tersedia pada Departemen FARM dan seluruh 17 nama Kandang sudah dimasukkan. JOB `IB` juga sudah ditambahkan pada Departemen FARM bersama 12 karyawan baru. Jadwal Oktober JOB Kandang sudah dikoreksi berdasarkan tabel sumber terbaru: 68 record kode L dan 1 record CT untuk RIDWAN pada 1 Oktober 2026. Untuk JOB IB, 12 karyawan masing-masing memiliki 4 record kode L pada 7, 14, 21, dan 28 Oktober 2026.
 
 ---
 
@@ -406,13 +406,43 @@ Koreksi ini hanya mengubah jadwal Oktober 2026 JOB Kandang. Data jadwal JOB lain
 
 **Catatan master nama:** tabel terbaru memiliki perbedaan ejaan pada dua nama dibanding master saat ini, yaitu RICO KRISMUNANTO vs RICO KRISMUNTO dan URAY IMANNUDDIN vs URAY IMAY INNUDDIN. Koreksi kali ini menggunakan employee master yang sudah ada dan belum mengubah ejaan master tersebut agar koreksi jadwal tidak sekaligus mengubah master tanpa keputusan terpisah.
 
-### 11.5 Filter JOB
+### 11.5 Penambahan JOB IB dan Karyawan IB
+
+Pada 2026-10-07, sumber jadwal baru menunjukkan JOB `IB` dengan 12 karyawan. Berdasarkan struktur awal project yang juga menggunakan IB sebagai contoh JOB, data tersebut dimasukkan sebagai JOB master Departemen FARM.
+
+Daftar karyawan:
+
+- KRISTIANI YONI
+- M IKLAS RAMADHAN
+- HONGFUNGLOY
+- MARDIANA
+- ROMADHAN
+- HATIP
+- HALIZAH
+- FAREL
+- NAJWAN NAUFAL NURRIFQI
+- JILA FITRI
+- NOPRIANTO
+- ALDO
+
+Jadwal Oktober 2026 yang diterima pada sumber adalah kode `L` pada tanggal 7, 14, 21, dan 28 untuk setiap karyawan. Hasil verifikasi:
+
+- JOB IB tersedia pada Departemen FARM;
+- 12 karyawan IB aktif;
+- 48 record jadwal Oktober 2026 untuk IB;
+- seluruh 48 record menggunakan kode `L`;
+- setiap karyawan memiliki 4 record jadwal pada tanggal 7, 14, 21, dan 28;
+- tidak ditemukan duplikasi pasangan employee_id dan tanggal;
+- total karyawan aktif menjadi 59;
+- total `employee_schedules` menjadi 518.
+
+### 11.6 Filter JOB
 
 Saat ini sumber daftar JOB dapat bergantung pada data yang sedang dimuat.
 
 Perlu dipertimbangkan apakah master JOB sebaiknya dimuat terpisah agar filter lebih konsisten.
 
-### 11.6 Data Demo
+### 11.7 Data Demo
 
 Fallback data demo **sudah dihapus** dari Web UI Production.
 
@@ -420,7 +450,7 @@ Jika Supabase belum dikonfigurasi atau query Supabase gagal, aplikasi menampilka
 
 Keputusan ini didokumentasikan pada `docs/Dokumentasi_Perubahan_dan_Audit_Web_UI.md`.
 
-### 11.7 Sumber Departemen
+### 11.8 Sumber Departemen
 
 Dropdown Departemen pada Web UI Production sekarang membaca `public.departments` melalui Supabase Client.
 
@@ -428,7 +458,7 @@ Query hanya mengambil departemen aktif (`aktif = true`) dan mengurutkan berdasar
 
 Daftar FARM/HATCHERY tidak lagi ditulis sebagai opsi hardcode pada Web UI.
 
-### 11.8 Authentication dan RLS
+### 11.9 Authentication dan RLS
 
 RLS sudah diaktifkan pada tabel utama database, tetapi policy final untuk aplikasi belum ditentukan.
 
@@ -626,6 +656,7 @@ Fokus saat ini tetap pada penyelesaian dan stabilisasi **master data + Web UI v1
 | v1.7 | Input libur Kandang Oktober 2026 dan standarisasi L menggantikan OFF | Selesai |
 | v1.8 | Dokumentasi perubahan desain: L ditetapkan sebagai satu-satunya kode Libur pada database dan Web UI | Selesai |
 | v1.9 | Koreksi jadwal Kandang Oktober 2026 berdasarkan tabel sumber terbaru | Selesai |
+| v2.0 | Penambahan JOB IB, 12 karyawan IB, dan 48 jadwal L Oktober 2026 | Selesai |
 
 ---
 
@@ -655,12 +686,13 @@ Perubahan Production terbaru dan keputusan audit dicatat pada `docs/Dokumentasi_
 ### Baseline Master Data Terbaru
 
 - Departemen aktif: 2
-- JOB master: 10, termasuk JOB HATCHERY pada Departemen HATCHERY dan JOB Kandang pada Departemen FARM
-- Karyawan: 47
+- JOB master: 11, termasuk JOB HATCHERY pada Departemen HATCHERY, JOB Kandang pada Departemen FARM, dan JOB IB pada Departemen FARM
+- Karyawan: 59
 - Seluruh 15 karyawan HATCHERY menggunakan JOB master HATCHERY
 - Deta dan Alda berada di HATCHERY dan tetap memiliki assignment harian seperti KANTIN, LONDRY, atau OFF
-- Total employee_schedules: 470
+- Total employee_schedules: 518
 - Tidak ditemukan duplikasi pasangan employee_id dan tanggal pada jadwal
 - Daftar Kandang: 17 nama dari sumber; seluruh 17 sudah dimasukkan ke master employees
 - Jadwal Kandang Oktober 2026: 68 record kode L + 1 record CT
+- Jadwal IB Oktober 2026: 48 record kode L untuk 12 karyawan
 - Standar kode libur: `L` saja untuk input dan tampilan; `OFF` nonaktif/historis
