@@ -1,7 +1,7 @@
 # Dokumentasi Progres Pengembangan Web UI — Jadwal Karyawan
 
 **Status:** Draft / Living Document  
-**Versi:** 1.8  
+**Versi:** 1.9  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Database:** `database-jadwal-karyawan` / PostgreSQL 17 / Supabase
@@ -32,13 +32,13 @@ Komponen yang tersedia saat Web UI mulai dikembangkan:
 | JOB | 10 |
 | Karyawan | 47 |
 | Kode jadwal | 6 |
-| Jadwal Oktober 2026 | 518 record saat ini |
+| Jadwal Oktober 2026 | 470 record saat ini |
 | Data absensi | 0 record |
 | View `v_jadwal_karyawan` | Tersedia |
 
 Database PostgreSQL/Supabase menjadi sumber data utama Web UI.
 
-**Catatan master data terbaru:** JOB `Kandang` tersedia pada Departemen FARM. Seluruh **17 nama Kandang** dari daftar yang diberikan sudah dimasukkan ke master `employees` sebagai karyawan FARM dengan JOB Kandang. Jadwal Oktober JOB Kandang dari gambar sudah dimasukkan sebagai kode L; tanda OFF dinormalisasi menjadi L.
+**Catatan master data terbaru:** JOB `Kandang` tersedia pada Departemen FARM. Seluruh **17 nama Kandang** dari daftar yang diberikan sudah dimasukkan ke master `employees` sebagai karyawan FARM dengan JOB Kandang. Jadwal Oktober JOB Kandang sudah dikoreksi berdasarkan tabel sumber terbaru: 68 record kode L dan 1 record CT untuk RIDWAN pada 1 Oktober 2026.
 
 ---
 
@@ -361,8 +361,9 @@ Hasil verifikasi:
 - seluruh 17 karyawan memiliki JOB master Kandang;
 - HERI = employee_id 31;
 - karyawan Kandang terakhir yang ditambahkan memperoleh employee_id 47;
-- 115 record libur kode L Oktober 2026 dimasukkan untuk 17 karyawan Kandang;
-- total `employee_schedules` saat ini = 518;
+- 68 record libur kode L Oktober 2026 dimasukkan untuk 17 karyawan Kandang;
+- 1 record CT untuk RIDWAN pada 1 Oktober 2026;
+- total `employee_schedules` saat ini = 470;
 - tidak ditemukan duplikasi pasangan employee_id dan tanggal.
 
 ### 11.3 Perubahan Desain Kode Libur: L sebagai Satu-satunya Kode Libur
@@ -386,13 +387,32 @@ Perubahan desain yang sudah diterapkan:
 
 Kode `CT` tetap dipertahankan sebagai Cuti karena pada sumber Kandang terdapat tanda `CT` yang berbeda makna dari libur.
 
-### 11.4 Filter JOB
+### 11.4 Koreksi Jadwal Kandang Oktober 2026
+
+Pada 2026-10-07, tabel sumber terbaru menunjukkan bahwa pemasukan jadwal Kandang sebelumnya tidak sesuai dengan data sumber.
+
+Koreksi dilakukan dengan mengganti seluruh record jadwal Kandang untuk Oktober 2026 berdasarkan tabel terbaru, bukan menambahkan data di atas data lama.
+
+Hasil koreksi:
+
+- 17 karyawan Kandang tetap menggunakan master yang sama;
+- 68 record kode L dimasukkan sesuai tanggal pada tabel terbaru;
+- 1 record CT untuk RIDWAN pada 1 Oktober 2026 dipertahankan sesuai sumber;
+- total record jadwal Kandang Oktober 2026 sekarang = 69;
+- sebelum koreksi terdapat 117 record Kandang Oktober 2026 yang semuanya tercatat sebagai L;
+- setelah koreksi tidak ada duplikasi pasangan employee_id dan tanggal.
+
+Koreksi ini hanya mengubah jadwal Oktober 2026 JOB Kandang. Data jadwal JOB lain tidak diubah.
+
+**Catatan master nama:** tabel terbaru memiliki perbedaan ejaan pada dua nama dibanding master saat ini, yaitu RICO KRISMUNANTO vs RICO KRISMUNTO dan URAY IMANNUDDIN vs URAY IMAY INNUDDIN. Koreksi kali ini menggunakan employee master yang sudah ada dan belum mengubah ejaan master tersebut agar koreksi jadwal tidak sekaligus mengubah master tanpa keputusan terpisah.
+
+### 11.5 Filter JOB
 
 Saat ini sumber daftar JOB dapat bergantung pada data yang sedang dimuat.
 
 Perlu dipertimbangkan apakah master JOB sebaiknya dimuat terpisah agar filter lebih konsisten.
 
-### 11.5 Data Demo
+### 11.6 Data Demo
 
 Fallback data demo **sudah dihapus** dari Web UI Production.
 
@@ -400,7 +420,7 @@ Jika Supabase belum dikonfigurasi atau query Supabase gagal, aplikasi menampilka
 
 Keputusan ini didokumentasikan pada `docs/Dokumentasi_Perubahan_dan_Audit_Web_UI.md`.
 
-### 11.6 Sumber Departemen
+### 11.7 Sumber Departemen
 
 Dropdown Departemen pada Web UI Production sekarang membaca `public.departments` melalui Supabase Client.
 
@@ -408,7 +428,7 @@ Query hanya mengambil departemen aktif (`aktif = true`) dan mengurutkan berdasar
 
 Daftar FARM/HATCHERY tidak lagi ditulis sebagai opsi hardcode pada Web UI.
 
-### 11.7 Authentication dan RLS
+### 11.8 Authentication dan RLS
 
 RLS sudah diaktifkan pada tabel utama database, tetapi policy final untuk aplikasi belum ditentukan.
 
@@ -558,7 +578,6 @@ Urutan pengembangan yang disarankan:
 
 2. **Validasi aturan bisnis**
    - JOB master vs assignment;
-   - aturan schedule code lainnya;
    - aturan schedule code;
    - validasi data Oktober 2026.
 
@@ -606,6 +625,7 @@ Fokus saat ini tetap pada penyelesaian dan stabilisasi **master data + Web UI v1
 | v1.6 | Penambahan seluruh 17 karyawan FARM JOB Kandang | Selesai |
 | v1.7 | Input libur Kandang Oktober 2026 dan standarisasi L menggantikan OFF | Selesai |
 | v1.8 | Dokumentasi perubahan desain: L ditetapkan sebagai satu-satunya kode Libur pada database dan Web UI | Selesai |
+| v1.9 | Koreksi jadwal Kandang Oktober 2026 berdasarkan tabel sumber terbaru | Selesai |
 
 ---
 
@@ -639,8 +659,8 @@ Perubahan Production terbaru dan keputusan audit dicatat pada `docs/Dokumentasi_
 - Karyawan: 47
 - Seluruh 15 karyawan HATCHERY menggunakan JOB master HATCHERY
 - Deta dan Alda berada di HATCHERY dan tetap memiliki assignment harian seperti KANTIN, LONDRY, atau OFF
-- Total employee_schedules: 518
+- Total employee_schedules: 470
 - Tidak ditemukan duplikasi pasangan employee_id dan tanggal pada jadwal
 - Daftar Kandang: 17 nama dari sumber; seluruh 17 sudah dimasukkan ke master employees
-- Jadwal libur Kandang Oktober 2026: 115 record kode L
+- Jadwal Kandang Oktober 2026: 68 record kode L + 1 record CT
 - Standar kode libur: `L` saja untuk input dan tampilan; `OFF` nonaktif/historis
