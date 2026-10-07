@@ -335,9 +335,7 @@ function App() {
   const [employeeMasterSearch, setEmployeeMasterSearch] = useState('')
   const [employeeMasterStatus, setEmployeeMasterStatus] = useState('aktif')
   const [employeeMasterDepartment, setEmployeeMasterDepartment] = useState('')
-  const [employeeMasterJobs, setEmployeeMasterJobs] = useState([])
-  const [employeeMasterJobFilterOpen, setEmployeeMasterJobFilterOpen] = useState(false)
-  const [employeeMasterJobSearch, setEmployeeMasterJobSearch] = useState('')
+  const [employeeMasterJob, setEmployeeMasterJob] = useState('')
   const [employeeFormOpen, setEmployeeFormOpen] = useState(false)
   const [employeeFormEditMode, setEmployeeFormEditMode] = useState(false)
   const [employeeFormId, setEmployeeFormId] = useState('')
@@ -979,9 +977,16 @@ function App() {
               </div>
               <div>
                 <label>Departemen</label>
-                <select value={employeeMasterDepartment} onChange={(e) => setEmployeeMasterDepartment(e.target.value)}>
+                <select value={employeeMasterDepartment} onChange={(e) => { setEmployeeMasterDepartment(e.target.value); setEmployeeMasterJob('') }}>
                   <option value="">Semua</option>
                   {masterDepartments.map((item) => <option key={item.id} value={item.id}>{item.nama_departemen}</option>)}
+                </select>
+              </div>
+              <div>
+                <label>JOB</label>
+                <select value={employeeMasterJob} onChange={(e) => setEmployeeMasterJob(e.target.value)}>
+                  <option value="">Semua JOB</option>
+                  {employeeMasterFilterJobs.map((item) => <option key={item.id} value={item.id}>{item.nama_job}</option>)}
                 </select>
               </div>
             </div>
@@ -995,32 +1000,7 @@ function App() {
                     <th>Kode</th>
                     <th className="employee-master-name">Nama Karyawan</th>
                     <th>Departemen</th>
-                    <th className="employee-job-filter-header">
-                      <div className="excel-filter">
-                        <button type="button" className={`excel-filter-trigger${employeeMasterJobs.length ? ' active' : ''}`} onClick={() => setEmployeeMasterJobFilterOpen((open) => !open)}>
-                          <span>JOB{employeeMasterJobs.length ? ` (${employeeMasterJobs.length})` : ''}</span><span className="excel-filter-icon">▾</span>
-                        </button>
-                        {employeeMasterJobFilterOpen && (
-                          <div className="excel-filter-menu">
-                            <div className="excel-filter-search"><input value={employeeMasterJobSearch} onChange={(e) => setEmployeeMasterJobSearch(e.target.value)} placeholder="Cari JOB..." autoFocus /></div>
-                            <div className="excel-filter-actions">
-                              <button type="button" onClick={selectAllEmployeeMasterJobs}>Pilih Semua</button>
-                              <button type="button" onClick={clearEmployeeMasterJobs}>Hapus Semua</button>
-                            </div>
-                            <div className="excel-filter-list">
-                              {filteredEmployeeMasterJobOptions.length === 0 && <div className="excel-filter-empty">JOB tidak ditemukan.</div>}
-                              {filteredEmployeeMasterJobOptions.map((item) => (
-                                <label key={item} className="excel-filter-option">
-                                  <input type="checkbox" checked={employeeMasterJobs.includes(item)} onChange={() => toggleEmployeeMasterJob(item)} />
-                                  <span>{item}</span>
-                                </label>
-                              ))}
-                            </div>
-                            <div className="excel-filter-footer">{employeeMasterJobs.length ? `${employeeMasterJobs.length} JOB dipilih` : 'Semua JOB ditampilkan'}</div>
-                          </div>
-                        )}
-                      </div>
-                    </th>
+                    <th>JOB</th>
                     <th>Tanggal Masuk</th>
                     <th>Tanggal Berhenti</th>
                     <th>Status</th>
