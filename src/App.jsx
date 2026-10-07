@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase, supabaseConfigured } from './lib/supabase'
+import jsPDF from 'jspdf'
+import * as XLSX from 'xlsx'
 
 const DAYS = ['MG', 'SN', 'SL', 'RB', 'KM', 'JM', 'SB']
 const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
@@ -50,6 +52,148 @@ function getDateRange(startDate, endDate) {
   }
 
   return dates
+}
+
+
+function buildExportMatrix(rows, dateRange, includeJob) {
+  const header = [
+    ...(includeJob ? ['JOB'] : []),
+    'Nama Karyawan',
+    ...dateRange.map(({ day, dayName }) => `${day} ${dayName}`),
+  ]
+
+  const body = rows.map((row) => [
+    ...(includeJob ? [row.job || ''] : []),
+    row.name,
+    ...dateRange.map(({ value }) => row.codes?.[value] || ''),
+  ])
+
+  return [header, ...body]
+}
+
+function exportExcel(rows, dateRange, department, includeJob, startDate, endDate) {
+  if (!rows.length || !dateRange.length) return
+
+  const title = [['Jadwal Karyawan'], [`Departemen: ${department}`], [`Periode: ${startDate} s/d ${endDate}`], []]
+  const matrix = [...title, ...buildExportMatrix(rows, dateRange, includeJob)]
+  const worksheet = XLSX.utils.aoa_to_sheet(matrix)
+  const dataStartRow = title.length + 1
+
+  worksheet['!freeze'] = { xSplit: includeJob ? 2 : 1, ySplit: dataStartRow }
+  worksheet['!cols'] = [
+    ...(includeJob ? [{ wch: 18 }] : []),
+    { wch: 28 },
+    ...dateRange.map(() => ({ wch: 9 })),
+  ]
+
+  const workbook = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Jadwal')
+  XLSX.writeFile(workbook, `jadwal-karyawan-${startDate}-${endDate}.xlsx`)
+}
+
+function exportPdf(rows, dateRange, department, includeJob, startDate, endDate) {
+  if (!rows.length || !dateRange.length) return
+
+  const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3' })
+  const margin = 8
+  const pageWidth = pdf.internal.pageSize.getWidth()
+  const pageHeight = pdf.internal.pageSize.getHeight()
+  const titleHeight = 16
+  const headerHeight = 9
+  const rowHeight = 7
+  const nameWidth = includeJob ? 52 : 62
+  const jobWidth = includeJob ? 22 : 0
+  const dateWidth = Math.max(7, Math.min(11, (pageWidth - (margin * 2) - nameWidth - jobWidth) / dateRange.length))
+  const tableWidth = nameWidth + jobWidth + (dateWidth * dateRange.length)
+  const left = (pageWidth - tableWidth) / 2
+
+  const drawHeader = () => {
+    pdf.setFontSize(14)
+    pdf.setFont(undefined, 'bold')
+    pdf.text('Jadwal Karyawan', margin, margin + 2)
+    pdf.setFontSize(8)
+    pdf.setFont(undefined, 'normal')
+    pdf.text(`Departemen: ${department} | Periode: ${startDate} s/d ${endDate}`, margin, margin + 7)
+  }
+
+  const drawTableHeader = (y) => {
+    let x = left
+    pdf.setFillColor(239, 244, 250)
+    pdf.rect(x, y, tableWidth, headerHeight, 'F')
+    pdf.setFontSize(5.5)
+    pdf.setFont(undefined, 'bold')
+    if (includeJob) {
+      pdf.rect(x, y, jobWidth, headerHeight)
+      pdf.text('JOB', x + 1.5, y + 5.8)
+      x += jobWidth
+    }
+    pdf.rect(x, y, nameWidth, headerHeight)
+    pdf.text('Nama Karyawan', x + 1.5, y + 5.8)
+    x += nameWidth
+    for (const item of dateRange) {
+      pdf.rect(x, y, dateWidth, headerHeight)
+      pdf.text(String(item.day), x + dateWidth / 2, y + 3.8, { align: 'center' })
+      pdf.setFontSize(4.3)
+      pdf.text(item.dayName, x + dateWidth / 2, y + 7.2, { align: 'center' })
+      pdf.setFontSize(5.5)
+      x += dateWidth
+    }
+  }
+
+  const codeFill = {
+    P: [201, 242, 207],
+    S: [203, 226, 251],
+    M: [255, 233, 168],
+    L: [255, 208, 208],
+    CT: [222, 208, 255],
+  }
+
+  let y = margin + titleHeight
+  drawHeader()
+  drawTableHeader(y)
+  y += headerHeight
+
+  pdf.setFontSize(5.5)
+  for (const row of rows) {
+    if (y + rowHeight > pageHeight - margin) {
+      pdf.addPage('a3', 'landscape')
+      y = margin + titleHeight
+      drawHeader()
+      drawTableHeader(y)
+      y += headerHeight
+    }
+
+    let x = left
+    pdf.setFont(undefined, 'normal')
+    if (includeJob) {
+      pdf.rect(x, y, jobWidth, rowHeight)
+      pdf.text(String(row.job || ''), x + 1.5, y + 4.8, { maxWidth: jobWidth - 3 })
+      x += jobWidth
+    }
+
+    pdf.rect(x, y, nameWidth, rowHeight)
+    pdf.text(String(row.name || ''), x + 1.5, y + 4.8, { maxWidth: nameWidth - 3 })
+    x += nameWidth
+
+    for (const item of dateRange) {
+      const code = row.codes?.[item.value] || ''
+      const fill = codeFill[code]
+      if (fill) {
+        pdf.setFillColor(...fill)
+        pdf.rect(x, y, dateWidth, rowHeight, 'F')
+      }
+      pdf.rect(x, y, dateWidth, rowHeight)
+      if (code) {
+        pdf.setFont(undefined, 'bold')
+        pdf.text(code, x + dateWidth / 2, y + 4.8, { align: 'center' })
+      }
+      x += dateWidth
+    }
+
+    y += rowHeight
+  }
+
+  pdf.save(`jadwal-karyawan-${startDate}-${endDate}.pdf`)
 }
 
 function App() {
@@ -326,7 +470,7 @@ function App() {
           <div className="title">
             <div>
               <h2>Jadwal {department} — {formatDisplayDate(startDate)}{startDate !== endDate ? ` – ${formatDisplayDate(endDate)}` : ''}</h2>
-              <div className="meta">{supabaseConfigured ? 'Sumber: Supabase / v_jadwal_karyawan' : 'Supabase belum dikonfigurasi'}</div>
+              <div className="meta">{supabaseConfigured ? 'Sumber: Supabase / v_jadwal_karyawan' : 'Supabase belum dikonfigurasi'} · Export mengikuti filter yang sedang aktif.</div>
             </div>
             <div className="title-actions">
               <div className="month-picker">
@@ -346,6 +490,8 @@ function App() {
                   </div>
                 )}
               </div>
+              <button className="secondary export-button" type="button" onClick={() => exportExcel(filteredRows, dateRange, department, showJobColumn, startDate, endDate)} disabled={loading || filteredRows.length === 0}>Excel</button>
+              <button className="secondary export-button" type="button" onClick={() => exportPdf(filteredRows, dateRange, department, showJobColumn, startDate, endDate)} disabled={loading || filteredRows.length === 0}>PDF</button>
               <button className="focus-toggle" type="button" onClick={() => setFocusMode((value) => !value)}>
                 {focusMode ? 'Kembalikan Tampilan' : 'Perbesar Jadwal'}
               </button>
