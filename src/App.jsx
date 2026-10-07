@@ -412,6 +412,34 @@ function App() {
     setMonthPickerOpen(false)
   }
 
+  async function toggleFocusMode() {
+    const nextValue = !focusMode
+    setFocusMode(nextValue)
+
+    if (window.matchMedia('(max-width: 900px)').matches && nextValue) {
+      try {
+        if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+          await document.documentElement.requestFullscreen()
+        }
+        if (screen.orientation?.lock) {
+          await screen.orientation.lock('landscape')
+        }
+      } catch {
+        // Beberapa browser mobile tidak mengizinkan orientation lock.
+        // Focus mode tetap aktif sebagai fallback.
+      }
+    } else if (!nextValue) {
+      try {
+        if (screen.orientation?.unlock) screen.orientation.unlock()
+        if (document.fullscreenElement && document.exitFullscreen) {
+          await document.exitFullscreen()
+        }
+      } catch {
+        // Abaikan jika browser tidak menyediakan kontrol orientasi/fullscreen.
+      }
+    }
+  }
+
   useEffect(() => {
     if (!supabaseConfigured || !supabase) return
 
@@ -1158,7 +1186,7 @@ function App() {
                   </div>
                 )}
               </div>
-              <button className="focus-toggle" type="button" onClick={() => setFocusMode((value) => !value)}>
+              <button className="focus-toggle" type="button" onClick={toggleFocusMode}>
                 {focusMode ? 'Kembalikan Tampilan' : 'Perbesar Jadwal'}
               </button>
               <button className={`employee-count-toggle${showJobColumn ? " active" : ""}`} type="button" onClick={() => setShowJobColumn((value) => !value)} title={showJobColumn ? "Sembunyikan Job" : "Tampilkan Job"}>{showJobColumn ? "Sembunyikan Job" : "Tampilkan Job"}</button>
