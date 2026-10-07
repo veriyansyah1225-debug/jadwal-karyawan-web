@@ -362,6 +362,18 @@ function App() {
   const [transferLoading, setTransferLoading] = useState(false)
   const [transferError, setTransferError] = useState('')
   const [transferSuccess, setTransferSuccess] = useState('')
+  const [userManagementOpen, setUserManagementOpen] = useState(false)
+  const [managedUsers, setManagedUsers] = useState([])
+  const [userFormOpen, setUserFormOpen] = useState(false)
+  const [userFormName, setUserFormName] = useState('')
+  const [userFormEmail, setUserFormEmail] = useState('')
+  const [userFormRole, setUserFormRole] = useState('supervisor_farm')
+  const [userFormEmployeeId, setUserFormEmployeeId] = useState('')
+  const [userFormLoading, setUserFormLoading] = useState(false)
+  const [userFormError, setUserFormError] = useState('')
+  const [userFormSuccess, setUserFormSuccess] = useState('')
+  const [userManagementLoading, setUserManagementLoading] = useState(false)
+  const [userManagementError, setUserManagementError] = useState('')
 
   const dateRange = useMemo(() => getDateRange(startDate, endDate), [startDate, endDate])
   const invalidRange = Boolean(startDate && endDate && startDate > endDate)
@@ -667,6 +679,43 @@ function App() {
     }
   }, [isAdmin, scheduleRefresh])
 
+  useEffect(() => {
+    if (!supabaseConfigured || !supabase || !isAdmin) return
+    let cancelled = false
+
+    async function loadManagedUsers() {
+      setUserManagementLoading(true)
+      setUserManagementError('')
+      const [{ data: profiles, error: profileError }, { data: scopes, error: scopeError }] = await Promise.all([
+        supabase.from('user_profiles').select('user_id,nama,email,role,aktif,employee_id,created_at').order('created_at', { ascending: false }),
+        supabase.from('user_access_scopes').select('user_id,department_id,departments(nama_departemen)').order('department_id'),
+      ])
+
+      if (cancelled) return
+      if (profileError || scopeError) {
+        setUserManagementError(profileError?.message || scopeError?.message || 'Gagal memuat pengguna.')
+        setUserManagementLoading(false)
+        return
+      }
+
+      const scopeMap = new Map()
+      for (const item of scopes || []) {
+        const current = scopeMap.get(item.user_id) || []
+        current.push(item.departments?.nama_departemen || String(item.department_id))
+        scopeMap.set(item.user_id, current)
+      }
+
+      setManagedUsers((profiles || []).map((profile) => ({
+        ...profile,
+        scopeNames: scopeMap.get(profile.user_id) || [],
+      })))
+      setUserManagementLoading(false)
+    }
+
+    loadManagedUsers()
+    return () => { cancelled = true }
+  }, [isAdmin, userManagementOpen, scheduleRefresh])
+
   const employeeMasterFilterJobs = useMemo(() => masterJobs.filter((item) => !employeeMasterDepartment || !item.department_id || String(item.department_id) === String(employeeMasterDepartment)).sort((a, b) => String(a.nama_job || '').localeCompare(String(b.nama_job || ''))), [masterJobs, employeeMasterDepartment])
 
   const filteredEmployeeMasterRows = useMemo(() => {
@@ -718,6 +767,97 @@ function App() {
     () => masterJobs.filter((item) => !transferDepartmentId || !item.department_id || String(item.department_id) === String(transferDepartmentId)),
     [masterJobs, transferDepartmentId],
   )
+
+  function openUserForm() {
+    if (!isAdmin) return
+    setUserFormName('')
+    setUserFormEmail('')
+    setUserFormRole('supervisor_farm')
+    setUserFormEmployeeId('')
+    setUserFormError('')
+    setUserFormSuccess('')
+    setUserFormOpen(true)
+  }
+
+  function getUserScopeDepartmentIds(role) {
+    if (role === 'supervisor_farm') {
+      const item = masterDepartments.find((departmentItem) => departmentItem.nama_departemen === 'FARM')
+      return item ? [Number(item.id)] : []
+    }
+    if (role === 'supervisor_hatchery') {
+      const item = masterDepartments.find((departmentItem) => departmentItem.nama_departemen === 'HATCHERY')
+      return item ? [Number(item.id)] : []
+    }
+    if (role === 'external') {
+      return masterDepartments.map((item) => Number(item.id))
+    }
+    return []
+  }
+
+  async function handleUserFormSave(event) {
+    event.preventDefault()
+    if (!supabase || !isAdmin) return
+
+    const nama = userFormName.trim()
+    const email = userFormEmail.trim().toLowerCase()
+    if (!nama || !email) {
+      setUserFormError('Nama dan email wajib diisi.')
+      return
+    }
+
+    const scopeDepartmentIds = getUserScopeDepartmentIds(userFormRole)
+    if ((userFormRole === 'supervisor_farm' || userFormRole === 'supervisor_hatchery' || userFormRole === 'external') && scopeDepartmentIds.length === 0) {
+      setUserFormError('Departemen untuk scope role belum tersedia.')
+      return
+    }
+
+    setUserFormLoading(true)
+    setUserFormError('')
+    setUserFormSuccess('')
+
+    const { data, error: functionError } = await supabase.functions.invoke('admin-create-user', {
+      body: {
+        nama,
+        email,
+        role: userFormRole,
+        employee_id: userFormEmployeeId ? Number(userFormEmployeeId) : null,
+        scope_department_ids: scopeDepartmentIds,
+      },
+    })
+
+    if (functionError) {
+      setUserFormError(functionError.message || 'Gagal membuat akun pengguna.')
+      setUserFormLoading(false)
+      return
+    }
+
+    if (data?.error) {
+      setUserFormError(data.error)
+      setUserFormLoading(false)
+      return
+    }
+
+    setUserFormSuccess(data?.message || 'Undangan akun berhasil dikirim.')
+    setUserFormLoading(false)
+    setScheduleRefresh((value) => value + 1)
+    setTimeout(() => setUserFormOpen(false), 900)
+  }
+
+  async function toggleManagedUser(user) {
+    if (!supabase || !isAdmin || !user) return
+    const nextActive = !user.aktif
+    const { error: updateError } = await supabase
+      .from('user_profiles')
+      .update({ aktif: nextActive, updated_at: new Date().toISOString() })
+      .eq('user_id', user.user_id)
+
+    if (updateError) {
+      setUserManagementError(updateError.message)
+      return
+    }
+
+    setManagedUsers((current) => current.map((item) => item.user_id === user.user_id ? { ...item, aktif: nextActive } : item))
+  }
 
   async function handleTransferSave(event) {
     event.preventDefault()
@@ -1312,18 +1452,142 @@ function App() {
                 }}>Tambah Jadwal</button>
               )}
             </div>
+            {isAdmin && (
+              <div className="settings-section">
+                <div>
+                  <strong>Manajemen Pengguna</strong>
+                  <p>Admin membuat akun, menentukan role, dan menentukan hak akses pengguna.</p>
+                </div>
+                <button className="focus-toggle" type="button" onClick={() => {
+                  setUserManagementError('')
+                  setUserManagementOpen(true)
+                  setSettingsOpen(false)
+                }}>Kelola Pengguna</button>
+              </div>
+            )}
             <div className="settings-section">
               <div>
                 <strong>Akun Pengguna</strong>
                 <p>{userProfile?.nama || session?.user?.email || 'Pengguna'} · {userProfile?.role || '—'}</p>
               </div>
               <button className="admin-status-button" type="button" onClick={handleLogout}>Keluar</button>
-            </div>>
+            </div>
           </div>
         </div>
       )}
 
-            {adminLoginOpen && (
+            {userManagementOpen && (
+        <div className="modal-backdrop" onClick={() => !userFormLoading && setUserManagementOpen(false)}>
+          <div className="modal settings-modal" role="dialog" aria-modal="true" aria-labelledby="user-management-title" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-head">
+              <div>
+                <div className="modal-kicker">Akses Sistem</div>
+                <h2 id="user-management-title">Manajemen Pengguna</h2>
+              </div>
+              <button className="modal-close" type="button" onClick={() => setUserManagementOpen(false)} aria-label="Tutup">×</button>
+            </div>
+
+            <div className="settings-section">
+              <div>
+                <strong>Pengguna Sistem</strong>
+                <p>Role dan scope ditentukan oleh Admin. User tidak memilih role sendiri.</p>
+              </div>
+              <button className="focus-toggle" type="button" onClick={openUserForm}>Tambah Pengguna</button>
+            </div>
+
+            {userManagementError && <div className="state error">{userManagementError}</div>}
+            {userManagementLoading && <div className="state">Memuat pengguna...</div>}
+
+            {!userManagementLoading && managedUsers.length === 0 && (
+              <div className="state">Belum ada pengguna lain.</div>
+            )}
+
+            {!userManagementLoading && managedUsers.length > 0 && (
+              <div className="wrap">
+                <table>
+                  <thead>
+                    <tr><th>Nama</th><th>Email</th><th>Role</th><th>Scope</th><th>Status</th><th>Aksi</th></tr>
+                  </thead>
+                  <tbody>
+                    {managedUsers.map((user) => (
+                      <tr key={user.user_id}>
+                        <td>{user.nama || '—'}</td>
+                        <td>{user.email || '—'}</td>
+                        <td>{user.role}</td>
+                        <td>{user.scopeNames.length ? user.scopeNames.join(', ') : 'Semua departemen'}</td>
+                        <td>{user.aktif ? 'Aktif' : 'Nonaktif'}</td>
+                        <td>
+                          {user.user_id !== session?.user?.id && (
+                            <button type="button" className="secondary" onClick={() => toggleManagedUser(user)}>
+                              {user.aktif ? 'Nonaktifkan' : 'Aktifkan'}
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {userFormOpen && (
+        <div className="modal-backdrop" onClick={() => !userFormLoading && setUserFormOpen(false)}>
+          <div className="modal admin-schedule-modal" role="dialog" aria-modal="true" aria-labelledby="user-form-title" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-head">
+              <div>
+                <div className="modal-kicker">Pembuatan Akun</div>
+                <h2 id="user-form-title">Tambah Pengguna</h2>
+              </div>
+              <button className="modal-close" type="button" onClick={() => !userFormLoading && setUserFormOpen(false)} aria-label="Tutup">×</button>
+            </div>
+            <form className="admin-schedule-form" onSubmit={handleUserFormSave}>
+              <label>Nama Lengkap
+                <input value={userFormName} onChange={(e) => setUserFormName(e.target.value)} placeholder="Nama pengguna" required />
+              </label>
+              <label>Email
+                <input type="email" value={userFormEmail} onChange={(e) => setUserFormEmail(e.target.value)} placeholder="email@perusahaan.com" required />
+              </label>
+              <label>Role
+                <select value={userFormRole} onChange={(e) => setUserFormRole(e.target.value)} required>
+                  <option value="supervisor_farm">Supervisor Farm</option>
+                  <option value="supervisor_hatchery">Supervisor Hatchery</option>
+                  <option value="hrd">HRD</option>
+                  <option value="manager">Manager</option>
+                  <option value="external">External</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </label>
+              <label>Karyawan terkait
+                <select value={userFormEmployeeId} onChange={(e) => setUserFormEmployeeId(e.target.value)}>
+                  <option value="">Tidak terkait karyawan</option>
+                  {employeeMasterRows.filter((item) => item.aktif).map((item) => (
+                    <option key={item.id} value={item.id}>{item.nama}{item.kode_karyawan ? ' — ' + item.kode_karyawan : ''}</option>
+                  ))}
+                </select>
+              </label>
+              <div className="state">
+                <strong>Scope akses:</strong>{' '}
+                {userFormRole === 'supervisor_farm' && 'FARM'}
+                {userFormRole === 'supervisor_hatchery' && 'HATCHERY'}
+                {userFormRole === 'external' && 'FARM + HATCHERY'}
+                {(userFormRole === 'admin' || userFormRole === 'hrd' || userFormRole === 'manager') && 'Semua departemen'}
+              </div>
+              <div className="state">Setelah dibuat, undangan akan dikirim ke email pengguna untuk menyelesaikan pembuatan password.</div>
+              {userFormError && <div className="state error">{userFormError}</div>}
+              {userFormSuccess && <div className="admin-schedule-success">{userFormSuccess}</div>}
+              <div className="admin-login-actions">
+                <button className="secondary" type="button" onClick={() => setUserFormOpen(false)} disabled={userFormLoading}>Batal</button>
+                <button className="focus-toggle" type="submit" disabled={userFormLoading}>{userFormLoading ? 'Membuat...' : 'Buat & Kirim Undangan'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {adminLoginOpen && (
         <div className="modal-backdrop" onClick={() => !authLoading && setAdminLoginOpen(false)}>
           <div className="modal admin-login-modal" role="dialog" aria-modal="true" aria-labelledby="admin-login-title" onClick={(e) => e.stopPropagation()}>
             <div className="modal-head">
