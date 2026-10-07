@@ -1,7 +1,7 @@
 # Dokumentasi Perubahan dan Audit Web UI — Jadwal Karyawan
 
 **Status:** Living Document  
-**Versi:** 1.9  
+**Versi:** 2.0  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Branch produksi:** `main`  
@@ -290,7 +290,41 @@ ARIF ditambahkan sebagai karyawan FARM dengan JOB master `MEKANIK`, kemudian 4 r
 
 ---
 
-### 4.8 Penambahan Karyawan HERI sebagai FARM / Kandang
+### 4.8 Penambahan Export Excel dan PDF
+
+**Status:** Production / Web UI aktif  
+**Tanggal:** 2026-10-07
+
+#### Perubahan
+
+Web UI sekarang menyediakan dua tombol export pada halaman jadwal:
+
+- **Excel** untuk mengunduh `.xlsx`;
+- **PDF** untuk mengunduh `.pdf`.
+
+#### Aturan export
+
+Export menggunakan hasil data yang sedang ditampilkan setelah filter aktif diterapkan. Dengan demikian pengguna dapat mengunduh:
+
+- seluruh karyawan yang sedang ditampilkan;
+- hanya JOB tertentu;
+- hanya karyawan tertentu;
+- rentang tanggal tertentu;
+- Departemen yang sedang dipilih.
+
+PDF dibuat dalam format landscape A3 agar tabel jadwal tetap memiliki ruang horizontal yang cukup. Excel menggunakan sheet `Jadwal` dan menyertakan Departemen serta periode pada bagian atas.
+
+#### Batasan
+
+Fitur ini hanya membaca data. Export tidak mengubah database, tidak menambah/menghapus jadwal, dan tidak membutuhkan hak tulis.
+
+#### Verifikasi
+
+Kode export ditempatkan di frontend dan menggunakan data hasil query `v_jadwal_karyawan` yang sudah dimuat. Tombol export dinonaktifkan ketika data sedang dimuat atau tidak ada hasil.
+
+---
+
+### 4.9 Penambahan Karyawan HERI sebagai FARM / Kandang
 
 **Status:** Production / Database aktif  
 **Tanggal:** 2026-10-07
@@ -358,6 +392,8 @@ Perubahan terakhir pada master data dan jadwal:
 
 Total `employee_schedules` saat ini = 522.
 
+Web UI juga sudah menyediakan export Excel dan PDF untuk jadwal yang sedang ditampilkan.
+
 JOB `IB` juga sudah ditambahkan pada Departemen FARM bersama 12 karyawan dan 48 record jadwal L Oktober 2026 yang sudah dikoreksi ke tanggal 4, 11, 18, dan 25. ARIF juga sudah ditambahkan pada JOB MEKANIK dengan 4 record L pada 1, 8, 15, dan 22 Oktober 2026.
 
 ---
@@ -411,7 +447,7 @@ Perubahan yang tercatat di dokumen ini **tidak berarti** bahwa fitur berikut sud
 - pengelolaan kode jadwal;
 - absensi;
 - laporan;
-- export;
+- export — sudah tersedia untuk Excel dan PDF;
 - audit histori perubahan.
 
 Fitur-fitur tersebut tetap mengikuti status pada dokumentasi progres dan roadmap.
@@ -500,7 +536,13 @@ JOB `IB` ditambahkan pada Departemen FARM. Dua belas karyawan dari sumber dimasu
 
 Tanggal IB dikoreksi berdasarkan sumber terbaru menjadi 4, 11, 18, dan 25 Oktober 2026. ARIF ditambahkan sebagai karyawan FARM / MEKANIK dengan jadwal L pada 1, 8, 15, dan 22 Oktober 2026.
 
-### Keputusan D-010 — Perubahan desain: L menjadi satu-satunya kode libur
+### Keputusan D-010 — Export jadwal Excel dan PDF
+
+**Keputusan:** diterapkan pada Web UI.
+
+Export menjadi fitur read-only yang menggunakan hasil filter aktif. Excel dan PDF tidak mengubah data database dan dapat digunakan sebelum Authentication/CRUD selesai.
+
+### Keputusan D-011 — Perubahan desain: L menjadi satu-satunya kode libur
 
 **Keputusan:** diterapkan pada database dan Web UI.
 
