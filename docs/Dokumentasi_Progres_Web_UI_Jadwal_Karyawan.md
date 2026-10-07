@@ -1,7 +1,7 @@
 # Dokumentasi Progres Pengembangan Web UI — Jadwal Karyawan
 
 **Status:** Draft / Living Document  
-**Versi:** 2.9  
+**Versi:** 2.11  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Database:** `database-jadwal-karyawan` / PostgreSQL 17 / Supabase
@@ -244,9 +244,9 @@ Tujuannya agar satu karyawan tidak terpecah menjadi beberapa baris hanya karena 
 | Penanda khusus header hari Minggu | ✓ Selesai |
 | Deployment Vercel | ✓ Selesai |
 | Pengujian browser online | ✓ Selesai |
-| Authentication | Belum |
-| RLS policy final | Belum |
-| Input/Edit jadwal | Belum |
+| Authentication | ✓ Selesai |
+| RLS policy final | ✓ Selesai untuk scope saat ini |
+| Tambah/Edit jadwal Admin | Tambah ✓ / Edit ✓ code, menunggu verifikasi browser Production |
 | Modul absensi | Belum |
 | Laporan | Belum |
 | Export Excel/PDF | ✓ Selesai |
@@ -946,3 +946,23 @@ Fitur Admin saat ini:
 - **Penyebab:** struktur JSX pada modal **Pengaturan** memiliki satu penutupan `</div>` berlebih di sekitar bagian **Akses Admin**, sehingga esbuild berhenti pada `App.jsx` sekitar baris 846.
 - **Perbaikan:** struktur bagian Akses Admin dirapikan menjadi section yang tertutup dengan benar. Tidak ada perubahan database atau data jadwal.
 - **Verifikasi saat pencatatan:** commit baru sudah diterima Vercel dan status deployment masih **Pending**. Verifikasi Production browser belum dilakukan.
+
+
+### 11.14 Edit Jadwal Admin melalui Detail Sel
+
+Pada 2026-10-07, Web UI ditambahkan alur **Edit Jadwal Admin** tanpa mengubah struktur database.
+
+Alur yang digunakan:
+1. Admin login melalui menu **Pengaturan**.
+2. Admin klik sel jadwal pada tabel untuk membuka **Detail Jadwal**.
+3. Jika sel sudah memiliki kode jadwal, tombol **Edit Jadwal** tersedia.
+4. Form pengelolaan jadwal terbuka dengan karyawan, tanggal, kode jadwal, dan keterangan yang sudah diisi dari data sel.
+5. Penyimpanan tetap menggunakan upsert pada pasangan `employee_id,tanggal`, sehingga tidak membuat record duplikat.
+6. Setelah berhasil disimpan, tabel jadwal dimuat ulang agar perubahan langsung terlihat.
+
+Jika sel belum memiliki jadwal, tombol pada detail menggunakan label **Tambah Jadwal** dan membuka form dengan tanggal/karyawan yang sesuai.
+
+**Status:** code sudah diterapkan pada branch `main`; verifikasi browser Production masih diperlukan.
+
+**Commit implementasi:** `5470d004d93c646c8aed0f8f568ea854cbc6f151`  
+**Commit penyegaran tabel setelah simpan:** `3a8271786d17ce0193ff1188f0afc30bf9a290f2`
