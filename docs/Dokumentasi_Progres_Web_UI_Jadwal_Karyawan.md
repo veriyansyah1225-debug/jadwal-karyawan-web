@@ -1,7 +1,7 @@
 # Dokumentasi Progres Pengembangan Web UI — Jadwal Karyawan
 
 **Status:** Draft / Living Document  
-**Versi:** 2.14  
+**Versi:** 2.15  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Database:** `database-jadwal-karyawan` / PostgreSQL 17 / Supabase
@@ -1024,3 +1024,17 @@ Perbaikan hanya menyentuh sintaks JSX dan tidak mengubah database, RLS, data jad
 **Commit:** 473a1f10873b846cc1afddf36ccc890f56f92786
 
 **Verifikasi berikutnya:** pastikan build Vercel berstatus berhasil, kemudian uji ulang form Edit Jadwal dan tombol Hapus Jadwal pada Production.
+
+### 11.18 Verifikasi Production — Perbaikan Build dan Tombol Hapus Jadwal
+
+Pada 2026-10-07, setelah perbaikan JSX pada commit `473a1f10873b846cc1afddf36ccc890f56f92786`, deployment Vercel berhasil dan Web Production dapat digunakan kembali.
+
+Hasil verifikasi pengguna:
+- build/deployment Vercel berhasil;
+- form **Edit Jadwal** dapat digunakan;
+- fitur **Hapus Jadwal** sudah berhasil tersedia pada Production;
+- perubahan ini tidak memerlukan perubahan database atau RLS.
+
+Dengan verifikasi ini, error build pada `adminDeleteError` dinyatakan selesai. Tahap berikutnya adalah pengujian fungsional CRUD jadwal secara menyeluruh sebelum menambah fitur baru.
+
+**Status:** Terverifikasi Production.
