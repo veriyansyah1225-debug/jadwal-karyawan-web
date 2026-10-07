@@ -953,6 +953,33 @@ function App() {
               {adminScheduleError && <div className="state error">{adminScheduleError}</div>}
               {adminScheduleSuccess && <div className="admin-schedule-success">{adminScheduleSuccess}</div>}
               <div className="admin-login-actions">
+                {adminScheduleEditMode && (
+                  <button
+                    className="danger-button"
+                    type="button"
+                    onClick={() => {
+                      setAdminScheduleOpen(false)
+                      setSelectedCell({
+                        row: adminEmployees.find((item) => String(item.id) === String(adminEmployeeId))
+                          ? {
+                              employeeId: Number(adminEmployeeId),
+                              name: adminEmployees.find((item) => String(item.id) === String(adminEmployeeId))?.nama || 'Karyawan',
+                              department: adminEmployees.find((item) => String(item.id) === String(adminEmployeeId))?.departments?.nama_departemen || department,
+                              job: '',
+                            }
+                          : selectedCell?.row,
+                        date: adminScheduleDate,
+                        detail: {
+                          code: adminScheduleCodes.find((item) => String(item.id) === String(adminScheduleCodeId))?.kode || '',
+                          note: adminScheduleNote,
+                        },
+                      })
+                    }}
+                    disabled={adminScheduleLoading}
+                  >
+                    Hapus Jadwal
+                  </button>
+                )}
                 <button className="secondary" type="button" onClick={() => setAdminScheduleOpen(false)} disabled={adminScheduleLoading}>Batal</button>
                 <button className="focus-toggle" type="submit" disabled={adminScheduleLoading}>{adminScheduleLoading ? 'Menyimpan...' : 'Simpan Jadwal'}</button>
               </div>
