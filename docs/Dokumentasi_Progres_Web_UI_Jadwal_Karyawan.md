@@ -777,6 +777,11 @@ Teks informasi internal mengenai sumber Supabase dan catatan penggunaan filter d
 Pondasi Admin mulai diterapkan tanpa mengubah akses publik read-only. Database memiliki tabel `admin_users` dengan RLS untuk memetakan akun Supabase Auth yang berhak menjadi Admin. Web UI memiliki dialog Login Admin dan pemeriksaan role. Fitur CRUD jadwal belum dibuka pada tahap ini.
 
 
+### Penempatan akses Admin
+
+Akses Admin tidak lagi ditampilkan di dekat tabel jadwal. Login Admin ditempatkan di dalam menu **Pengaturan** agar area operasional jadwal tetap bersih.
+
+
 ## 18. Status Dokumen
 
 Dokumen ini adalah **dokumentasi progres**, bukan spesifikasi final.
