@@ -401,3 +401,45 @@ Model akses saat ini menjadi:
 - `admin_users` tetap tidak dapat ditulis oleh client.
 
 Pengujian end-to-end penyimpanan dari browser masih menjadi langkah verifikasi berikutnya.
+
+
+## 16. Audit Integrasi Client Publik setelah Login Admin
+
+Pada 2026-10-07 ditemukan efek samping integrasi Authentication terhadap query read-only.
+
+### Temuan
+
+Saat browser memiliki session Admin, Supabase Client utama menggunakan role `authenticated`. Sementara policy SELECT pada tabel publik jadwal masih diberikan kepada role `anon`.
+
+Akibatnya query berikut dapat gagal saat session Admin aktif:
+- `departments`;
+- `employees`;
+- `schedule_codes`;
+- `employee_schedules`;
+- View `v_jadwal_karyawan` yang menggunakan `security_invoker=true`.
+
+Database tidak kehilangan data Departemen. Masalah berada pada kecocokan role session dengan policy RLS SELECT.
+
+### Perbaikan Web UI
+
+Web UI sekarang menggunakan dua client:
+
+- `supabase`: client ber-session untuk Authentication, pemeriksaan role Admin, dan operasi tulis;
+- `publicSupabase`: client tanpa persistensi session untuk query read-only publik.
+
+Dengan desain ini, login Admin tidak mengubah role query publik dari `anon` menjadi `authenticated`.
+
+### Dampak terhadap keamanan
+
+Perubahan ini tidak membuka hak tulis baru kepada publik.
+
+- query publik tetap menggunakan policy SELECT `anon`;
+- operasi INSERT/UPDATE/DELETE jadwal tetap menggunakan client authenticated;
+- RLS Admin pada `employee_schedules` tetap menjadi pengaman utama operasi tulis;
+- tidak ada service-role key pada frontend.
+
+### Status
+
+Perbaikan kode sudah masuk `main` pada commit `4e91dad3f69c5682609c1b59775e6678c8e54543` dan `d2b4852de3595b01f9f9ed307c66b573de3697f5`.
+
+Verifikasi browser setelah deployment terbaru masih diperlukan.
