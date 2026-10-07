@@ -935,3 +935,14 @@ Fitur Admin saat ini:
 - RLS INSERT/UPDATE/DELETE `employee_schedules`: tersedia untuk Admin aktif;
 - uji simpan dari browser: belum dinyatakan selesai;
 - edit/hapus visual dari tabel: belum dibuat.
+
+
+### v2.10 — Perbaikan Build Vercel setelah implementasi bulan tanpa jadwal
+
+- **Tanggal:** 2026-10-07
+- **Status:** Menunggu hasil deployment Vercel
+- **Commit:** `88dbb7680414851bcda54e4806898d98e69eecb2`
+- **Temuan:** deployment Production untuk commit `39e8253` gagal pada proses `npm run build`.
+- **Penyebab:** struktur JSX pada modal **Pengaturan** memiliki satu penutupan `</div>` berlebih di sekitar bagian **Akses Admin**, sehingga esbuild berhenti pada `App.jsx` sekitar baris 846.
+- **Perbaikan:** struktur bagian Akses Admin dirapikan menjadi section yang tertutup dengan benar. Tidak ada perubahan database atau data jadwal.
+- **Verifikasi saat pencatatan:** commit baru sudah diterima Vercel dan status deployment masih **Pending**. Verifikasi Production browser belum dilakukan.
