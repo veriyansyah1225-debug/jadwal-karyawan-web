@@ -987,6 +987,13 @@ function App() {
           <button type="button" className={settingsOpen ? "nav-settings active" : "nav-settings"} onClick={() => setSettingsOpen(true)}>⚙ &nbsp; Pengaturan</button>
         </nav>
       </aside>
+      <header className="mobile-header">
+        <div className="mobile-brand">
+          <strong>Jadwal Karyawan</strong>
+          <span>{activeTab === 'employees' ? 'Master Karyawan' : department}</span>
+        </div>
+        <button className="mobile-header-button" type="button" onClick={() => setSettingsOpen(true)} aria-label="Buka pengaturan">⚙</button>
+      </header>
 
       <main className="main">
         <h1>{activeTab === 'employees' ? 'Master Karyawan' : 'Jadwal Karyawan'}</h1>
@@ -1180,6 +1187,18 @@ function App() {
           </>
         )}
       </main>
+
+      <nav className="mobile-bottom-nav" aria-label="Navigasi utama">
+        <button type="button" className={activeTab === 'schedule' ? 'mobile-nav-item active' : 'mobile-nav-item'} onClick={() => setActiveTab('schedule')}>
+          <span>⌂</span><small>Jadwal</small>
+        </button>
+        <button type="button" className={activeTab === 'employees' ? 'mobile-nav-item active' : 'mobile-nav-item'} onClick={() => setActiveTab('employees')}>
+          <span>♟</span><small>Karyawan</small>
+        </button>
+        <button type="button" className={settingsOpen ? 'mobile-nav-item active' : 'mobile-nav-item'} onClick={() => setSettingsOpen(true)}>
+          <span>⚙</span><small>Pengaturan</small>
+        </button>
+      </nav>
 
       {settingsOpen && (
         <div className="modal-backdrop" onClick={() => setSettingsOpen(false)}>
