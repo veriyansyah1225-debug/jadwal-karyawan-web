@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { supabase, supabaseConfigured } from './lib/supabase'
+import { publicSupabase, supabase, supabaseConfigured } from './lib/supabase'
 import jsPDF from 'jspdf'
 import * as XLSX from 'xlsx-js-style'
 
@@ -474,7 +474,7 @@ function App() {
     let cancelled = false
 
     async function loadDepartments() {
-      const { data, error: queryError } = await supabase
+      const { data, error: queryError } = await publicSupabase
         .from('departments')
         .select('id,nama_departemen')
         .eq('aktif', true)
@@ -509,12 +509,12 @@ function App() {
 
     async function loadAdminMasterData() {
       const [{ data: employeeData, error: employeeError }, { data: codeData, error: codeError }] = await Promise.all([
-        supabase
+        publicSupabase
           .from('employees')
           .select('id,nama,aktif,department_id,departments(nama_departemen)')
           .eq('aktif', true)
           .order('nama'),
-        supabase
+        publicSupabase
           .from('schedule_codes')
           .select('id,kode,nama,keterangan')
           .eq('aktif', true)
@@ -593,7 +593,7 @@ function App() {
       setLoading(true)
       setError('')
 
-      const { data, error: queryError } = await supabase
+      const { data, error: queryError } = await publicSupabase
         .from('v_jadwal_karyawan')
         .select('employee_id,tanggal,nama_departemen,nama_job,nama_job_master,nama_karyawan,kode_jadwal,keterangan')
         .gte('tanggal', startDate)
