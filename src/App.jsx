@@ -470,10 +470,18 @@ function App() {
 
     async function handleInviteCallback() {
       const params = new URLSearchParams(window.location.search)
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''))
       const code = params.get('code')
       const tokenHash = params.get('token_hash')
-      const type = params.get('type')
-      const isInviteLink = Boolean(code || (tokenHash && type === 'invite'))
+      const queryType = params.get('type')
+      const hashType = hashParams.get('type')
+      const hashAccessToken = hashParams.get('access_token')
+      const hashRefreshToken = hashParams.get('refresh_token')
+      const isInviteLink = Boolean(
+        code ||
+        (tokenHash && queryType === 'invite') ||
+        (hashType === 'invite' && (hashAccessToken || hashRefreshToken)),
+      )
 
       if (!isInviteLink) {
         const pendingInvite = window.sessionStorage.getItem('jadwal_invite_activation') === '1'
@@ -484,24 +492,43 @@ function App() {
       setAuthReady(false)
       setAuthError('Memproses undangan akun...')
 
-      // Undangan harus menggantikan sesi browser yang mungkin masih login
-      // sebagai Admin atau pengguna lain.
-      await supabase.auth.signOut()
-
       let authData = null
       let authError = null
 
       if (code) {
+        // PKCE invitation callback.
+        await supabase.auth.signOut()
         const result = await supabase.auth.exchangeCodeForSession(code)
         authData = result.data
         authError = result.error
-      } else {
+      } else if (tokenHash) {
+        // Legacy invitation callback.
+        await supabase.auth.signOut()
         const result = await supabase.auth.verifyOtp({
           token_hash: tokenHash,
           type: 'invite',
         })
         authData = result.data
         authError = result.error
+      } else {
+        // Supabase juga dapat memproses invitation melalui URL fragment
+        // (#access_token=...&refresh_token=...&type=invite) secara otomatis.
+        const currentSession = await supabase.auth.getSession()
+
+        if (currentSession.error) {
+          authError = currentSession.error
+        } else if (currentSession.data.session) {
+          authData = currentSession.data
+        } else if (hashAccessToken && hashRefreshToken) {
+          const result = await supabase.auth.setSession({
+            access_token: hashAccessToken,
+            refresh_token: hashRefreshToken,
+          })
+          authData = result.data
+          authError = result.error
+        } else {
+          authError = new Error('Sesi undangan tidak ditemukan.')
+        }
       }
 
       if (authError || !authData?.session?.user?.id) {
@@ -633,7 +660,12 @@ function App() {
     setInvitePassword('')
     setInvitePasswordConfirm('')
     setInviteActivation(false)
-    setInviteActivationSuccess('Akun berhasil diaktifkan.')
+    setInviteActivationSuccess('')
+    await supabase.auth.signOut()
+    setSession(null)
+    setUserProfile(null)
+    setIsAdmin(false)
+    setAuthError('Password berhasil dibuat. Silakan login dengan email dan password baru Anda.')
     setInviteActivationLoading(false)
   }
 
