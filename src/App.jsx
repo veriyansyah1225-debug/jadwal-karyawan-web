@@ -314,6 +314,16 @@ function App() {
   const [adminPassword, setAdminPassword] = useState('')
   const [authLoading, setAuthLoading] = useState(false)
   const [authError, setAuthError] = useState('')
+  const [adminScheduleOpen, setAdminScheduleOpen] = useState(false)
+  const [adminEmployees, setAdminEmployees] = useState([])
+  const [adminScheduleCodes, setAdminScheduleCodes] = useState([])
+  const [adminEmployeeId, setAdminEmployeeId] = useState('')
+  const [adminScheduleDate, setAdminScheduleDate] = useState(toInputDate(today))
+  const [adminScheduleCodeId, setAdminScheduleCodeId] = useState('')
+  const [adminScheduleNote, setAdminScheduleNote] = useState('')
+  const [adminScheduleLoading, setAdminScheduleLoading] = useState(false)
+  const [adminScheduleError, setAdminScheduleError] = useState('')
+  const [adminScheduleSuccess, setAdminScheduleSuccess] = useState('')
 
   const dateRange = useMemo(() => getDateRange(startDate, endDate), [startDate, endDate])
   const invalidRange = Boolean(startDate && endDate && startDate > endDate)
@@ -491,6 +501,81 @@ function App() {
       cancelled = true
     }
   }, [])
+
+  useEffect(() => {
+    if (!supabaseConfigured || !supabase || !isAdmin) return
+
+    let cancelled = false
+
+    async function loadAdminMasterData() {
+      const [{ data: employeeData, error: employeeError }, { data: codeData, error: codeError }] = await Promise.all([
+        supabase
+          .from('employees')
+          .select('id,nama,aktif,department_id,departments(nama_departemen)')
+          .eq('aktif', true)
+          .order('nama'),
+        supabase
+          .from('schedule_codes')
+          .select('id,kode,nama,keterangan')
+          .eq('aktif', true)
+          .order('id'),
+      ])
+
+      if (cancelled) return
+
+      if (employeeError || codeError) {
+        setAdminScheduleError(employeeError?.message || codeError?.message || 'Gagal memuat data master Admin.')
+        return
+      }
+
+      setAdminEmployees(employeeData || [])
+      setAdminScheduleCodes(codeData || [])
+      setAdminEmployeeId((current) => current || String(employeeData?.find((item) => item.departments?.nama_departemen === department)?.id || employeeData?.[0]?.id || ''))
+      setAdminScheduleCodeId((current) => current || String(codeData?.find((item) => item.kode === 'L')?.id || codeData?.[0]?.id || ''))
+    }
+
+    loadAdminMasterData()
+
+    return () => {
+      cancelled = true
+    }
+  }, [isAdmin, department])
+
+  async function handleAdminScheduleSave(event) {
+    event.preventDefault()
+    if (!supabase || !isAdmin) return
+
+    if (!adminEmployeeId || !adminScheduleDate || !adminScheduleCodeId) {
+      setAdminScheduleError('Karyawan, tanggal, dan kode jadwal wajib diisi.')
+      return
+    }
+
+    setAdminScheduleLoading(true)
+    setAdminScheduleError('')
+    setAdminScheduleSuccess('')
+
+    const { error: saveError } = await supabase
+      .from('employee_schedules')
+      .upsert(
+        {
+          employee_id: Number(adminEmployeeId),
+          tanggal: adminScheduleDate,
+          schedule_code_id: Number(adminScheduleCodeId),
+          keterangan: adminScheduleNote.trim() || null,
+        },
+        { onConflict: 'employee_id,tanggal' },
+      )
+
+    if (saveError) {
+      setAdminScheduleError(saveError.message)
+      setAdminScheduleLoading(false)
+      return
+    }
+
+    setAdminScheduleSuccess('Jadwal berhasil disimpan.')
+    setAdminScheduleNote('')
+    setAdminScheduleLoading(false)
+  }
 
   useEffect(() => {
     if (invalidRange) return
@@ -724,6 +809,19 @@ function App() {
             </div>
             <div className="settings-section">
               <div>
+                <strong>Pengelolaan Jadwal</strong>
+                <p>Admin dapat menambah atau memperbarui jadwal karyawan berdasarkan tanggal.</p>
+              </div>
+              {isAdmin && (
+                <button className="focus-toggle" type="button" onClick={() => {
+                  setAdminScheduleError('')
+                  setAdminScheduleSuccess('')
+                  setAdminScheduleOpen(true)
+                  setSettingsOpen(false)
+                }}>Tambah Jadwal</button>
+              )}
+            </div>
+              <div>
                 <strong>Akses Admin</strong>
                 <p>{isAdmin ? 'Anda sedang login sebagai Admin.' : 'Login diperlukan untuk mengakses fitur pengelolaan jadwal.'}</p>
               </div>
@@ -754,6 +852,48 @@ function App() {
               <div className="admin-login-actions">
                 <button className="secondary" type="button" onClick={() => setAdminLoginOpen(false)} disabled={authLoading}>Batal</button>
                 <button className="focus-toggle" type="submit" disabled={authLoading}>{authLoading ? 'Memeriksa...' : 'Login'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {adminScheduleOpen && (
+        <div className="modal-backdrop" onClick={() => !adminScheduleLoading && setAdminScheduleOpen(false)}>
+          <div className="modal admin-schedule-modal" role="dialog" aria-modal="true" aria-labelledby="admin-schedule-title" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-head">
+              <div>
+                <div className="modal-kicker">Pengelolaan Jadwal</div>
+                <h2 id="admin-schedule-title">Tambah Jadwal</h2>
+              </div>
+              <button className="modal-close" type="button" onClick={() => !adminScheduleLoading && setAdminScheduleOpen(false)} aria-label="Tutup">×</button>
+            </div>
+            <form className="admin-schedule-form" onSubmit={handleAdminScheduleSave}>
+              <label>Karyawan
+                <select value={adminEmployeeId} onChange={(e) => setAdminEmployeeId(e.target.value)} required>
+                  <option value="">Pilih karyawan</option>
+                  {adminEmployees
+                    .filter((item) => !department || item.departments?.nama_departemen === department)
+                    .map((item) => <option key={item.id} value={item.id}>{item.nama}</option>)}
+                </select>
+              </label>
+              <label>Tanggal
+                <input type="date" value={adminScheduleDate} onChange={(e) => setAdminScheduleDate(e.target.value)} required />
+              </label>
+              <label>Kode Jadwal
+                <select value={adminScheduleCodeId} onChange={(e) => setAdminScheduleCodeId(e.target.value)} required>
+                  <option value="">Pilih kode jadwal</option>
+                  {adminScheduleCodes.map((item) => <option key={item.id} value={item.id}>{item.kode} — {item.nama}</option>)}
+                </select>
+              </label>
+              <label>Keterangan
+                <textarea value={adminScheduleNote} onChange={(e) => setAdminScheduleNote(e.target.value)} placeholder="Opsional" rows="3" />
+              </label>
+              {adminScheduleError && <div className="state error">{adminScheduleError}</div>}
+              {adminScheduleSuccess && <div className="admin-schedule-success">{adminScheduleSuccess}</div>}
+              <div className="admin-login-actions">
+                <button className="secondary" type="button" onClick={() => setAdminScheduleOpen(false)} disabled={adminScheduleLoading}>Batal</button>
+                <button className="focus-toggle" type="submit" disabled={adminScheduleLoading}>{adminScheduleLoading ? 'Menyimpan...' : 'Simpan Jadwal'}</button>
               </div>
             </form>
           </div>
