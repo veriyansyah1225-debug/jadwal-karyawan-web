@@ -1,7 +1,7 @@
 # Dokumentasi Perubahan dan Audit Web UI — Jadwal Karyawan
 
 **Status:** Living Document  
-**Versi:** 2.3  
+**Versi:** 2.4  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Branch produksi:** `main`  
@@ -793,3 +793,14 @@ Tahap ini belum membuka pengelolaan master karyawan/JOB/kode jadwal dan belum me
 - unique index `(employee_id,tanggal)` tersedia;
 - perubahan kode Web UI sudah masuk branch `main`;
 - pengujian penyimpanan record dari browser belum dilakukan pada tahap dokumentasi ini.
+
+
+### 4.18 Perbaikan RLS SELECT untuk Sesi Admin
+
+- **Tanggal:** 2026-10-07
+- **Status:** Production / database diperbaiki
+- **Temuan:** setelah Login Admin, role database menjadi `authenticated`. Policy SELECT data jadwal sebelumnya hanya mencakup `anon`, sehingga dropdown Departemen dan pembacaan jadwal dapat kosong walaupun data PostgreSQL tersedia.
+- **Perubahan database:** policy SELECT pada `departments`, `employees`, `jobs`, `schedule_codes`, dan `employee_schedules` diperluas menjadi `anon, authenticated`.
+- **Batas keamanan:** perubahan hanya untuk SELECT. INSERT/UPDATE/DELETE `employee_schedules` tetap khusus Admin aktif.
+- **Verifikasi:** kelima policy SELECT sudah diverifikasi memiliki roles `{anon,authenticated}`.
+- **Dampak:** tidak ada data jadwal atau master yang diubah.
