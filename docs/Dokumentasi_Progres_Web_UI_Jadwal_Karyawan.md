@@ -1,7 +1,7 @@
 # Dokumentasi Progres Pengembangan Web UI — Jadwal Karyawan
 
 **Status:** Draft / Living Document  
-**Versi:** 1.2  
+**Versi:** 1.3  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Database:** `database-jadwal-karyawan` / PostgreSQL 17 / Supabase
@@ -29,7 +29,7 @@ Komponen yang tersedia saat Web UI mulai dikembangkan:
 | Komponen | Kondisi |
 |---|---:|
 | Departments | 2 |
-| JOB | 8 |
+| JOB | 9 |
 | Karyawan | 30 |
 | Kode jadwal | 6 |
 | Jadwal Oktober 2026 | 401 record |
@@ -337,13 +337,14 @@ Catatan ini dipertahankan hanya sebagai sejarah pengembangan agar tidak menimbul
 
 ### 11.1 JOB Master vs JOB Assignment
 
-Frontend saat ini membedakan:
+Untuk tahap stabilisasi saat ini, aturan bisnis sementara sudah ditetapkan:
 
-- JOB master karyawan;
-- JOB assignment pada tanggal tertentu;
-- schedule code seperti P/S/M/L/OFF/CT.
+- seluruh karyawan Departemen HATCHERY menggunakan JOB master HATCHERY;
+- assignment JOB pada tanggal tertentu tetap disimpan pada employee_schedules.job_id;
+- assignment seperti KANTIN atau LONDRY tidak mengubah Departemen/JOB master karyawan;
+- Deta dan Alda tetap tercatat sebagai karyawan HATCHERY, walaupun pada tanggal tertentu mendapat assignment di FARM.
 
-Namun aturan bisnis final mengenai hubungan ketiganya belum ditetapkan.
+Detail JOB internal HATCHERY seperti admin, holding, sexer, dan pembagian lebih rinci ditunda sampai database stabil.
 
 ### 11.2 L dan OFF
 
@@ -559,6 +560,7 @@ Riwayat berikut mempertahankan milestone penting tanpa mengulang daftar fitur da
 | v1.0 | Penanda visual header hari Minggu | Selesai |
 | v1.1 | Penghapusan fallback data demo dari Web UI | Selesai |
 | v1.1 | Dropdown Departemen membaca master `departments` | Selesai |
+| v1.2 | Seluruh karyawan HATCHERY menggunakan JOB master HATCHERY; Deta/Alda dipastikan sebagai HATCHERY tanpa menghapus assignment harian | Selesai |
 | Saat ini | Stabilisasi Web UI v1 | Sedang dikerjakan |
 
 ---
@@ -594,3 +596,14 @@ Informasi penting tetap dipertahankan dalam bentuk yang lebih ringkas, terutama:
 **Online Web UI + Supabase Integration + Penyempurnaan Web UI v1 — SEDANG DIKERJAKAN.**
 
 Perubahan Production terbaru dan keputusan audit dicatat pada `docs/Dokumentasi_Perubahan_dan_Audit_Web_UI.md`.
+
+
+### Baseline Master Data Terbaru
+
+- Departemen aktif: 2
+- JOB master: 9, termasuk JOB HATCHERY pada Departemen HATCHERY
+- Karyawan: 30
+- Seluruh 15 karyawan HATCHERY menggunakan JOB master HATCHERY
+- Deta dan Alda berada di HATCHERY dan tetap memiliki assignment harian seperti KANTIN, LONDRY, atau OFF
+- Total employee_schedules: 401
+- Tidak ditemukan duplikasi pasangan employee_id dan tanggal pada jadwal
