@@ -61,3 +61,23 @@
 .status-choice.inactive{background:#fff0f0;color:#a52f2f;border-color:#e5bcbc}
 .employee-form-success{padding:10px 12px;border:1px solid #b9ddc2;border-radius:8px;background:#eef9f0;color:#21653a;font-size:12px;font-weight:700}
 @media(max-width:700px){.employee-form-grid{grid-template-columns:1fr}.employee-master-filters{grid-template-columns:1fr}.employee-master-card .title{align-items:flex-start;flex-direction:column}.employee-master-card .title button{width:100%}}
+
+/* Excel-style JOB filter */
+.employee-master-table .employee-job-filter-header{position:sticky;top:0;z-index:7;min-width:190px;padding:0;background:#f4f7fb}
+.excel-filter{position:relative;width:100%}
+.excel-filter-trigger{display:flex;align-items:center;justify-content:space-between;width:100%;height:48px;padding:0 10px;background:#f4f7fb;color:#25364d;border:0;border-radius:0;font-size:13px;font-weight:800;text-align:left}
+.excel-filter-trigger:hover,.excel-filter-trigger.active{background:#e8f1fb;color:#1265c5}
+.excel-filter-icon{font-size:12px;color:var(--muted)}
+.excel-filter-menu{position:absolute;top:calc(100% + 4px);right:0;width:270px;background:#fff;border:1px solid #cfd8e5;border-radius:10px;box-shadow:0 14px 36px #14243a2b;z-index:30;overflow:hidden;text-align:left}
+.excel-filter-search{padding:10px;border-bottom:1px solid var(--line)}
+.excel-filter-search input{height:36px;font-size:12px}
+.excel-filter-actions{display:flex;gap:7px;padding:8px 10px;border-bottom:1px solid var(--line)}
+.excel-filter-actions button{width:auto;height:30px;padding:0 9px;background:#eef3f8;color:#25364d;border:1px solid #d7dee9;font-size:11px}
+.excel-filter-actions button:hover{background:#e3ebf5}
+.excel-filter-list{max-height:250px;overflow:auto;padding:4px 0}
+.excel-filter-option{display:flex;align-items:center;gap:9px;padding:8px 12px;margin:0;font-size:12px;font-weight:600;cursor:pointer}
+.excel-filter-option:hover{background:#f4f7fb}
+.excel-filter-option input{width:16px;height:16px;margin:0;padding:0}
+.excel-filter-empty{padding:16px 12px;text-align:center;color:var(--muted);font-size:12px}
+.excel-filter-footer{padding:8px 12px;border-top:1px solid var(--line);background:#f8fafc;color:var(--muted);font-size:11px;font-weight:600}
+@media(max-width:700px){.excel-filter-menu{position:fixed;left:14px;right:14px;top:145px;width:auto}}
