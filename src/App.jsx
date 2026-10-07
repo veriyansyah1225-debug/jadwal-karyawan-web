@@ -563,7 +563,6 @@ function App() {
           <div className="title">
             <div>
               <h2>Jadwal {department} — {formatDisplayDate(startDate)}{startDate !== endDate ? ` – ${formatDisplayDate(endDate)}` : ''}</h2>
-              <div className="meta">{supabaseConfigured ? 'Sumber: Supabase / v_jadwal_karyawan' : 'Supabase belum dikonfigurasi'} · Export mengikuti filter yang sedang aktif.</div>
             </div>
             <div className="title-actions">
               <div className="month-picker">
@@ -605,7 +604,6 @@ function App() {
             </div>
           )}
 
-          <div className="note">Data produksi berasal dari <b>v_jadwal_karyawan</b>. Filter tanggal, pemilihan karyawan, dan tampilan JOB hanya mengatur tampilan; jadwal tetap tersimpan per tanggal di database. Jika rentang melewati bulan, tabel dapat digeser secara horizontal.</div>
         </section>
 
         <section className="card">
