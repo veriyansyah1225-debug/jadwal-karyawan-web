@@ -2,12 +2,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'jsr:@supabase/supabase-js@2/cors'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
-const publishableKeys = JSON.parse(Deno.env.get('SUPABASE_PUBLISHABLE_KEYS') ?? '{}')
 const secretKeys = JSON.parse(Deno.env.get('SUPABASE_SECRET_KEYS') ?? '{}')
-
-const supabasePublic = createClient(SUPABASE_URL, publishableKeys.default ?? '', {
-  auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false },
-})
 
 const supabaseAdmin = createClient(SUPABASE_URL, secretKeys.default ?? '', {
   auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false },
@@ -30,7 +25,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const token = authHeader.replace('Bearer ', '')
-    const { data: authData, error: authError } = await supabasePublic.auth.getUser(token)
+    const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(token)
     if (authError || !authData.user) {
       return json({ error: 'Sesi login tidak valid.' }, 401)
     }
