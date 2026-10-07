@@ -170,26 +170,20 @@ function exportExcel(rows, dateRange, department, includeJob, startDate, endDate
   XLSX.writeFile(workbook, 'jadwal-karyawan-' + startDate + '-' + endDate + '.xlsx')
 }
 
-function exportPdf(rows, dateRange, department, includeJob, startDate, endDate, paper = 'A4') {
+function exportPdf(rows, dateRange, department, includeJob, startDate, endDate) {
   if (!rows.length || !dateRange.length) return
 
-  const isF4 = paper === 'F4'
-  const pageFormat = isF4 ? [330, 216] : 'a4'
-  const paperLabel = isF4 ? 'F4' : 'A4'
-  const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: pageFormat })
-  const margin = 8
+  const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3' })
+  const margin = 10
   const pageWidth = pdf.internal.pageSize.getWidth()
   const pageHeight = pdf.internal.pageSize.getHeight()
   const titleHeight = 18
   const headerHeight = 12
   const rowHeight = 10
-  const nameWidth = includeJob ? 58 : 66
-  const jobWidth = includeJob ? 24 : 0
-  const datesPerPage = isF4 ? 10 : 8
-  const dateChunks = []
-  for (let index = 0; index < dateRange.length; index += datesPerPage) {
-    dateChunks.push(dateRange.slice(index, index + datesPerPage))
-  }
+  const nameWidth = includeJob ? 72 : 82
+  const jobWidth = includeJob ? 30 : 0
+  const datesPerPage = dateRange.length
+  const dateChunks = [dateRange]
 
   const codeFill = {
     P: [201, 242, 207],
@@ -214,16 +208,16 @@ function exportPdf(rows, dateRange, department, includeJob, startDate, endDate, 
     const left = (pageWidth - tableWidth) / 2
 
     for (const rowChunk of rowChunks) {
-      if (pageNumber > 0) pdf.addPage(pageFormat, 'landscape')
+      if (pageNumber > 0) pdf.addPage('a3', 'landscape')
       pageNumber += 1
 
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(15)
+      pdf.setFontSize(16)
       pdf.text('Jadwal Karyawan', margin, margin + 3)
       pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(8.5)
+      pdf.setFontSize(9)
       pdf.text('Departemen: ' + department + ' | Periode: ' + startDate + ' s/d ' + endDate, margin, margin + 10)
-      pdf.text(paperLabel + ' | Tanggal ' + dateChunk[0].day + '–' + dateChunk[dateChunk.length - 1].day + ' | Halaman ' + pageNumber + '/' + totalPages, pageWidth - margin, margin + 10, { align: 'right' })
+      pdf.text('A3 | Tanggal ' + dateChunk[0].day + '–' + dateChunk[dateChunk.length - 1].day + ' | Halaman ' + pageNumber + '/' + totalPages, pageWidth - margin, margin + 10, { align: 'right' })
 
       let y = margin + titleHeight
       let x = left
@@ -232,7 +226,7 @@ function exportPdf(rows, dateRange, department, includeJob, startDate, endDate, 
       pdf.setDrawColor(95, 108, 125)
       pdf.setLineWidth(0.45)
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(8.8)
+      pdf.setFontSize(9.5)
 
       if (includeJob) {
         pdf.rect(x, y, jobWidth, headerHeight)
@@ -247,14 +241,14 @@ function exportPdf(rows, dateRange, department, includeJob, startDate, endDate, 
       for (const item of dateChunk) {
         pdf.rect(x, y, dateWidth, headerHeight)
         pdf.text(String(item.day), x + dateWidth / 2, y + 5.2, { align: 'center' })
-        pdf.setFontSize(7)
+        pdf.setFontSize(7.2)
         pdf.text(item.dayName, x + dateWidth / 2, y + 9.0, { align: 'center' })
-        pdf.setFontSize(8.8)
+        pdf.setFontSize(9.5)
         x += dateWidth
       }
 
       y += headerHeight
-      pdf.setFontSize(8.5)
+      pdf.setFontSize(9)
 
       for (const row of rowChunk) {
         x = left
@@ -263,12 +257,12 @@ function exportPdf(rows, dateRange, department, includeJob, startDate, endDate, 
 
         if (includeJob) {
           pdf.rect(x, y, jobWidth, rowHeight)
-          pdf.text(String(row.job || ''), x + 2, y + 6.7, { maxWidth: jobWidth - 4 })
+          pdf.text(String(row.job || ''), x + 2.5, y + 6.7, { maxWidth: jobWidth - 5 })
           x += jobWidth
         }
 
         pdf.rect(x, y, nameWidth, rowHeight)
-        pdf.text(String(row.name || ''), x + 2, y + 6.7, { maxWidth: nameWidth - 4 })
+        pdf.text(String(row.name || ''), x + 2.5, y + 6.7, { maxWidth: nameWidth - 5 })
         x += nameWidth
 
         for (const item of dateChunk) {
@@ -281,9 +275,9 @@ function exportPdf(rows, dateRange, department, includeJob, startDate, endDate, 
           pdf.rect(x, y, dateWidth, rowHeight)
           if (code) {
             pdf.setFont('helvetica', 'bold')
-            pdf.setFontSize(code.length > 1 ? 8.2 : 10)
+            pdf.setFontSize(code.length > 1 ? 8.5 : 10)
             pdf.text(code, x + dateWidth / 2, y + 6.7, { align: 'center' })
-            pdf.setFontSize(8.5)
+            pdf.setFontSize(9)
           }
           x += dateWidth
         }
@@ -292,7 +286,7 @@ function exportPdf(rows, dateRange, department, includeJob, startDate, endDate, 
     }
   }
 
-  pdf.save('jadwal-karyawan-' + paperLabel.toLowerCase() + '-' + startDate + '-' + endDate + '.pdf')
+  pdf.save('jadwal-karyawan-a3-' + startDate + '-' + endDate + '.pdf')
 }
 
 function App() {
@@ -590,8 +584,7 @@ function App() {
                 )}
               </div>
               <button className="secondary export-button" type="button" onClick={() => exportExcel(filteredRows, dateRange, department, showJobColumn, startDate, endDate)} disabled={loading || filteredRows.length === 0}>Excel</button>
-              <button className="secondary export-button" type="button" onClick={() => exportPdf(filteredRows, dateRange, department, showJobColumn, startDate, endDate, 'A4')} disabled={loading || filteredRows.length === 0}>PDF A4</button>
-              <button className="secondary export-button" type="button" onClick={() => exportPdf(filteredRows, dateRange, department, showJobColumn, startDate, endDate, 'F4')} disabled={loading || filteredRows.length === 0}>PDF F4</button>
+              <button className="secondary export-button" type="button" onClick={() => exportPdf(filteredRows, dateRange, department, showJobColumn, startDate, endDate)} disabled={loading || filteredRows.length === 0}>PDF A3</button>
               <button className="focus-toggle" type="button" onClick={() => setFocusMode((value) => !value)}>
                 {focusMode ? 'Kembalikan Tampilan' : 'Perbesar Jadwal'}
               </button>
