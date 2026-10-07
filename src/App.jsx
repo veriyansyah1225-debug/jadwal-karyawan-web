@@ -328,6 +328,27 @@ function App() {
   const [scheduleRefresh, setScheduleRefresh] = useState(0)
   const [adminDeleteLoading, setAdminDeleteLoading] = useState(false)
   const [adminDeleteError, setAdminDeleteError] = useState('')
+  const [activeTab, setActiveTab] = useState('schedule')
+  const [employeeMasterRows, setEmployeeMasterRows] = useState([])
+  const [masterDepartments, setMasterDepartments] = useState([])
+  const [masterJobs, setMasterJobs] = useState([])
+  const [employeeMasterSearch, setEmployeeMasterSearch] = useState('')
+  const [employeeMasterStatus, setEmployeeMasterStatus] = useState('aktif')
+  const [employeeMasterDepartment, setEmployeeMasterDepartment] = useState('')
+  const [employeeFormOpen, setEmployeeFormOpen] = useState(false)
+  const [employeeFormEditMode, setEmployeeFormEditMode] = useState(false)
+  const [employeeFormId, setEmployeeFormId] = useState('')
+  const [employeeFormCode, setEmployeeFormCode] = useState('')
+  const [employeeFormName, setEmployeeFormName] = useState('')
+  const [employeeFormDepartmentId, setEmployeeFormDepartmentId] = useState('')
+  const [employeeFormJobId, setEmployeeFormJobId] = useState('')
+  const [employeeFormActive, setEmployeeFormActive] = useState(true)
+  const [employeeFormStartDate, setEmployeeFormStartDate] = useState('')
+  const [employeeFormEndDate, setEmployeeFormEndDate] = useState('')
+  const [employeeFormNote, setEmployeeFormNote] = useState('')
+  const [employeeFormLoading, setEmployeeFormLoading] = useState(false)
+  const [employeeFormError, setEmployeeFormError] = useState('')
+  const [employeeFormSuccess, setEmployeeFormSuccess] = useState('')
 
   const dateRange = useMemo(() => getDateRange(startDate, endDate), [startDate, endDate])
   const invalidRange = Boolean(startDate && endDate && startDate > endDate)
@@ -544,6 +565,145 @@ function App() {
     }
   }, [isAdmin, department])
 
+  useEffect(() => {
+    if (!supabaseConfigured || !publicSupabase) return
+
+    let cancelled = false
+
+    async function loadEmployeeMaster() {
+      const [{ data: employeeData, error: employeeError }, { data: departmentData, error: departmentError }, { data: jobData, error: jobError }] = await Promise.all([
+        publicSupabase
+          .from('employees')
+          .select('id,kode_karyawan,nama,aktif,department_id,job_id,tanggal_masuk,tanggal_keluar,keterangan,departments(id,nama_departemen),jobs(id,nama_job,department_id)')
+          .order('nama'),
+        publicSupabase
+          .from('departments')
+          .select('id,nama_departemen')
+          .eq('aktif', true)
+          .order('nama_departemen'),
+        publicSupabase
+          .from('jobs')
+          .select('id,nama_job,department_id')
+          .eq('aktif', true)
+          .order('nama_job'),
+      ])
+
+      if (cancelled) return
+
+      if (employeeError || departmentError || jobError) {
+        setEmployeeFormError(employeeError?.message || departmentError?.message || jobError?.message || 'Gagal memuat master karyawan.')
+        return
+      }
+
+      const employees = employeeData || []
+      setEmployeeMasterRows(employees)
+      setMasterDepartments(departmentData || [])
+      setMasterJobs(jobData || [])
+      setAdminEmployees(employees.filter((item) => item.aktif))
+
+      if (!employeeFormDepartmentId && departmentData?.length) {
+        setEmployeeFormDepartmentId(String(departmentData[0].id))
+      }
+    }
+
+    loadEmployeeMaster()
+
+    return () => {
+      cancelled = true
+    }
+  }, [isAdmin, scheduleRefresh])
+
+  const filteredEmployeeMasterRows = useMemo(() => {
+    const query = employeeMasterSearch.trim().toLowerCase()
+
+    return employeeMasterRows
+      .filter((employee) => employeeMasterStatus === 'semua' || (employeeMasterStatus === 'aktif' ? employee.aktif : !employee.aktif))
+      .filter((employee) => !employeeMasterDepartment || String(employee.department_id || '') === String(employeeMasterDepartment))
+      .filter((employee) => !query || [employee.nama, employee.kode_karyawan, employee.departments?.nama_departemen, employee.jobs?.nama_job]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(query)))
+      .sort((a, b) => String(a.nama || '').localeCompare(String(b.nama || '')))
+  }, [employeeMasterRows, employeeMasterStatus, employeeMasterDepartment, employeeMasterSearch])
+
+  const employeeFormJobs = useMemo(
+    () => masterJobs.filter((item) => !employeeFormDepartmentId || !item.department_id || String(item.department_id) === String(employeeFormDepartmentId)),
+    [masterJobs, employeeFormDepartmentId],
+  )
+
+  function openEmployeeForm(employee = null) {
+    if (!isAdmin) return
+
+    setEmployeeFormEditMode(Boolean(employee))
+    setEmployeeFormId(employee ? String(employee.id) : '')
+    setEmployeeFormCode(employee?.kode_karyawan || '')
+    setEmployeeFormName(employee?.nama || '')
+    setEmployeeFormDepartmentId(employee ? String(employee.department_id || '') : String(masterDepartments[0]?.id || ''))
+    setEmployeeFormJobId(employee?.job_id ? String(employee.job_id) : '')
+    setEmployeeFormActive(employee ? Boolean(employee.aktif) : true)
+    setEmployeeFormStartDate(employee?.tanggal_masuk || '')
+    setEmployeeFormEndDate(employee?.tanggal_keluar || '')
+    setEmployeeFormNote(employee?.keterangan || '')
+    setEmployeeFormError('')
+    setEmployeeFormSuccess('')
+    setEmployeeFormOpen(true)
+  }
+
+  async function handleEmployeeFormSave(event) {
+    event.preventDefault()
+    if (!supabase || !isAdmin) return
+
+    const name = employeeFormName.trim()
+    if (!name) {
+      setEmployeeFormError('Nama karyawan wajib diisi.')
+      return
+    }
+
+    if (!employeeFormDepartmentId) {
+      setEmployeeFormError('Departemen wajib dipilih.')
+      return
+    }
+
+    if (!employeeFormActive && !employeeFormEndDate) {
+      setEmployeeFormError('Tanggal berhenti wajib diisi untuk karyawan nonaktif.')
+      return
+    }
+
+    if (employeeFormStartDate && employeeFormEndDate && employeeFormEndDate < employeeFormStartDate) {
+      setEmployeeFormError('Tanggal berhenti tidak boleh lebih awal dari tanggal masuk.')
+      return
+    }
+
+    setEmployeeFormLoading(true)
+    setEmployeeFormError('')
+    setEmployeeFormSuccess('')
+
+    const payload = {
+      kode_karyawan: employeeFormCode.trim() || null,
+      nama: name,
+      department_id: Number(employeeFormDepartmentId),
+      job_id: employeeFormJobId ? Number(employeeFormJobId) : null,
+      aktif: employeeFormActive,
+      tanggal_masuk: employeeFormStartDate || null,
+      tanggal_keluar: employeeFormActive ? null : (employeeFormEndDate || null),
+      keterangan: employeeFormNote.trim() || null,
+    }
+
+    const result = employeeFormEditMode
+      ? await supabase.from('employees').update(payload).eq('id', Number(employeeFormId))
+      : await supabase.from('employees').insert(payload)
+
+    if (result.error) {
+      setEmployeeFormError(result.error.message)
+      setEmployeeFormLoading(false)
+      return
+    }
+
+    setEmployeeFormSuccess(employeeFormEditMode ? 'Data karyawan berhasil diperbarui.' : 'Karyawan baru berhasil ditambahkan.')
+    setEmployeeFormLoading(false)
+    setScheduleRefresh((value) => value + 1)
+    setEmployeeFormOpen(false)
+  }
+
   async function handleAdminScheduleSave(event) {
     event.preventDefault()
     if (!supabase || !isAdmin) return
@@ -751,8 +911,8 @@ function App() {
       <aside className="side">
         <div className="brand">▣ Jadwal Karyawan<small>Database Jadwal & Absensi</small></div>
         <nav className="nav">
-          <div className="active">⌂ &nbsp; Jadwal Karyawan</div>
-          <div>♟ &nbsp; Karyawan</div>
+          <button type="button" className={activeTab === 'schedule' ? 'nav-settings active' : 'nav-settings'} onClick={() => setActiveTab('schedule')}>⌂ &nbsp; Jadwal Karyawan</button>
+          <button type="button" className={activeTab === 'employees' ? 'nav-settings active' : 'nav-settings'} onClick={() => setActiveTab('employees')}>♟ &nbsp; Karyawan</button>
           <div>▦ &nbsp; Departemen</div>
           <div>▣ &nbsp; JOB</div>
           <div>☷ &nbsp; Kode Jadwal</div>
@@ -763,9 +923,83 @@ function App() {
       </aside>
 
       <main className="main">
-        <h1>Jadwal Karyawan</h1>
-        <p className="sub">Frontend awal berdasarkan Prototype UI v2</p>
+        <h1>{activeTab === 'employees' ? 'Master Karyawan' : 'Jadwal Karyawan'}</h1>
+        <p className="sub">{activeTab === 'employees' ? 'Kelola data master karyawan dan status kepegawaian.' : 'Frontend awal berdasarkan Prototype UI v2'}</p>
 
+        {activeTab === 'employees' ? (
+          <section className="card employee-master-card">
+            <div className="title">
+              <div>
+                <h2>Data Karyawan</h2>
+                <div className="meta">{filteredEmployeeMasterRows.length} data ditampilkan</div>
+              </div>
+              {isAdmin && <button className="focus-toggle" type="button" onClick={() => openEmployeeForm()}>+ Tambah Karyawan</button>}
+            </div>
+
+            <div className="filters employee-master-filters">
+              <div>
+                <label>Cari Karyawan</label>
+                <input value={employeeMasterSearch} onChange={(e) => setEmployeeMasterSearch(e.target.value)} placeholder="Nama atau kode karyawan..." />
+              </div>
+              <div>
+                <label>Status</label>
+                <select value={employeeMasterStatus} onChange={(e) => setEmployeeMasterStatus(e.target.value)}>
+                  <option value="aktif">Aktif</option>
+                  <option value="nonaktif">Berhenti / Nonaktif</option>
+                  <option value="semua">Semua</option>
+                </select>
+              </div>
+              <div>
+                <label>Departemen</label>
+                <select value={employeeMasterDepartment} onChange={(e) => setEmployeeMasterDepartment(e.target.value)}>
+                  <option value="">Semua</option>
+                  {masterDepartments.map((item) => <option key={item.id} value={item.id}>{item.nama_departemen}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {employeeFormError && !employeeFormOpen && <div className="state error">{employeeFormError}</div>}
+
+            <div className="wrap employee-master-table-wrap">
+              <table className="employee-master-table">
+                <thead>
+                  <tr>
+                    <th>Kode</th>
+                    <th className="employee-master-name">Nama Karyawan</th>
+                    <th>Departemen</th>
+                    <th>JOB</th>
+                    <th>Tanggal Masuk</th>
+                    <th>Tanggal Berhenti</th>
+                    <th>Status</th>
+                    {isAdmin && <th>Aksi</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredEmployeeMasterRows.length === 0 && (
+                    <tr><td colSpan={isAdmin ? 8 : 7}><div className="state">Tidak ada data karyawan yang sesuai.</div></td></tr>
+                  )}
+                  {filteredEmployeeMasterRows.map((employee) => (
+                    <tr key={employee.id}>
+                      <td>{employee.kode_karyawan || '—'}</td>
+                      <td className="employee-master-name">{employee.nama}</td>
+                      <td>{employee.departments?.nama_departemen || '—'}</td>
+                      <td>{employee.jobs?.nama_job || '—'}</td>
+                      <td>{employee.tanggal_masuk || '—'}</td>
+                      <td>{employee.tanggal_keluar || '—'}</td>
+                      <td><span className={employee.aktif ? 'employee-status active' : 'employee-status inactive'}>{employee.aktif ? 'Aktif' : 'Berhenti'}</span></td>
+                      {isAdmin && (
+                        <td>
+                          <button className="table-action-button" type="button" onClick={() => openEmployeeForm(employee)}>Edit</button>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        ) : (
+          <>
         <section className="card">
           <div className="filters">
             <div><label>Dari Tanggal</label><input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></div>
@@ -859,6 +1093,8 @@ function App() {
           <h3>Legenda Kode Jadwal</h3>
           <div className="legend">{[['P','Shift Pagi'],['S','Shift Sore'],['M','Shift Malam'],['L','Libur'],['CT','Cuti']].map(([code,label]) => <div key={code}><span className={code}>{code}</span>{label}</div>)}</div>
         </section>
+          </>
+        )}
       </main>
 
       {settingsOpen && (
@@ -973,6 +1209,71 @@ function App() {
                 )}
                 <button className="secondary" type="button" onClick={() => setAdminScheduleOpen(false)} disabled={adminScheduleLoading}>Batal</button>
                 <button className="focus-toggle" type="submit" disabled={adminScheduleLoading}>{adminScheduleLoading ? 'Menyimpan...' : 'Simpan Jadwal'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {employeeFormOpen && (
+        <div className="modal-backdrop" onClick={() => !employeeFormLoading && setEmployeeFormOpen(false)}>
+          <div className="modal employee-form-modal" role="dialog" aria-modal="true" aria-labelledby="employee-form-title" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-head">
+              <div>
+                <div className="modal-kicker">Master Karyawan</div>
+                <h2 id="employee-form-title">{employeeFormEditMode ? 'Edit Karyawan' : 'Tambah Karyawan'}</h2>
+              </div>
+              <button className="modal-close" type="button" onClick={() => !employeeFormLoading && setEmployeeFormOpen(false)} aria-label="Tutup">×</button>
+            </div>
+
+            <form className="employee-form" onSubmit={handleEmployeeFormSave}>
+              <div className="employee-form-grid">
+                <label>Kode / ID Karyawan
+                  <input value={employeeFormCode} onChange={(e) => setEmployeeFormCode(e.target.value)} placeholder="Contoh: EMP001" />
+                </label>
+                <label>Nama Lengkap *
+                  <input value={employeeFormName} onChange={(e) => setEmployeeFormName(e.target.value)} placeholder="Nama karyawan" required />
+                </label>
+                <label>Departemen *
+                  <select value={employeeFormDepartmentId} onChange={(e) => { setEmployeeFormDepartmentId(e.target.value); setEmployeeFormJobId('') }} required>
+                    <option value="">Pilih departemen</option>
+                    {masterDepartments.map((item) => <option key={item.id} value={item.id}>{item.nama_departemen}</option>)}
+                  </select>
+                </label>
+                <label>JOB
+                  <select value={employeeFormJobId} onChange={(e) => setEmployeeFormJobId(e.target.value)}>
+                    <option value="">Belum ditentukan</option>
+                    {employeeFormJobs.map((item) => <option key={item.id} value={item.id}>{item.nama_job}</option>)}
+                  </select>
+                </label>
+                <label>Tanggal Masuk
+                  <input type="date" value={employeeFormStartDate} onChange={(e) => setEmployeeFormStartDate(e.target.value)} />
+                </label>
+                <label>Tanggal Berhenti
+                  <input type="date" value={employeeFormEndDate} onChange={(e) => setEmployeeFormEndDate(e.target.value)} disabled={employeeFormActive} />
+                </label>
+              </div>
+
+              <div className="employee-status-editor">
+                <div>
+                  <label>Status Karyawan</label>
+                  <div className="employee-status-toggle">
+                    <button type="button" className={employeeFormActive ? 'status-choice active' : 'status-choice'} onClick={() => { setEmployeeFormActive(true); setEmployeeFormEndDate('') }}>Aktif</button>
+                    <button type="button" className={!employeeFormActive ? 'status-choice inactive' : 'status-choice'} onClick={() => setEmployeeFormActive(false)}>Berhenti / Nonaktif</button>
+                  </div>
+                </div>
+              </div>
+
+              <label>Keterangan
+                <textarea value={employeeFormNote} onChange={(e) => setEmployeeFormNote(e.target.value)} placeholder="Catatan internal karyawan (opsional)" rows="3" />
+              </label>
+
+              {employeeFormError && <div className="state error">{employeeFormError}</div>}
+              {employeeFormSuccess && <div className="employee-form-success">{employeeFormSuccess}</div>}
+
+              <div className="admin-login-actions">
+                <button className="secondary" type="button" onClick={() => setEmployeeFormOpen(false)} disabled={employeeFormLoading}>Batal</button>
+                <button className="focus-toggle" type="submit" disabled={employeeFormLoading}>{employeeFormLoading ? 'Menyimpan...' : 'Simpan Karyawan'}</button>
               </div>
             </form>
           </div>
