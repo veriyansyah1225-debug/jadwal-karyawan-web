@@ -530,7 +530,7 @@ function App() {
 
       setAdminEmployees(employeeData || [])
       setAdminScheduleCodes(codeData || [])
-      setAdminEmployeeId((current) => current || String(employeeData?.find((item) => item.departments?.nama_departemen === department)?.id || employeeData?.[0]?.id || ''))
+      setAdminEmployeeId(String(employeeData?.find((item) => item.departments?.nama_departemen === department)?.id || employeeData?.[0]?.id || ''))
       setAdminScheduleCodeId((current) => current || String(codeData?.find((item) => item.kode === 'L')?.id || codeData?.[0]?.id || ''))
     }
 
