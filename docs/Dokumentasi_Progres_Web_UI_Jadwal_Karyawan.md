@@ -1,7 +1,7 @@
 # Dokumentasi Progres Pengembangan Web UI — Jadwal Karyawan
 
 **Status:** Draft / Living Document  
-**Versi:** 2.1  
+**Versi:** 2.2  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Database:** `database-jadwal-karyawan` / PostgreSQL 17 / Supabase
@@ -30,7 +30,7 @@ Komponen yang tersedia saat Web UI mulai dikembangkan:
 |---|---:|
 | Departments | 2 |
 | JOB | 11 |
-| Karyawan | 59 |
+| Karyawan | 60 |
 | Kode jadwal | 6 |
 | Jadwal Oktober 2026 | 522 record saat ini |
 | Data absensi | 0 record |
@@ -249,7 +249,7 @@ Tujuannya agar satu karyawan tidak terpecah menjadi beberapa baris hanya karena 
 | Input/Edit jadwal | Belum |
 | Modul absensi | Belum |
 | Laporan | Belum |
-| Export Excel/PDF | Belum |
+| Export Excel/PDF | ✓ Selesai |
 | Audit/histori perubahan | Belum |
 
 ---
@@ -497,7 +497,28 @@ Query hanya mengambil departemen aktif (`aktif = true`) dan mengurutkan berdasar
 
 Daftar FARM/HATCHERY tidak lagi ditulis sebagai opsi hardcode pada Web UI.
 
-### 11.11 Authentication dan RLS
+### 11.11 Export Excel dan PDF
+
+Pada 2026-10-07, Web UI ditambahkan fitur export data jadwal berdasarkan filter yang sedang aktif.
+
+Tersedia dua tombol:
+
+- **Excel** — mengunduh file `.xlsx`;
+- **PDF** — mengunduh file `.pdf`.
+
+Kedua export menggunakan data hasil filter Web UI saat ini, termasuk:
+
+- rentang tanggal;
+- Departemen;
+- JOB;
+- pilihan karyawan;
+- status tampilan kolom JOB.
+
+Export tidak mengubah database dan tidak melakukan query tambahan. Data yang diekspor berasal dari hasil query `v_jadwal_karyawan` yang sudah ditampilkan pada halaman.
+
+PDF menggunakan format landscape A3 agar jadwal dengan banyak tanggal tetap terbaca. Excel menggunakan satu sheet `Jadwal` dengan informasi Departemen dan periode di bagian atas.
+
+### 11.12 Authentication dan RLS
 
 RLS sudah diaktifkan pada tabel utama database, tetapi policy final untuk aplikasi belum ditentukan.
 
@@ -624,8 +645,8 @@ Database sudah memiliki `attendance_records`, tetapi modul Web UI absensi belum 
 
 - laporan jadwal;
 - laporan absensi;
-- Excel;
-- PDF;
+- **Export Excel — sudah tersedia pada Web UI**;
+- **Export PDF — sudah tersedia pada Web UI**;
 - pencetakan format final.
 
 ### Operasional
@@ -663,7 +684,7 @@ Urutan pengembangan yang disarankan:
 
 8. **Modul absensi**
 
-9. **Laporan dan export**
+9. **Penyempurnaan export dan laporan**
 
 10. **Audit dan operasional**
 
@@ -697,6 +718,7 @@ Fokus saat ini tetap pada penyelesaian dan stabilisasi **master data + Web UI v1
 | v1.9 | Koreksi jadwal Kandang Oktober 2026 berdasarkan tabel sumber terbaru | Selesai |
 | v2.0 | Penambahan JOB IB, 12 karyawan IB, dan 48 jadwal L Oktober 2026 | Selesai |
 | v2.1 | Koreksi tanggal libur IB dan penambahan ARIF pada JOB MEKANIK | Selesai |
+| v2.2 | Penambahan export Excel dan PDF berdasarkan filter aktif | Selesai |
 
 ---
 
@@ -716,7 +738,7 @@ Audit versi sebelumnya mempertahankan informasi penting dalam bentuk yang lebih 
 
 **Status keseluruhan:**
 
-> **Web UI React + Vite sudah online, terhubung ke Supabase/PostgreSQL, mampu menampilkan jadwal berdasarkan rentang tanggal atau pilihan bulan, memfilter karyawan secara multi-select, membuka detail jadwal, memperbesar area tabel, menampilkan/menyembunyikan kolom JOB, dan memberikan penanda visual khusus pada header hari Minggu. Authentication, RLS final, pengelolaan jadwal, absensi, laporan, dan beberapa aturan bisnis masih belum final. Master data FARM untuk daftar Kandang yang diterima sudah dimasukkan; daftar JOB FARM berikutnya masih menunggu sumber.**
+> **Web UI React + Vite sudah online, terhubung ke Supabase/PostgreSQL, mampu menampilkan jadwal berdasarkan rentang tanggal atau pilihan bulan, memfilter karyawan secara multi-select, membuka detail jadwal, memperbesar area tabel, menampilkan/menyembunyikan kolom JOB, dan memberikan penanda visual khusus pada header hari Minggu. Authentication, RLS final, pengelolaan jadwal, absensi, laporan, dan beberapa aturan bisnis masih belum final. Export Excel/PDF sudah tersedia untuk data jadwal yang sedang ditampilkan. Master data FARM untuk daftar Kandang yang diterima sudah dimasukkan; daftar JOB FARM berikutnya masih menunggu sumber.**
 
 **Milestone saat ini:**  
 **Online Web UI + Supabase Integration + Stabilisasi Master Data + Penyempurnaan Web UI v1 — SEDANG DIKERJAKAN.**
@@ -727,7 +749,7 @@ Perubahan Production terbaru dan keputusan audit dicatat pada `docs/Dokumentasi_
 
 - Departemen aktif: 2
 - JOB master: 11, termasuk JOB HATCHERY pada Departemen HATCHERY, JOB Kandang pada Departemen FARM, dan JOB IB pada Departemen FARM
-- Karyawan: 59
+- Karyawan: 60
 - Seluruh 15 karyawan HATCHERY menggunakan JOB master HATCHERY
 - Deta dan Alda berada di HATCHERY dan tetap memiliki assignment harian seperti KANTIN, LONDRY, atau OFF
 - Total employee_schedules: 522
