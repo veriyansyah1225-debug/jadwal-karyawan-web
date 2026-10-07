@@ -1,7 +1,7 @@
 # Dokumentasi Progres Pengembangan Web UI — Jadwal Karyawan
 
 **Status:** Draft / Living Document  
-**Versi:** 1.6  
+**Versi:** 1.7  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Database:** `database-jadwal-karyawan` / PostgreSQL 17 / Supabase
@@ -30,15 +30,15 @@ Komponen yang tersedia saat Web UI mulai dikembangkan:
 |---|---:|
 | Departments | 2 |
 | JOB | 10 |
-| Karyawan | 31 |
+| Karyawan | 47 |
 | Kode jadwal | 6 |
-| Jadwal Oktober 2026 | 401 record |
+| Jadwal Oktober 2026 | 518 record saat ini |
 | Data absensi | 0 record |
 | View `v_jadwal_karyawan` | Tersedia |
 
 Database PostgreSQL/Supabase menjadi sumber data utama Web UI.
 
-**Catatan master data terbaru:** JOB `Kandang` tersedia pada Departemen FARM. Seluruh **17 nama Kandang** dari daftar yang diberikan sudah dimasukkan ke master `employees` sebagai karyawan FARM dengan JOB Kandang. Jadwal Oktober dari gambar belum dimasukkan.
+**Catatan master data terbaru:** JOB `Kandang` tersedia pada Departemen FARM. Seluruh **17 nama Kandang** dari daftar yang diberikan sudah dimasukkan ke master `employees` sebagai karyawan FARM dengan JOB Kandang. Jadwal Oktober JOB Kandang dari gambar sudah dimasukkan sebagai kode L; tanda OFF dinormalisasi menjadi L.
 
 ---
 
@@ -361,12 +361,23 @@ Hasil verifikasi:
 - seluruh 17 karyawan memiliki JOB master Kandang;
 - HERI = employee_id 31;
 - karyawan Kandang terakhir yang ditambahkan memperoleh employee_id 47;
-- tidak ada perubahan pada 401 record `employee_schedules`;
-- jadwal Oktober dari gambar belum dimasukkan pada tahap ini.
+- 115 record libur kode L Oktober 2026 dimasukkan untuk 17 karyawan Kandang;
+- total `employee_schedules` saat ini = 518;
+- tidak ditemukan duplikasi pasangan employee_id dan tanggal.
 
-### 11.3 L dan OFF
+### 11.3 Standarisasi L sebagai satu-satunya kode libur
 
-Makna `L` dan `OFF` masih perlu dikonfirmasi agar keduanya tidak sekadar menjadi dua kode dengan makna visual yang sama.
+Keputusan terbaru: **L dan OFF sama-sama berarti libur, tetapi sistem hanya menggunakan kode `L` untuk input dan tampilan.**
+
+Perubahan yang sudah diterapkan:
+
+- seluruh record lama dengan kode `OFF` dipindahkan ke kode `L`;
+- kode `OFF` dinonaktifkan pada `schedule_codes`;
+- jumlah record `OFF` aktif = 0;
+- Web UI tidak lagi menampilkan `OFF` pada legenda;
+- Web UI juga menormalisasi `OFF` menjadi `L` jika suatu data lama masih muncul dari sumber.
+
+Kode `CT` tetap dipertahankan sebagai Cuti karena pada sumber Kandang terdapat tanda `CT` yang berbeda makna dari libur.
 
 ### 11.4 Filter JOB
 
@@ -586,6 +597,7 @@ Fokus saat ini tetap pada penyelesaian dan stabilisasi **master data + Web UI v1
 | v1.3 | Penambahan JOB master Kandang pada FARM | Selesai |
 | v1.5 | Penambahan HERI sebagai karyawan FARM JOB Kandang | Selesai |
 | v1.6 | Penambahan seluruh 17 karyawan FARM JOB Kandang | Selesai |
+| v1.7 | Input libur Kandang Oktober 2026 dan standarisasi L menggantikan OFF | Selesai |
 
 ---
 
@@ -619,6 +631,7 @@ Perubahan Production terbaru dan keputusan audit dicatat pada `docs/Dokumentasi_
 - Karyawan: 47
 - Seluruh 15 karyawan HATCHERY menggunakan JOB master HATCHERY
 - Deta dan Alda berada di HATCHERY dan tetap memiliki assignment harian seperti KANTIN, LONDRY, atau OFF
-- Total employee_schedules: 401
+- Total employee_schedules: 518
 - Tidak ditemukan duplikasi pasangan employee_id dan tanggal pada jadwal
 - Daftar Kandang: 17 nama dari sumber; seluruh 17 sudah dimasukkan ke master employees
+- Jadwal libur Kandang Oktober 2026: 115 record kode L
