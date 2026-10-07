@@ -1,7 +1,7 @@
 # Dokumentasi Perubahan dan Audit Web UI — Jadwal Karyawan
 
 **Status:** Living Document  
-**Versi:** 1.4  
+**Versi:** 1.5  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Branch produksi:** `main`  
@@ -268,12 +268,14 @@ Web UI Production:
 
 PostgreSQL/Supabase tetap menjadi sumber data utama.
 
-Perubahan terakhir pada master data:
+Perubahan terakhir pada master data dan jadwal:
 
 - JOB Kandang tersedia pada FARM;
-- seluruh 17 karyawan Kandang sudah ditambahkan sebagai karyawan FARM / Kandang.
+- seluruh 17 karyawan Kandang sudah ditambahkan sebagai karyawan FARM / Kandang;
+- 115 record libur Kandang Oktober 2026 sudah dimasukkan sebagai kode L;
+- kode OFF sudah dinormalisasi ke L dan dinonaktifkan.
 
-Tidak ada perubahan pada 401 record jadwal yang sudah ada.
+Total `employee_schedules` saat ini = 518.
 
 ---
 
@@ -295,13 +297,14 @@ Bagian yang perlu dijaga konsistensinya:
 
 ### Hasil audit
 
-Dokumentasi progres diperbarui dari versi 1.5 menjadi versi 1.6 untuk mencatat:
+Dokumentasi progres diperbarui menjadi versi 1.7 untuk mencatat:
 
 - jumlah karyawan menjadi 47;
 - seluruh 17 karyawan Kandang sudah menjadi karyawan FARM;
 - seluruh 17 karyawan menggunakan JOB Kandang;
-- jadwal Oktober dari sumber gambar belum dimasukkan;
-- penambahan master Kandang untuk daftar yang diterima selesai.
+- 115 record libur Kandang Oktober 2026 sudah dimasukkan sebagai L;
+- OFF dinormalisasi menjadi L dan dinonaktifkan;
+- Web UI tidak lagi menampilkan OFF.
 
 ---
 
@@ -392,7 +395,13 @@ Data karyawan FARM dari sumber baru dimasukkan per JOB. JOB master harus tersedi
 
 **Keputusan:** diterapkan pada database.
 
-Seluruh 17 nama dari daftar JOB Kandang dimasukkan ke master `employees` sebagai FARM / Kandang. Jadwal Oktober pada sumber gambar tetap belum dimasukkan sampai proses jadwal dilakukan terpisah.
+Seluruh 17 nama dari daftar JOB Kandang dimasukkan ke master `employees` sebagai FARM / Kandang.
+
+### Keputusan D-007 — L menjadi satu-satunya kode libur
+
+**Keputusan:** diterapkan pada database dan Web UI.
+
+`L` dan `OFF` sama-sama berarti libur pada sumber, tetapi sistem menggunakan `L` sebagai satu-satunya kode libur untuk input dan tampilan. Record lama `OFF` sudah dipindahkan ke `L`, kode `OFF` dinonaktifkan, dan Web UI menampilkan `L` jika menerima nilai `OFF` dari data lama.
 
 ---
 
