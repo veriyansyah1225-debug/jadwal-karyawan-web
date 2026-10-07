@@ -597,13 +597,13 @@ function App() {
     setAdminScheduleOpen(true)
   }
 
-  async function handleAdminScheduleDelete() {
-    if (!supabase || !isAdmin || !selectedCell?.detail?.code) return
+  async function deleteAdminSchedule(employeeId, date, employeeName) {
+    if (!supabase || !isAdmin) return false
 
     const confirmed = window.confirm(
-      `Hapus jadwal ${selectedCell.row.name} pada ${formatDisplayDate(selectedCell.date)}? Tindakan ini tidak dapat dibatalkan.`,
+      `Hapus jadwal ${employeeName} pada ${formatDisplayDate(date)}? Tindakan ini tidak dapat dibatalkan.`,
     )
-    if (!confirmed) return
+    if (!confirmed) return false
 
     setAdminDeleteLoading(true)
     setAdminDeleteError('')
@@ -611,18 +611,25 @@ function App() {
     const { error: deleteError } = await supabase
       .from('employee_schedules')
       .delete()
-      .eq('employee_id', Number(selectedCell.row.employeeId))
-      .eq('tanggal', selectedCell.date)
+      .eq('employee_id', Number(employeeId))
+      .eq('tanggal', date)
 
     if (deleteError) {
       setAdminDeleteError(deleteError.message)
       setAdminDeleteLoading(false)
-      return
+      return false
     }
 
-    setSelectedCell(null)
     setAdminDeleteLoading(false)
+    setAdminScheduleOpen(false)
+    setSelectedCell(null)
     setScheduleRefresh((value) => value + 1)
+    return true
+  }
+
+  async function handleAdminScheduleDelete() {
+    if (!selectedCell?.detail?.code) return
+    await deleteAdminSchedule(selectedCell.row.employeeId, selectedCell.date, selectedCell.row.name)
   }
 
   useEffect(() => {
@@ -958,26 +965,12 @@ function App() {
                     className="danger-button"
                     type="button"
                     onClick={() => {
-                      setAdminScheduleOpen(false)
-                      setSelectedCell({
-                        row: adminEmployees.find((item) => String(item.id) === String(adminEmployeeId))
-                          ? {
-                              employeeId: Number(adminEmployeeId),
-                              name: adminEmployees.find((item) => String(item.id) === String(adminEmployeeId))?.nama || 'Karyawan',
-                              department: adminEmployees.find((item) => String(item.id) === String(adminEmployeeId))?.departments?.nama_departemen || department,
-                              job: '',
-                            }
-                          : selectedCell?.row,
-                        date: adminScheduleDate,
-                        detail: {
-                          code: adminScheduleCodes.find((item) => String(item.id) === String(adminScheduleCodeId))?.kode || '',
-                          note: adminScheduleNote,
-                        },
-                      })
+                      const employee = adminEmployees.find((item) => String(item.id) === String(adminEmployeeId))
+                      deleteAdminSchedule(adminEmployeeId, adminScheduleDate, employee?.nama || 'Karyawan')
                     }}
-                    disabled={adminScheduleLoading}
+                    disabled={adminScheduleLoading || adminDeleteLoading}
                   >
-                    Hapus Jadwal
+                    {adminDeleteLoading ? 'Menghapus...' : 'Hapus Jadwal'}
                   </button>
                 )}
                 <button className="secondary" type="button" onClick={() => setAdminScheduleOpen(false)} disabled={adminScheduleLoading}>Batal</button>
