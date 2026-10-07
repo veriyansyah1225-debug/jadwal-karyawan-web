@@ -1,7 +1,7 @@
 # Dokumentasi Perubahan dan Audit Web UI — Jadwal Karyawan
 
 **Status:** Living Document  
-**Versi:** 1.7  
+**Versi:** 1.8  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Branch produksi:** `main`  
@@ -211,7 +211,55 @@ Jadwal Oktober pada gambar **belum dimasukkan** pada tahap ini. Data master kary
 
 ---
 
-### 4.5 Penambahan Karyawan HERI sebagai FARM / Kandang
+### 4.6 Penambahan JOB IB, Karyawan IB, dan Jadwal Oktober 2026
+
+**Status:** Production / Database aktif  
+**Tanggal:** 2026-10-07
+
+#### Sumber
+
+Sumber jadwal yang diberikan menunjukkan JOB `IB` dengan 12 karyawan dan tanda `L` pada tanggal 7, 14, 21, dan 28 Oktober 2026.
+
+Daftar karyawan:
+
+- KRISTIANI YONI
+- M IKLAS RAMADHAN
+- HONGFUNGLOY
+- MARDIANA
+- ROMADHAN
+- HATIP
+- HALIZAH
+- FAREL
+- NAJWAN NAUFAL NURRIFQI
+- JILA FITRI
+- NOPRIANTO
+- ALDO
+
+#### Keputusan
+
+JOB `IB` dimasukkan sebagai JOB master pada Departemen FARM. Keputusan ini konsisten dengan contoh struktur awal project yang menempatkan IB sebagai JOB dan dengan konteks penambahan data FARM secara bertahap.
+
+#### Perubahan database
+
+- JOB master `IB` ditambahkan pada Departemen FARM;
+- 12 karyawan dimasukkan ke `employees` sebagai FARM / IB;
+- 48 record jadwal Oktober 2026 dimasukkan sebagai kode `L`;
+- setiap karyawan memiliki jadwal L pada 7, 14, 21, dan 28 Oktober 2026.
+
+#### Verifikasi
+
+- 12 karyawan IB aktif;
+- 48 jadwal Oktober 2026;
+- seluruh 48 jadwal menggunakan kode `L`;
+- tidak ditemukan duplikasi employee_id dan tanggal;
+- total karyawan aktif = 59;
+- total `employee_schedules` = 518.
+
+Perubahan ini hanya menambahkan JOB, master karyawan, dan jadwal IB yang diberikan. Data JOB lain tidak diubah.
+
+---
+
+### 4.7 Penambahan Karyawan HERI sebagai FARM / Kandang
 
 **Status:** Production / Database aktif  
 **Tanggal:** 2026-10-07
@@ -277,7 +325,9 @@ Perubahan terakhir pada master data dan jadwal:
 - kode OFF sudah dinormalisasi ke L dan dinonaktifkan;
 - desain kode libur sudah diubah menjadi satu standar: L untuk Libur pada input dan tampilan.
 
-Total `employee_schedules` saat ini = 470.
+Total `employee_schedules` saat ini = 518.
+
+JOB `IB` juga sudah ditambahkan pada Departemen FARM bersama 12 karyawan dan 48 record jadwal L Oktober 2026.
 
 ---
 
@@ -295,6 +345,7 @@ Bagian yang perlu dijaga konsistensinya:
 - fitur yang masih Preview atau belum dibuat;
 - jumlah master JOB;
 - jumlah karyawan;
+- jumlah jadwal setelah penambahan JOB baru;
 - status pemasukan karyawan FARM.
 
 ### Hasil audit
@@ -306,7 +357,9 @@ Dokumentasi progres diperbarui menjadi versi 1.9 untuk mencatat:
 - seluruh 17 karyawan menggunakan JOB Kandang;
 - 68 record libur Kandang Oktober 2026 sudah dimasukkan sebagai L;
 - 1 record CT untuk RIDWAN pada 1 Oktober 2026;
-- total employee_schedules menjadi 470 setelah koreksi jadwal;
+- total employee_schedules menjadi 518 setelah penambahan IB;
+- JOB IB dan 12 karyawan IB sudah ditambahkan pada FARM;
+- 48 jadwal L Oktober 2026 untuk IB sudah dimasukkan;
 - OFF dinormalisasi menjadi L dan dinonaktifkan;
 - Web UI tidak lagi menampilkan OFF;
 - perubahan tersebut dicatat sebagai perubahan desain/standarisasi, bukan hanya perubahan visual.
@@ -402,7 +455,13 @@ Data karyawan FARM dari sumber baru dimasukkan per JOB. JOB master harus tersedi
 
 Seluruh 17 nama dari daftar JOB Kandang dimasukkan ke master `employees` sebagai FARM / Kandang.
 
-### Keputusan D-007 — Perubahan desain: L menjadi satu-satunya kode libur
+### Keputusan D-008 — Penambahan JOB IB dan 12 karyawan
+
+**Keputusan:** diterapkan pada database.
+
+JOB `IB` ditambahkan pada Departemen FARM. Dua belas karyawan dari sumber dimasukkan sebagai karyawan FARM / IB dan masing-masing memperoleh empat jadwal `L` pada 7, 14, 21, dan 28 Oktober 2026.
+
+### Keputusan D-009 — Perubahan desain: L menjadi satu-satunya kode libur
 
 **Keputusan:** diterapkan pada database dan Web UI.
 
