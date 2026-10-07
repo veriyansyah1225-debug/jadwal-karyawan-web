@@ -1003,14 +1003,14 @@ function App() {
     setManagedUsers((current) => current.map((item) => item.user_id === user.user_id ? { ...item, aktif: nextActive } : item))
   }
 
-  async function deleteUnactivatedUser(user) {
+  async function deleteManagedUser(user) {
     if (!supabase || !isAdmin || !user || user.user_id === session?.user?.id) return
 
     const confirmed = window.confirm(
       'Hapus akun percobaan ini secara permanen?\\n\\n' +
       'Nama: ' + (user.nama || '—') + '\\n' +
       'Email: ' + (user.email || '—') + '\\n\\n' +
-      'Tindakan ini hanya tersedia untuk akun yang belum diaktivasi.'
+      'Untuk fase testing, akun yang sudah diaktivasi juga dapat dihapus.'
     )
     if (!confirmed) return
 
@@ -1025,7 +1025,7 @@ function App() {
     }
     setSession(refreshedSession.session)
 
-    const { data, error: functionError } = await supabase.functions.invoke('admin-delete-unactivated-user', {
+    const { data, error: functionError } = await supabase.functions.invoke('admin-delete-user', {
       body: { user_id: user.user_id },
     })
 
@@ -1819,9 +1819,9 @@ function App() {
                               <button
                                 type="button"
                                 className="secondary danger"
-                                onClick={() => deleteUnactivatedUser(user)}
+                                onClick={() => deleteManagedUser(user)}
                                 disabled={userResendLoadingId === user.user_id || userDeleteLoadingId === user.user_id}
-                                title="Hanya untuk akun yang belum membuat password"
+                                title="Penghapusan akun testing"
                               >
                                 {userDeleteLoadingId === user.user_id ? 'Menghapus...' : 'Hapus Akun'}
                               </button>
