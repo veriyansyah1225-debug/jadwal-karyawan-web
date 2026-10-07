@@ -865,3 +865,38 @@ Commit perbaikan sudah masuk branch `main` dan Vercel sudah menerima deployment 
 #### Dampak
 
 Perbaikan hanya menyentuh sintaks/struktur JSX agar proses Vite/esbuild dapat dilanjutkan. Fungsionalitas yang dirancang sebelumnya untuk menampilkan master karyawan pada bulan tanpa jadwal tidak diubah.
+
+
+### 4.21 Penambahan Edit Jadwal Admin melalui Detail
+
+- **Tanggal:** 2026-10-07
+- **Status:** Implemented on main / verifikasi browser Production belum selesai
+- **Commit Web UI:** `5470d004d93c646c8aed0f8f568ea854cbc6f151`
+- **Commit penyegaran data setelah simpan:** `3a8271786d17ce0193ff1188f0afc30bf9a290f2`
+
+#### Perubahan
+
+Admin sekarang dapat membuka detail sebuah sel jadwal dan menggunakan tombol **Edit Jadwal** jika sel sudah memiliki schedule code.
+
+Form Edit menggunakan data sel yang dipilih:
+- employee;
+- tanggal;
+- kode jadwal;
+- keterangan.
+
+Penyimpanan tetap menggunakan operasi upsert pada unique key `employee_id,tanggal`. Setelah penyimpanan berhasil, state penyegaran memicu pembacaan ulang jadwal sehingga perubahan dapat terlihat tanpa harus mengganti periode.
+
+Untuk sel yang belum memiliki jadwal, tombol yang sama menggunakan label **Tambah Jadwal** dan mengisi karyawan serta tanggal dari sel yang dipilih.
+
+#### Batas
+
+Tidak ada perubahan schema PostgreSQL atau policy RLS pada tahap ini. Tombol **Hapus Jadwal** belum ditambahkan.
+
+#### Verifikasi
+
+Kode sudah berada di branch `main`. Verifikasi browser Production perlu memastikan:
+1. Admin dapat membuka detail sel;
+2. tombol Edit Jadwal muncul pada sel yang memiliki jadwal;
+3. form terisi dengan data yang benar;
+4. perubahan kode/keterangan dapat disimpan;
+5. tabel langsung menampilkan hasil perubahan setelah simpan.
