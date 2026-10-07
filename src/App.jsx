@@ -584,7 +584,7 @@ function App() {
                 )}
               </div>
               <button className="secondary export-button" type="button" onClick={() => exportExcel(filteredRows, dateRange, department, showJobColumn, startDate, endDate)} disabled={loading || filteredRows.length === 0}>Excel</button>
-              <button className="secondary export-button" type="button" onClick={() => exportPdf(filteredRows, dateRange, department, showJobColumn, startDate, endDate)} disabled={loading || filteredRows.length === 0}>PDF A3</button>
+              <button className="secondary export-button" type="button" onClick={() => exportPdf(filteredRows, dateRange, department, showJobColumn, startDate, endDate)} disabled={loading || filteredRows.length === 0}>PDF</button>
               <button className="focus-toggle" type="button" onClick={() => setFocusMode((value) => !value)}>
                 {focusMode ? 'Kembalikan Tampilan' : 'Perbesar Jadwal'}
               </button>
