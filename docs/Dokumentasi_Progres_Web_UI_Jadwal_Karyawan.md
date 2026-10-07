@@ -753,6 +753,7 @@ Fokus saat ini tetap pada penyelesaian dan stabilisasi **master data + Web UI v1
 | v2.2 | Penambahan export Excel dan PDF berdasarkan filter aktif | Selesai |
 | v2.3 | Penyempurnaan format Excel dan keterbacaan PDF untuk hasil cetak | Selesai |
 | v2.4 | Perbesar font dan pertegas border PDF | Selesai |\n| v2.5 | Evaluasi A4/F4 dan pengembalian PDF ke A3 satu tampilan penuh | Selesai |
+| v2.6 | Pondasi Admin Login + role admin + RLS dasar | Selesai |
 
 ---
 
@@ -769,6 +770,11 @@ Label tombol pada Web UI sekarang ditampilkan sebagai **PDF** agar lebih sederha
 ### Penyederhanaan tampilan informasi
 
 Teks informasi internal mengenai sumber Supabase dan catatan penggunaan filter dihapus dari halaman jadwal agar area kerja lebih ringkas. Informasi tersebut tetap tercatat di dokumentasi teknis, bukan pada tampilan operasional utama.
+
+
+### v2.6 — Pondasi Admin Login
+
+Pondasi Admin mulai diterapkan tanpa mengubah akses publik read-only. Database memiliki tabel `admin_users` dengan RLS untuk memetakan akun Supabase Auth yang berhak menjadi Admin. Web UI memiliki dialog Login Admin dan pemeriksaan role. Fitur CRUD jadwal belum dibuka pada tahap ini.
 
 
 ## 18. Status Dokumen
