@@ -50,7 +50,7 @@ Deno.serve(async (req: Request) => {
       return json({ error: 'Scope departemen wajib ditentukan untuk role ini.' }, 400)
     }
 
-    const { data: invited, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, { data: { nama } })
+    const { data: invited, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {\n      data: { nama },\n      redirectTo: 'https://jadwal-karyawan-web.vercel.app',\n    })
     if (inviteError || !invited.user) return json({ error: inviteError?.message ?? 'Gagal membuat undangan akun.' }, 400)
 
     const userId = invited.user.id
