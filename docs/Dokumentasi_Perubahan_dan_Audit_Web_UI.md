@@ -612,7 +612,7 @@ Tanggal IB dikoreksi berdasarkan sumber terbaru menjadi 4, 11, 18, dan 25 Oktobe
 
 Export menjadi fitur read-only yang menggunakan hasil filter aktif. Excel dan PDF tidak mengubah data database dan dapat digunakan sebelum Authentication/CRUD selesai.
 
-### Keputusan D-013 — Perbesar font dan pertegas border PDF
+### Keputusan D-014 — PDF mengikuti ukuran kertas A4/F4\n\n**Keputusan:** diterapkan pada Web UI.\n\nExport PDF dipisahkan menjadi A4 landscape dan F4 landscape agar file yang dihasilkan dapat langsung diarahkan ke ukuran kertas tujuan tanpa bergantung pada scaling dari A3.\n\n### Keputusan D-013 — Perbesar font dan pertegas border PDF
 
 **Keputusan:** diterapkan pada Web UI.
 
@@ -647,4 +647,4 @@ Setiap perubahan Production yang relevan harus ditambahkan sebagai catatan baru 
 - hasil verifikasi;
 - keputusan.
 
-**Tujuan utama:** menjaga agar kondisi Web UI, database, deployment, dan dokumentasi selalu menggambarkan sistem yang sama.
+**Tujuan utama:** menjaga agar kondisi Web UI, database, deployment, dan dokumentasi selalu menggambarkan sistem yang sama.\n### 4.11 Penyesuaian PDF untuk Cetak A4 dan F4\n\n- **Tanggal:** 2026-10-07\n- **Status:** Production code\n- **Commit:** `5512332402122dfbc836201589d276e54b9ac538` dan `8d48945be5c84aef09456f71b180942f67d954a6`\n- **Perubahan:** PDF tidak lagi menggunakan A3 sebagai format cetak utama. Export dipisahkan menjadi **PDF A4 landscape** dan **PDF F4 landscape**.\n- **A4:** maksimal 8 tanggal per blok horizontal.\n- **F4:** maksimal 10 tanggal per blok horizontal.\n- **Keterbacaan:** ukuran font, tinggi baris 10 mm, serta border dibuat lebih tegas agar sesuai untuk pencetakan langsung.\n- **Dampak:** jumlah halaman akan bertambah sesuai jumlah tanggal dan jumlah karyawan, tetapi setiap halaman mengikuti ukuran kertas tujuan.\n- **Verifikasi:** kode sudah diterapkan pada branch `main`; hasil cetak fisik masih perlu diverifikasi setelah deployment Vercel.\n
