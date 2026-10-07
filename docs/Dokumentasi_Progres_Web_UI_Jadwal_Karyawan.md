@@ -761,6 +761,11 @@ Fokus saat ini tetap pada penyelesaian dan stabilisasi **master data + Web UI v1
 Format A4/F4 sudah dievaluasi, tetapi untuk laporan bulanan 1–31 pembagian tanggal menjadi beberapa blok tidak sesuai kebutuhan. Export PDF dikembalikan ke A3 landscape. Seluruh tanggal pada rentang yang dipilih ditampilkan dalam satu blok horizontal; jika jumlah karyawan terlalu banyak, halaman hanya terbagi secara vertikal.
 
 
+### Penyesuaian label export PDF
+
+Label tombol pada Web UI sekarang ditampilkan sebagai **PDF** agar lebih sederhana. Format teknis file tetap A3 landscape dan tidak berubah.
+
+
 ## 18. Status Dokumen
 
 Dokumen ini adalah **dokumentasi progres**, bukan spesifikasi final.
