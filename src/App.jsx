@@ -614,42 +614,17 @@ function App() {
     }
   }, [isAdmin, scheduleRefresh])
 
-  const employeeMasterJobOptions = useMemo(
-    () => [...new Set(employeeMasterRows.map((employee) => employee.jobs?.nama_job).filter(Boolean))].sort((a, b) => a.localeCompare(b)),
-    [employeeMasterRows],
-  )
-
-  const filteredEmployeeMasterJobOptions = useMemo(() => {
-    const query = employeeMasterJobSearch.trim().toLowerCase()
-    return employeeMasterJobOptions.filter((item) => !query || item.toLowerCase().includes(query))
-  }, [employeeMasterJobOptions, employeeMasterJobSearch])
+  const employeeMasterFilterJobs = useMemo(() => masterJobs.filter((item) => !employeeMasterDepartment || !item.department_id || String(item.department_id) === String(employeeMasterDepartment)).sort((a, b) => String(a.nama_job || '').localeCompare(String(b.nama_job || ''))), [masterJobs, employeeMasterDepartment])
 
   const filteredEmployeeMasterRows = useMemo(() => {
     const query = employeeMasterSearch.trim().toLowerCase()
-
     return employeeMasterRows
       .filter((employee) => employeeMasterStatus === 'semua' || (employeeMasterStatus === 'aktif' ? employee.aktif : !employee.aktif))
       .filter((employee) => !employeeMasterDepartment || String(employee.department_id || '') === String(employeeMasterDepartment))
-      .filter((employee) => employeeMasterJobs.length === 0 || employeeMasterJobs.includes(employee.jobs?.nama_job || ''))
-      .filter((employee) => !query || [employee.nama, employee.kode_karyawan, employee.departments?.nama_departemen, employee.jobs?.nama_job]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(query)))
+      .filter((employee) => !employeeMasterJob || String(employee.job_id || '') === String(employeeMasterJob))
+      .filter((employee) => !query || [employee.nama, employee.kode_karyawan, employee.departments?.nama_departemen, employee.jobs?.nama_job].filter(Boolean).some((value) => String(value).toLowerCase().includes(query)))
       .sort((a, b) => String(a.nama || '').localeCompare(String(b.nama || '')))
-  }, [employeeMasterRows, employeeMasterStatus, employeeMasterDepartment, employeeMasterJobs, employeeMasterSearch])
-
-  function toggleEmployeeMasterJob(jobName) {
-    setEmployeeMasterJobs((current) => current.includes(jobName)
-      ? current.filter((item) => item !== jobName)
-      : [...current, jobName])
-  }
-
-  function selectAllEmployeeMasterJobs() {
-    setEmployeeMasterJobs(employeeMasterJobOptions)
-  }
-
-  function clearEmployeeMasterJobs() {
-    setEmployeeMasterJobs([])
-  }
+  }, [employeeMasterRows, employeeMasterStatus, employeeMasterDepartment, employeeMasterJob, employeeMasterSearch])
 
   const employeeFormJobs = useMemo(
     () => masterJobs.filter((item) => !employeeFormDepartmentId || !item.department_id || String(item.department_id) === String(employeeFormDepartmentId)),
