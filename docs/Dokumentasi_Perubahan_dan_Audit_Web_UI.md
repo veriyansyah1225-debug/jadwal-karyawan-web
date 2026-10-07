@@ -663,6 +663,19 @@ Export harus menghasilkan file yang tidak hanya dapat dibuka, tetapi juga layak 
 - Dampak: tampilan jadwal menjadi lebih ringkas; fungsi filter, tabel, export, dan sumber data tidak berubah.
 
 
+### 4.15 Pondasi Authentication dan Role Admin
+
+- Tanggal: 2026-10-07
+- Status: Production code + database foundation
+- Commit Web UI: 10eb9240838fd7854b5f4f25b161547e58f4abab dan cb2129fd75e02f23f3130e00d8a985655307d58e
+- Commit database: migration create_admin_users_role_table
+- Database: tabel public.admin_users dibuat untuk memetakan user Supabase Auth yang berhak sebagai Admin.
+- Keamanan: RLS admin_users aktif; user authenticated hanya dapat membaca role miliknya sendiri yang aktif. Insert/update/delete admin_users tidak diberikan kepada anon maupun authenticated.
+- Web UI: tombol Admin dan dialog Login Admin ditambahkan. Setelah login, aplikasi memeriksa role admin sebelum mempertahankan sesi sebagai Admin. Pengguna tanpa role admin langsung dikeluarkan.
+- Batas tahap ini: belum ada fitur membuat/edit/menghapus jadwal. Belum ada akun Admin yang dibuat melalui tahap ini.
+- Verifikasi: struktur tabel dan policy berhasil diverifikasi di PostgreSQL; build/deployment Web UI belum diverifikasi independen pada tahap ini.
+
+
 ## 10. Status Dokumen
 
 Dokumen ini bersifat **living document**.
