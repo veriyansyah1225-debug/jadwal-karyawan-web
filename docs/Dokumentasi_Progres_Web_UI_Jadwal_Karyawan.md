@@ -1,7 +1,7 @@
 # Dokumentasi Progres Pengembangan Web UI — Jadwal Karyawan
 
 **Status:** Draft / Living Document  
-**Versi:** 2.2  
+**Versi:** 2.3  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Database:** `database-jadwal-karyawan` / PostgreSQL 17 / Supabase
@@ -516,7 +516,36 @@ Kedua export menggunakan data hasil filter Web UI saat ini, termasuk:
 
 Export tidak mengubah database dan tidak melakukan query tambahan. Data yang diekspor berasal dari hasil query `v_jadwal_karyawan` yang sudah ditampilkan pada halaman.
 
-PDF menggunakan format landscape A3 agar jadwal dengan banyak tanggal tetap terbaca. Excel menggunakan satu sheet `Jadwal` dengan informasi Departemen dan periode di bagian atas.
+### 11.12 Penyempurnaan Format Export
+
+Masukan setelah penggunaan pertama menunjukkan bahwa file Excel perlu memiliki format visual dan PDF perlu lebih terbaca saat dicetak.
+
+**Excel sekarang memiliki:**
+
+- judul dan informasi Departemen/periode;
+- header tabel yang diformat;
+- border tabel;
+- perataan isi;
+- warna sel sesuai kode P, S, M, L, dan CT;
+- lebar kolom dan tinggi baris yang disesuaikan;
+- freeze pane;
+- autofilter;
+- pengaturan halaman landscape.
+
+**PDF sekarang memiliki:**
+
+- format A3 landscape;
+- pembagian tanggal maksimal 16 tanggal per halaman;
+- ukuran teks dan tinggi baris yang lebih besar;
+- header tanggal dan nama karyawan yang lebih jelas;
+- informasi bagian tanggal dan nomor halaman;
+- pagination vertikal untuk jumlah karyawan yang melebihi tinggi halaman.
+
+Dengan desain ini, PDF tidak lagi memaksakan seluruh tanggal dalam satu halaman sehingga hasil cetak dapat menggunakan ukuran teks yang lebih layak.
+
+Perubahan format tidak mengubah sumber data maupun filter export.
+
+
 
 ### 11.12 Authentication dan RLS
 
@@ -719,6 +748,7 @@ Fokus saat ini tetap pada penyelesaian dan stabilisasi **master data + Web UI v1
 | v2.0 | Penambahan JOB IB, 12 karyawan IB, dan 48 jadwal L Oktober 2026 | Selesai |
 | v2.1 | Koreksi tanggal libur IB dan penambahan ARIF pada JOB MEKANIK | Selesai |
 | v2.2 | Penambahan export Excel dan PDF berdasarkan filter aktif | Selesai |
+| v2.3 | Penyempurnaan format Excel dan keterbacaan PDF untuk hasil cetak | Selesai |
 
 ---
 
@@ -738,7 +768,7 @@ Audit versi sebelumnya mempertahankan informasi penting dalam bentuk yang lebih 
 
 **Status keseluruhan:**
 
-> **Web UI React + Vite sudah online, terhubung ke Supabase/PostgreSQL, mampu menampilkan jadwal berdasarkan rentang tanggal atau pilihan bulan, memfilter karyawan secara multi-select, membuka detail jadwal, memperbesar area tabel, menampilkan/menyembunyikan kolom JOB, dan memberikan penanda visual khusus pada header hari Minggu. Authentication, RLS final, pengelolaan jadwal, absensi, laporan, dan beberapa aturan bisnis masih belum final. Export Excel/PDF sudah tersedia untuk data jadwal yang sedang ditampilkan. Master data FARM untuk daftar Kandang yang diterima sudah dimasukkan; daftar JOB FARM berikutnya masih menunggu sumber.**
+> **Web UI React + Vite sudah online, terhubung ke Supabase/PostgreSQL, mampu menampilkan jadwal berdasarkan rentang tanggal atau pilihan bulan, memfilter karyawan secara multi-select, membuka detail jadwal, memperbesar area tabel, menampilkan/menyembunyikan kolom JOB, dan memberikan penanda visual khusus pada header hari Minggu. Authentication, RLS final, pengelolaan jadwal, absensi, laporan, dan beberapa aturan bisnis masih belum final. Export Excel/PDF sudah tersedia untuk data jadwal yang sedang ditampilkan. Format Excel sudah diberi styling, sedangkan PDF menggunakan pembagian tanggal per halaman untuk meningkatkan keterbacaan saat dicetak. Master data FARM untuk daftar Kandang yang diterima sudah dimasukkan; daftar JOB FARM berikutnya masih menunggu sumber.**
 
 **Milestone saat ini:**  
 **Online Web UI + Supabase Integration + Stabilisasi Master Data + Penyempurnaan Web UI v1 — SEDANG DIKERJAKAN.**
