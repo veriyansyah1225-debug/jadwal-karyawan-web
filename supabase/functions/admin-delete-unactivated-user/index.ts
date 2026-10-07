@@ -38,7 +38,7 @@ Deno.serve(async (req: Request) => {
       .maybeSingle()
 
     if (callerError || !caller || caller.role !== 'admin' || !caller.aktif) {
-      return json({ error: 'Hanya Admin aktif yang dapat menghapus akun percobaan.' }, 403)
+      return json({ error: 'Hanya Admin aktif yang dapat menghapus akun pengguna.' }, 403)
     }
 
     const body = await req.json()
@@ -60,11 +60,6 @@ Deno.serve(async (req: Request) => {
     }
 
     const target = targetData.user
-    if (target.email_confirmed_at || target.confirmed_at) {
-      return json({
-        error: 'Akun sudah diaktivasi. Gunakan Nonaktifkan, bukan Hapus Akun.',
-      }, 400)
-    }
 
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('user_profiles')
@@ -84,7 +79,7 @@ Deno.serve(async (req: Request) => {
     return json({
       ok: true,
       deleted_user_id: targetUserId,
-      message: 'Akun yang belum diaktivasi berhasil dihapus.',
+      message: 'Akun pengguna berhasil dihapus.',
     })
   } catch (error) {
     return json({
