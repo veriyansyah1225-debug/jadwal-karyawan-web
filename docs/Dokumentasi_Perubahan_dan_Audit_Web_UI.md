@@ -934,3 +934,31 @@ Master karyawan, JOB, schedule_codes, dan struktur database tidak diubah. Audit/
 #### Verifikasi yang diperlukan
 
 Gunakan data uji yang sudah ada pada ARIF tanggal 4 Oktober 2026. Karena data tersebut saat ini memiliki kode `L` dan keterangan `Ganti Libur`, pengujian Hapus dapat memastikan record benar-benar hilang dan sel kembali menjadi `—`. Jika hasil pengujian menghapus data uji tersebut, jadwal ARIF tanggal 4 perlu dibuat kembali melalui fitur Tambah Jadwal untuk mengembalikan kondisi data sebelum pengujian.
+
+
+### 4.23 Penempatan Tombol Hapus Langsung pada Form Edit
+
+- **Tanggal:** 2026-10-07
+- **Status:** Implemented / Vercel deployment pending
+- **Commit Web UI:** `0011e1c86ca79abdee8e99a21e2b8ff3ebc755d4`
+
+#### Temuan
+
+Pada pengujian browser, Admin sudah dapat membuka form **Edit Jadwal**, tetapi tombol **Hapus Jadwal** tidak terlihat di dalam form tersebut.
+
+Penyebabnya bukan kegagalan RLS atau database. Implementasi sebelumnya hanya menempatkan tombol hapus pada **Detail Jadwal**.
+
+#### Perbaikan
+
+Tombol **Hapus Jadwal** sekarang ditampilkan langsung di form **Edit Jadwal**.
+
+Aturan:
+- hanya muncul ketika form berada dalam mode Edit;
+- tidak muncul pada form Tambah Jadwal;
+- meminta konfirmasi sebelum DELETE;
+- menggunakan operasi DELETE Admin yang sudah ada;
+- setelah berhasil, jadwal dihapus dan tabel dimuat ulang.
+
+#### Verifikasi
+
+Commit sudah masuk branch `main`. Status Vercel untuk commit ini masih **Pending** dan perlu diverifikasi setelah deployment selesai.
