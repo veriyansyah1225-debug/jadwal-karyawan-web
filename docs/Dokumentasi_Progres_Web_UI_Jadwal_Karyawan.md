@@ -838,3 +838,23 @@ Database:
 - unique index `employee_schedules_employee_date_unique` menjaga satu jadwal per karyawan per tanggal.
 
 Tahap ini belum mencakup hapus melalui UI, pengelolaan master data, atau edit langsung dari tabel.
+
+
+## 19. Audit Terbaru — Login Admin dan Read-only
+
+Pada 2026-10-07, pengujian setelah Login Admin menemukan bahwa sesi `authenticated` dapat membuat query yang policy SELECT-nya hanya `anon` tidak mengembalikan data.
+
+Perbaikan Web UI sudah diterapkan dengan memisahkan:
+- client authenticated untuk Authentication, role Admin, dan operasi tulis;
+- client `publicSupabase` tanpa session untuk query read-only publik.
+
+Perbaikan ini dicatat pada audit Web UI dan dokumentasi keamanan. Tidak ada perubahan data PostgreSQL.
+
+**Status:** kode sudah masuk `main`; verifikasi browser setelah deployment terbaru masih diperlukan.
+
+Fitur Admin saat ini:
+- Login Admin: tersedia;
+- Tambah Jadwal: tersedia pada Web UI;
+- RLS INSERT/UPDATE/DELETE `employee_schedules`: tersedia untuk Admin aktif;
+- uji simpan dari browser: belum dinyatakan selesai;
+- edit/hapus visual dari tabel: belum dibuat.
