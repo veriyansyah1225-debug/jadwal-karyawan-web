@@ -55,7 +55,7 @@
 .employee-form textarea{min-height:82px;padding:10px 11px;resize:vertical}
 .employee-form input:focus,.employee-form select:focus,.employee-form textarea:focus{outline:2px solid #b8d8fa;outline-offset:1px}
 .employee-status-editor{padding:12px;background:#f7f9fc;border:1px solid #e4e9f1;border-radius:10px}
-.employee-status-toggle{display:flex;gap:8px;flex-wrap:wrap}
+.table-action-group{display:flex;gap:6px;justify-content:center;align-items:center;flex-wrap:wrap}.transfer-action-button{background:#eef5ff;color:#1265c5;border:1px solid #cfe2f8}.transfer-current-position{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#f8fafc}.transfer-current-position span{display:block;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px}.transfer-current-position strong{font-size:14px;color:#25364d}.transfer-info{margin-top:12px;font-size:12px!important}.filter-month-picker{min-width:0}.employee-status-toggle{display:flex;gap:8px;flex-wrap:wrap}
 .status-choice{width:auto;height:36px;padding:0 12px;background:#fff;color:#25364d;border:1px solid #d7dee9}
 .status-choice.active{background:#e8f6eb;color:#21653a;border-color:#b9ddc2}
 .status-choice.inactive{background:#fff0f0;color:#a52f2f;border-color:#e5bcbc}
