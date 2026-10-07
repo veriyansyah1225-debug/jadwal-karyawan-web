@@ -593,48 +593,59 @@ function App() {
       setLoading(true)
       setError('')
 
-      const { data, error: queryError } = await publicSupabase
-        .from('v_jadwal_karyawan')
-        .select('employee_id,tanggal,nama_departemen,nama_job,nama_job_master,nama_karyawan,kode_jadwal,keterangan')
-        .gte('tanggal', startDate)
-        .lte('tanggal', endDate)
-        .eq('nama_departemen', department)
-        .order('nama_karyawan')
-        .order('tanggal')
+      const [{ data: employeeData, error: employeeError }, { data: scheduleData, error: scheduleError }] = await Promise.all([
+        publicSupabase
+          .from('employees')
+          .select('id,nama,aktif,departments(nama_departemen),jobs(nama_job)')
+          .eq('aktif', true)
+          .order('nama'),
+        publicSupabase
+          .from('v_jadwal_karyawan')
+          .select('employee_id,tanggal,nama_departemen,nama_job,nama_job_master,nama_karyawan,kode_jadwal,keterangan')
+          .gte('tanggal', startDate)
+          .lte('tanggal', endDate)
+          .eq('nama_departemen', department)
+          .order('nama_karyawan')
+          .order('tanggal'),
+      ])
 
       if (cancelled) return
 
-      if (queryError) {
-        setError(queryError.message)
+      if (employeeError || scheduleError) {
+        setError(employeeError?.message || scheduleError?.message || 'Gagal memuat data jadwal.')
         setLoading(false)
         return
       }
 
-      if (!data?.length) {
-        setRows([])
-        setLoading(false)
-        return
-      }
+      const employees = (employeeData || []).filter(
+        (item) => item.departments?.nama_departemen === department,
+      )
 
       const grouped = new Map()
 
-      for (const item of data) {
+      for (const employee of employees) {
+        const masterJob = employee.jobs?.nama_job || ''
+        grouped.set(String(employee.id), {
+          department,
+          employeeId: employee.id,
+          job: masterJob,
+          jobs: new Set(masterJob ? [masterJob] : []),
+          name: employee.nama,
+          codes: {},
+          details: {},
+          assignmentDays: new Set(),
+        })
+      }
+
+      for (const item of scheduleData || []) {
         const key = String(item.employee_id)
-
-        if (!grouped.has(key)) {
-          grouped.set(key, {
-            department: item.nama_departemen,
-            employeeId: item.employee_id,
-            job: item.nama_job_master || '',
-            jobs: new Set(item.nama_job_master ? [item.nama_job_master] : []),
-            name: item.nama_karyawan,
-            codes: {},
-            details: {},
-            assignmentDays: new Set(),
-          })
-        }
-
         const row = grouped.get(key)
+
+        // Jadwal pada view dibatasi ke departemen yang sedang dipilih.
+        // Jika master employee tidak ditemukan, abaikan record agar UI
+        // tetap mengikuti master karyawan aktif.
+        if (!row) continue
+
         if (item.nama_job) row.jobs.add(item.nama_job)
 
         const dateKey = String(item.tanggal)
