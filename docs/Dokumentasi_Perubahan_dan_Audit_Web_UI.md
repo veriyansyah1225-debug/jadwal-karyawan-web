@@ -736,7 +736,7 @@ Masalah yang terlihat pada screenshot diidentifikasi sebagai konflik antara sess
 ### 4.19 Tampilan Bulan Tanpa Jadwal Menggunakan Master Karyawan
 
 - **Tanggal:** 2026-10-07
-- **Status:** Production code / menunggu verifikasi browser
+- **Status:** Terverifikasi Production
 - **Commit Web UI:** `39e825316f9ef42b25982d4d9a4df05ac65d7db0`
 
 #### Masalah
@@ -765,7 +765,7 @@ Pendekatan ini tidak menambah jumlah record database. Untuk skala master saat in
 
 #### Verifikasi
 
-Kode perubahan sudah masuk branch `main`. Belum ada GitHub Actions workflow pada commit ini, sehingga build otomatis melalui workflow tidak tersedia. Verifikasi browser/Vercel diperlukan untuk memastikan relasi Supabase `employees -> jobs/departments` dan tampilan bulan kosong bekerja sesuai harapan.
+Kode perubahan sudah masuk branch `main`. Deployment Vercel sempat gagal karena syntax JSX pada commit berikutnya, lalu diperbaiki pada commit `88dbb7680414851bcda54e4806898d98e69eecb2` dan deployment Production berhasil. Pengujian browser Production kemudian dikonfirmasi berhasil: bulan tanpa jadwal tetap menampilkan karyawan aktif dan sel tanpa jadwal tampil sebagai `—`.
 
 ### 10. Status Dokumen
 
