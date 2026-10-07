@@ -1,7 +1,7 @@
 # Dokumentasi Progres Pengembangan Web UI — Jadwal Karyawan
 
 **Status:** Draft / Living Document  
-**Versi:** 1.3  
+**Versi:** 1.4  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Database:** `database-jadwal-karyawan` / PostgreSQL 17 / Supabase
@@ -29,7 +29,7 @@ Komponen yang tersedia saat Web UI mulai dikembangkan:
 | Komponen | Kondisi |
 |---|---:|
 | Departments | 2 |
-| JOB | 9 |
+| JOB | 10 |
 | Karyawan | 30 |
 | Kode jadwal | 6 |
 | Jadwal Oktober 2026 | 401 record |
@@ -37,6 +37,8 @@ Komponen yang tersedia saat Web UI mulai dikembangkan:
 | View `v_jadwal_karyawan` | Tersedia |
 
 Database PostgreSQL/Supabase menjadi sumber data utama Web UI.
+
+**Catatan master data terbaru:** JOB `Kandang` telah ditambahkan pada Departemen FARM sebagai tahap pertama penambahan data karyawan FARM. Daftar karyawan Kandang belum dimasukkan pada tahap ini.
 
 ---
 
@@ -346,17 +348,43 @@ Untuk tahap stabilisasi saat ini, aturan bisnis sementara sudah ditetapkan:
 
 Detail JOB internal HATCHERY seperti admin, holding, sexer, dan pembagian lebih rinci ditunda sampai database stabil.
 
-### 11.2 L dan OFF
+### 11.2 Penambahan JOB Kandang
+
+Pada 2026-10-07, JOB master **Kandang** ditambahkan ke Departemen FARM sebagai tahap pertama pemasukan data karyawan dari format jadwal yang baru diterima.
+
+Sumber data yang diberikan menunjukkan 17 nama karyawan dengan JOB Kandang:
+
+- HERI
+- REHAN
+- ANDRE YUNUS MENO
+- JUMADI
+- AGUS DWI LAKSONO
+- RICO KRISMUNTO
+- RIDWAN
+- FERRY GUNAWAN
+- GANDI SEPTIO
+- ADITIA SRI ANDANA
+- FEBRI DWI SAPUTRA
+- ELVIS NUR HIDAYAT
+- ADITIA
+- URAY IMAY INNUDDIN
+- JEPRI APO
+- TEGUH ARI WIBOWO
+- MARNO
+
+Pada tahap ini **17 karyawan tersebut belum dimasukkan ke tabel employees**. Penambahan akan dilakukan satu per satu sesuai arahan pengguna.
+
+### 11.3 L dan OFF
 
 Makna `L` dan `OFF` masih perlu dikonfirmasi agar keduanya tidak sekadar menjadi dua kode dengan makna visual yang sama.
 
-### 11.3 Filter JOB
+### 11.4 Filter JOB
 
 Saat ini sumber daftar JOB dapat bergantung pada data yang sedang dimuat.
 
 Perlu dipertimbangkan apakah master JOB sebaiknya dimuat terpisah agar filter lebih konsisten.
 
-### 11.4 Data Demo
+### 11.5 Data Demo
 
 Fallback data demo **sudah dihapus** dari Web UI Production.
 
@@ -364,7 +392,7 @@ Jika Supabase belum dikonfigurasi atau query Supabase gagal, aplikasi menampilka
 
 Keputusan ini didokumentasikan pada `docs/Dokumentasi_Perubahan_dan_Audit_Web_UI.md`.
 
-### 11.5 Sumber Departemen
+### 11.6 Sumber Departemen
 
 Dropdown Departemen pada Web UI Production sekarang membaca `public.departments` melalui Supabase Client.
 
@@ -372,7 +400,7 @@ Query hanya mengambil departemen aktif (`aktif = true`) dan mengurutkan berdasar
 
 Daftar FARM/HATCHERY tidak lagi ditulis sebagai opsi hardcode pada Web UI.
 
-### 11.6 Authentication dan RLS
+### 11.7 Authentication dan RLS
 
 RLS sudah diaktifkan pada tabel utama database, tetapi policy final untuk aplikasi belum ditentukan.
 
@@ -392,6 +420,7 @@ Authentication dan RLS final harus diselesaikan sebelum aplikasi digunakan secar
 8. Authentication dan RLS harus diselesaikan sebelum penggunaan publik.
 9. Aturan bisnis yang belum dikonfirmasi tidak boleh dipaksakan ke database.
 10. Perubahan UI tidak boleh dianggap sebagai perubahan data database kecuali memang dinyatakan demikian.
+11. Penambahan master karyawan dilakukan bertahap dan diverifikasi sebelum jadwal terkait dimasukkan.
 
 ---
 
@@ -514,36 +543,39 @@ Database sudah memiliki `attendance_records`, tetapi modul Web UI absensi belum 
 
 Urutan pengembangan yang disarankan:
 
-1. **Validasi aturan bisnis**
+1. **Stabilisasi master data**
+   - masukkan karyawan FARM yang belum ada secara bertahap;
+   - validasi Departemen dan JOB;
+   - koreksi nama master bila data asli sudah tersedia.
+
+2. **Validasi aturan bisnis**
    - JOB master vs assignment;
    - arti L dan OFF;
    - aturan schedule code;
    - validasi data Oktober 2026.
 
-2. **Penyempurnaan database/view**
+3. **Penyempurnaan database/view**
    - hanya setelah aturan bisnis disepakati.
 
-3. **Authentication**
+4. **Authentication**
 
-4. **RLS final**
+5. **RLS final**
 
-5. **Interaksi dan pengelolaan jadwal**
+6. **Interaksi dan pengelolaan jadwal**
 
-6. **Master data**
+7. **Master data**
 
-7. **Modul absensi**
+8. **Modul absensi**
 
-8. **Laporan dan export**
+9. **Laporan dan export**
 
-9. **Audit dan operasional**
+10. **Audit dan operasional**
 
-Fokus saat ini tetap pada penyelesaian dan stabilisasi **Web UI v1** sebelum masuk ke perubahan besar database atau modul berikutnya.
+Fokus saat ini tetap pada penyelesaian dan stabilisasi **master data + Web UI v1** sebelum masuk ke perubahan besar database atau modul berikutnya.
 
 ---
 
 ## 17. Riwayat Progres Ringkas
-
-Riwayat berikut mempertahankan milestone penting tanpa mengulang daftar fitur dan status proyek pada setiap bagian.
 
 | Tahap | Pekerjaan utama | Status |
 |---|---|---|
@@ -561,7 +593,8 @@ Riwayat berikut mempertahankan milestone penting tanpa mengulang daftar fitur da
 | v1.1 | Penghapusan fallback data demo dari Web UI | Selesai |
 | v1.1 | Dropdown Departemen membaca master `departments` | Selesai |
 | v1.2 | Seluruh karyawan HATCHERY menggunakan JOB master HATCHERY; Deta/Alda dipastikan sebagai HATCHERY tanpa menghapus assignment harian | Selesai |
-| Saat ini | Stabilisasi Web UI v1 | Sedang dikerjakan |
+| v1.3 | Penambahan JOB master Kandang pada FARM | Selesai |
+| Saat ini | Penambahan karyawan FARM Kandang satu per satu | Sedang dikerjakan |
 
 ---
 
@@ -590,20 +623,20 @@ Informasi penting tetap dipertahankan dalam bentuk yang lebih ringkas, terutama:
 
 **Status keseluruhan:**
 
-> **Web UI React + Vite sudah online, terhubung ke Supabase/PostgreSQL, mampu menampilkan jadwal berdasarkan rentang tanggal atau pilihan bulan, memfilter karyawan secara multi-select, membuka detail jadwal, memperbesar area tabel, menampilkan/menyembunyikan kolom JOB, dan memberikan penanda visual khusus pada header hari Minggu. Authentication, RLS final, pengelolaan jadwal, absensi, laporan, dan beberapa aturan bisnis masih belum final.**
+> **Web UI React + Vite sudah online, terhubung ke Supabase/PostgreSQL, mampu menampilkan jadwal berdasarkan rentang tanggal atau pilihan bulan, memfilter karyawan secara multi-select, membuka detail jadwal, memperbesar area tabel, menampilkan/menyembunyikan kolom JOB, dan memberikan penanda visual khusus pada header hari Minggu. Authentication, RLS final, pengelolaan jadwal, absensi, laporan, dan beberapa aturan bisnis masih belum final. Master data FARM sedang dilengkapi secara bertahap.**
 
 **Milestone saat ini:**  
-**Online Web UI + Supabase Integration + Penyempurnaan Web UI v1 — SEDANG DIKERJAKAN.**
+**Online Web UI + Supabase Integration + Stabilisasi Master Data + Penyempurnaan Web UI v1 — SEDANG DIKERJAKAN.**
 
 Perubahan Production terbaru dan keputusan audit dicatat pada `docs/Dokumentasi_Perubahan_dan_Audit_Web_UI.md`.
-
 
 ### Baseline Master Data Terbaru
 
 - Departemen aktif: 2
-- JOB master: 9, termasuk JOB HATCHERY pada Departemen HATCHERY
+- JOB master: 10, termasuk JOB HATCHERY pada Departemen HATCHERY dan JOB Kandang pada Departemen FARM
 - Karyawan: 30
 - Seluruh 15 karyawan HATCHERY menggunakan JOB master HATCHERY
 - Deta dan Alda berada di HATCHERY dan tetap memiliki assignment harian seperti KANTIN, LONDRY, atau OFF
 - Total employee_schedules: 401
 - Tidak ditemukan duplikasi pasangan employee_id dan tanggal pada jadwal
+- 17 nama karyawan JOB Kandang sudah diverifikasi dari daftar yang diberikan, tetapi belum dimasukkan ke master employees
