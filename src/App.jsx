@@ -382,6 +382,7 @@ function App() {
   const [inviteActivationLoading, setInviteActivationLoading] = useState(false)
   const [inviteActivationError, setInviteActivationError] = useState('')
   const [inviteActivationSuccess, setInviteActivationSuccess] = useState('')
+  const [mobileNavHidden, setMobileNavHidden] = useState(false)
 
   const dateRange = useMemo(() => getDateRange(startDate, endDate), [startDate, endDate])
   const invalidRange = Boolean(startDate && endDate && startDate > endDate)
@@ -1281,6 +1282,34 @@ function App() {
   }
 
   useEffect(() => {
+    let lastScrollY = window.scrollY
+    let ticking = false
+
+    function handleScroll() {
+      if (ticking) return
+      ticking = true
+      window.requestAnimationFrame(() => {
+        const currentScrollY = window.scrollY
+        const delta = currentScrollY - lastScrollY
+
+        if (currentScrollY <= 12) {
+          setMobileNavHidden(false)
+        } else if (delta > 4) {
+          setMobileNavHidden(true)
+        } else if (delta < -4) {
+          setMobileNavHidden(false)
+        }
+
+        lastScrollY = currentScrollY
+        ticking = false
+      })
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  useEffect(() => {
     if (invalidRange) return
 
     if (!session) {
@@ -1701,7 +1730,7 @@ function App() {
         )}
       </main>
 
-      <nav className="mobile-bottom-nav" aria-label="Navigasi utama">
+      <nav className={`mobile-bottom-nav${mobileNavHidden ? " hidden" : ""}`} aria-label="Navigasi utama">
         <button type="button" className={activeTab === 'schedule' ? 'mobile-nav-item active' : 'mobile-nav-item'} onClick={() => setActiveTab('schedule')}>
           <span>⌂</span><small>Jadwal</small>
         </button>
