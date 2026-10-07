@@ -993,3 +993,28 @@ Perubahan hanya memperbaiki sintaks JSX. Tidak ada perubahan pada:
 #### Verifikasi
 
 Commit perbaikan sudah masuk branch main. Status Vercel untuk commit ini masih **Pending** saat audit diperbarui. Setelah deployment berhasil, perlu dilakukan verifikasi browser Production untuk memastikan form Edit Jadwal dan Hapus Jadwal dapat digunakan kembali.
+
+### 4.25 Verifikasi Production — Build dan Hapus Jadwal Admin
+
+- **Tanggal:** 2026-10-07
+- **Status:** Terverifikasi Production
+- **Commit perbaikan build:** `473a1f10873b846cc1afddf36ccc890f56f92786`
+
+#### Hasil
+
+Setelah perbaikan penutupan JSX pada blok `adminDeleteError`, deployment Vercel berhasil. Pengguna mengonfirmasi bahwa Web Production sudah berhasil dan fitur **Hapus Jadwal** dapat digunakan.
+
+Verifikasi ini menutup temuan build pada audit 4.24 dan mengonfirmasi bahwa penempatan tombol hapus langsung pada form **Edit Jadwal** dapat berjalan pada Production.
+
+Tidak ada perubahan pada schema PostgreSQL, RLS, master data, atau record jadwal sebagai bagian dari perbaikan build ini.
+
+#### Status fitur Admin
+
+Alur pengelolaan jadwal yang sudah tersedia pada Web UI:
+- Tambah Jadwal;
+- Edit Jadwal;
+- Hapus Jadwal;
+- konfirmasi sebelum penghapusan;
+- refresh tabel setelah perubahan.
+
+Pengujian CRUD menyeluruh dan verifikasi database masih menjadi tahap berikutnya.
