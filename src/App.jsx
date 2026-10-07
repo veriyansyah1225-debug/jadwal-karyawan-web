@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { publicSupabase, supabase, supabaseConfigured } from './lib/supabase'
+import { supabase, supabase, supabaseConfigured } from './lib/supabase'
 import jsPDF from 'jspdf'
 import * as XLSX from 'xlsx-js-style'
 
@@ -308,6 +308,8 @@ function App() {
   const [downloadMenuOpen, setDownloadMenuOpen] = useState(false)
   const [showJobColumn, setShowJobColumn] = useState(false)
   const [session, setSession] = useState(null)
+  const [authReady, setAuthReady] = useState(!supabaseConfigured)
+  const [userProfile, setUserProfile] = useState(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [adminLoginOpen, setAdminLoginOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -445,36 +447,45 @@ function App() {
 
     let cancelled = false
 
-    async function checkAdmin(userId) {
-      const { data, error: queryError } = await supabase
-        .from('admin_users')
-        .select('user_id,role')
+    async function loadUserAccess(userId) {
+      const { data: profile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('user_id,nama,role,aktif,employee_id')
         .eq('user_id', userId)
         .eq('aktif', true)
         .maybeSingle()
 
-      if (cancelled) return
+      if (cancelled) return false
 
-      if (queryError || !data || data.role !== 'admin') {
+      if (profileError || !profile) {
+        setUserProfile(null)
         setIsAdmin(false)
-        return      }
+        setAuthError('Akun belum memiliki akses ke sistem. Silakan hubungi Admin.')
+        return false
+      }
 
-      setIsAdmin(true)
+      setUserProfile(profile)
+      setIsAdmin(profile.role === 'admin')
+      setAuthError('')
+      return true
     }
 
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       if (cancelled) return
       setSession(data.session || null)
-      if (data.session?.user?.id) checkAdmin(data.session.user.id)
+      if (data.session?.user?.id) await loadUserAccess(data.session.user.id)
+      if (!cancelled) setAuthReady(true)
     })
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       if (cancelled) return
       setSession(nextSession || null)
       if (nextSession?.user?.id) {
-        setTimeout(() => checkAdmin(nextSession.user.id), 0)
+        setTimeout(() => loadUserAccess(nextSession.user.id), 0)
       } else {
+        setUserProfile(null)
         setIsAdmin(false)
+        setAuthError('')
       }
     })
 
@@ -484,7 +495,7 @@ function App() {
     }
   }, [])
 
-  async function handleAdminLogin(event) {
+  async function handleLogin(event) {
     event.preventDefault()
     if (!supabase) return
 
@@ -502,33 +513,37 @@ function App() {
       return
     }
 
-    const { data: adminData, error: roleError } = await supabase
-      .from('admin_users')
-      .select('user_id,role')
+    const { data: profile, error: profileError } = await supabase
+      .from('user_profiles')
+      .select('user_id,nama,role,aktif,employee_id')
       .eq('user_id', data.user.id)
       .eq('aktif', true)
       .maybeSingle()
 
-    if (roleError || !adminData || adminData.role !== 'admin') {
+    if (profileError || !profile) {
       await supabase.auth.signOut()
+      setUserProfile(null)
       setIsAdmin(false)
-      setAuthError('Akun berhasil login, tetapi belum terdaftar sebagai Admin.')
+      setAuthError('Akun berhasil login, tetapi belum memiliki akses ke sistem. Silakan hubungi Admin.')
       setAuthLoading(false)
       return
     }
 
     setSession(data.session)
-    setIsAdmin(true)
+    setUserProfile(profile)
+    setIsAdmin(profile.role === 'admin')
     setAdminPassword('')
     setAdminLoginOpen(false)
     setAuthLoading(false)
   }
 
-  async function handleAdminLogout() {
+  async function handleLogout() {
     if (!supabase) return
     await supabase.auth.signOut()
     setSession(null)
+    setUserProfile(null)
     setIsAdmin(false)
+    setAdminPassword('')
   }
 
   useEffect(() => {
@@ -537,7 +552,7 @@ function App() {
     let cancelled = false
 
     async function loadDepartments() {
-      const { data, error: queryError } = await publicSupabase
+      const { data, error: queryError } = await supabase
         .from('departments')
         .select('id,nama_departemen')
         .eq('aktif', true)
@@ -572,12 +587,12 @@ function App() {
 
     async function loadAdminMasterData() {
       const [{ data: employeeData, error: employeeError }, { data: codeData, error: codeError }] = await Promise.all([
-        publicSupabase
+        supabase
           .from('employees')
           .select('id,nama,aktif,department_id,departments(nama_departemen)')
           .eq('aktif', true)
           .order('nama'),
-        publicSupabase
+        supabase
           .from('schedule_codes')
           .select('id,kode,nama,keterangan')
           .eq('aktif', true)
@@ -605,22 +620,22 @@ function App() {
   }, [isAdmin, department])
 
   useEffect(() => {
-    if (!supabaseConfigured || !publicSupabase) return
+    if (!supabaseConfigured || !supabase) return
 
     let cancelled = false
 
     async function loadEmployeeMaster() {
       const [{ data: employeeData, error: employeeError }, { data: departmentData, error: departmentError }, { data: jobData, error: jobError }] = await Promise.all([
-        publicSupabase
+        supabase
           .from('employees')
           .select('id,kode_karyawan,nama,aktif,department_id,job_id,tanggal_masuk,tanggal_keluar,keterangan,departments(id,nama_departemen),jobs(id,nama_job,department_id)')
           .order('nama'),
-        publicSupabase
+        supabase
           .from('departments')
           .select('id,nama_departemen')
           .eq('aktif', true)
           .order('nama_departemen'),
-        publicSupabase
+        supabase
           .from('jobs')
           .select('id,nama_job,department_id')
           .eq('aktif', true)
@@ -888,7 +903,13 @@ function App() {
   useEffect(() => {
     if (invalidRange) return
 
-    if (!supabaseConfigured) {
+    if (!session) {
+      setRows([])
+      setLoading(false)
+      return
+    }
+
+    if (!supabaseConfigured || !supabase) {
       setRows([])
       setError('Supabase belum dikonfigurasi. Silakan periksa environment variable aplikasi.')
       setLoading(false)
@@ -902,12 +923,12 @@ function App() {
       setError('')
 
       const [{ data: employeeData, error: employeeError }, { data: scheduleData, error: scheduleError }] = await Promise.all([
-        publicSupabase
+        supabase
           .from('employees')
           .select('id,nama,aktif,departments(nama_departemen),jobs(nama_job)')
           .eq('aktif', true)
           .order('nama'),
-        publicSupabase
+        supabase
           .from('v_jadwal_karyawan')
           .select('employee_id,tanggal,nama_departemen,nama_job,nama_job_master,nama_karyawan,kode_jadwal,keterangan')
           .gte('tanggal', startDate)
@@ -992,13 +1013,51 @@ function App() {
     return () => {
       cancelled = true
     }
-  }, [department, startDate, endDate, invalidRange, scheduleRefresh])
+  }, [session?.user?.id, department, startDate, endDate, invalidRange, scheduleRefresh])
 
   useEffect(() => {
     const validIds = new Set(rows.map((row) => String(row.employeeId)))
     setSelectedEmployees((current) => current.filter((id) => validIds.has(id)))
   }, [rows])
 
+
+  if (!authReady) {
+    return (
+      <div className="auth-page">
+        <div className="auth-card">
+          <div className="modal-kicker">Jadwal Karyawan</div>
+          <h1>Memuat sistem...</h1>
+          <p>Memeriksa sesi pengguna.</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!session) {
+    return (
+      <div className="auth-page">
+        <div className="auth-card">
+          <div className="auth-brand">
+            <div className="modal-kicker">Sistem Informasi</div>
+            <h1>Jadwal Libur Karyawan</h1>
+            <p>Silakan masuk untuk mengakses jadwal dan data sesuai hak akses Anda.</p>
+          </div>
+          <form className="admin-login-form" onSubmit={handleLogin}>
+            <label>Email
+              <input type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} autoComplete="username" placeholder="nama@perusahaan.com" required />
+            </label>
+            <label>Password
+              <input type="password" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} autoComplete="current-password" placeholder="Masukkan password" required />
+            </label>
+            {authError && <div className="state error">{authError}</div>}
+            {!supabaseConfigured && <div className="state error">Konfigurasi Supabase belum tersedia.</div>}
+            <button className="focus-toggle auth-submit" type="submit" disabled={authLoading || !supabaseConfigured}>{authLoading ? 'Memeriksa...' : 'Masuk ke Sistem'}</button>
+          </form>
+          <p className="auth-help">Belum memiliki akun? Hubungi Admin untuk mendapatkan akses.</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className={`app${focusMode ? ' focus-mode' : ''}`}>
@@ -1255,15 +1314,11 @@ function App() {
             </div>
             <div className="settings-section">
               <div>
-                <strong>Akses Admin</strong>
-                <p>{isAdmin ? 'Anda sedang login sebagai Admin.' : 'Login diperlukan untuk mengakses fitur pengelolaan jadwal.'}</p>
+                <strong>Akun Pengguna</strong>
+                <p>{userProfile?.nama || session?.user?.email || 'Pengguna'} · {userProfile?.role || '—'}</p>
               </div>
-              {isAdmin ? (
-                <button className="admin-status-button" type="button" onClick={handleAdminLogout}>Admin · Keluar</button>
-              ) : (
-                <button className="focus-toggle" type="button" onClick={() => { setAuthError(''); setAdminLoginOpen(true); setSettingsOpen(false) }}>Login Admin</button>
-              )}
-            </div>
+              <button className="admin-status-button" type="button" onClick={handleLogout}>Keluar</button>
+            </div>>
           </div>
         </div>
       )}
@@ -1274,12 +1329,12 @@ function App() {
             <div className="modal-head">
               <div>
                 <div className="modal-kicker">Akses Terbatas</div>
-                <h2 id="admin-login-title">Login Admin</h2>
+                <h2 id="admin-login-title">Masuk ke Sistem</h2>
               </div>
               <button className="modal-close" type="button" onClick={() => !authLoading && setAdminLoginOpen(false)} aria-label="Tutup">×</button>
             </div>
-            <form className="admin-login-form" onSubmit={handleAdminLogin}>
-              <label>Email Admin<input type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} autoComplete="username" required /></label>
+            <form className="admin-login-form" onSubmit={handleLogin}>
+              <label>Email<input type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} autoComplete="username" required /></label>
               <label>Password<input type="password" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} autoComplete="current-password" required /></label>
               {authError && <div className="state error">{authError}</div>}
               <div className="admin-login-actions">
