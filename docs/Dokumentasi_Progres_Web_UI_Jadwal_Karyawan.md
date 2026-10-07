@@ -1,7 +1,7 @@
 # Dokumentasi Progres Pengembangan Web UI — Jadwal Karyawan
 
 **Status:** Draft / Living Document  
-**Versi:** 1.4  
+**Versi:** 1.5  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Database:** `database-jadwal-karyawan` / PostgreSQL 17 / Supabase
@@ -30,7 +30,7 @@ Komponen yang tersedia saat Web UI mulai dikembangkan:
 |---|---:|
 | Departments | 2 |
 | JOB | 10 |
-| Karyawan | 30 |
+| Karyawan | 31 |
 | Kode jadwal | 6 |
 | Jadwal Oktober 2026 | 401 record |
 | Data absensi | 0 record |
@@ -38,7 +38,7 @@ Komponen yang tersedia saat Web UI mulai dikembangkan:
 
 Database PostgreSQL/Supabase menjadi sumber data utama Web UI.
 
-**Catatan master data terbaru:** JOB `Kandang` telah ditambahkan pada Departemen FARM sebagai tahap pertama penambahan data karyawan FARM. Daftar karyawan Kandang belum dimasukkan pada tahap ini.
+**Catatan master data terbaru:** JOB `Kandang` tersedia pada Departemen FARM. Dari daftar 17 nama Kandang yang diberikan, karyawan pertama yaitu **HERI** sudah dimasukkan ke master `employees`. Enam belas nama lainnya belum dimasukkan.
 
 ---
 
@@ -348,31 +348,38 @@ Untuk tahap stabilisasi saat ini, aturan bisnis sementara sudah ditetapkan:
 
 Detail JOB internal HATCHERY seperti admin, holding, sexer, dan pembagian lebih rinci ditunda sampai database stabil.
 
-### 11.2 Penambahan JOB Kandang
+### 11.2 Penambahan JOB Kandang dan Karyawan Kandang
 
-Pada 2026-10-07, JOB master **Kandang** ditambahkan ke Departemen FARM sebagai tahap pertama pemasukan data karyawan dari format jadwal yang baru diterima.
+Pada 2026-10-07, JOB master **Kandang** tersedia pada Departemen FARM.
 
-Sumber data yang diberikan menunjukkan 17 nama karyawan dengan JOB Kandang:
+Daftar sumber berisi 17 nama karyawan dengan JOB Kandang. Penambahan karyawan dilakukan satu per satu.
 
-- HERI
-- REHAN
-- ANDRE YUNUS MENO
-- JUMADI
-- AGUS DWI LAKSONO
-- RICO KRISMUNTO
-- RIDWAN
-- FERRY GUNAWAN
-- GANDI SEPTIO
-- ADITIA SRI ANDANA
-- FEBRI DWI SAPUTRA
-- ELVIS NUR HIDAYAT
-- ADITIA
-- URAY IMAY INNUDDIN
-- JEPRI APO
-- TEGUH ARI WIBOWO
-- MARNO
+**Tahap yang sudah selesai:**
 
-Pada tahap ini **17 karyawan tersebut belum dimasukkan ke tabel employees**. Penambahan akan dilakukan satu per satu sesuai arahan pengguna.
+- HERI telah dimasukkan ke master `employees`;
+- HERI memiliki Departemen FARM;
+- HERI memiliki JOB master Kandang;
+- ID karyawan HERI = 31;
+- belum ada jadwal Oktober yang dimasukkan untuk HERI pada tahap ini.
+
+**Tahap berikutnya:**
+
+- REHAN;
+- ANDRE YUNUS MENO;
+- JUMADI;
+- AGUS DWI LAKSONO;
+- RICO KRISMUNTO;
+- RIDWAN;
+- FERRY GUNAWAN;
+- GANDI SEPTIO;
+- ADITIA SRI ANDANA;
+- FEBRI DWI SAPUTRA;
+- ELVIS NUR HIDAYAT;
+- ADITIA;
+- URAY IMAY INNUDDIN;
+- JEPRI APO;
+- TEGUH ARI WIBOWO;
+- MARNO.
 
 ### 11.3 L dan OFF
 
@@ -594,6 +601,7 @@ Fokus saat ini tetap pada penyelesaian dan stabilisasi **master data + Web UI v1
 | v1.1 | Dropdown Departemen membaca master `departments` | Selesai |
 | v1.2 | Seluruh karyawan HATCHERY menggunakan JOB master HATCHERY; Deta/Alda dipastikan sebagai HATCHERY tanpa menghapus assignment harian | Selesai |
 | v1.3 | Penambahan JOB master Kandang pada FARM | Selesai |
+| v1.5 | Penambahan HERI sebagai karyawan FARM JOB Kandang | Selesai |
 | Saat ini | Penambahan karyawan FARM Kandang satu per satu | Sedang dikerjakan |
 
 ---
@@ -602,16 +610,7 @@ Fokus saat ini tetap pada penyelesaian dan stabilisasi **master data + Web UI v1
 
 Dokumen ini adalah **dokumentasi progres**, bukan spesifikasi final.
 
-Audit versi 1.1 menghapus pengulangan yang sebelumnya terdapat pada:
-
-- beberapa daftar fitur dengan isi hampir sama;
-- beberapa bagian kondisi/status proyek;
-- beberapa tabel riwayat perubahan UI;
-- beberapa update milestone yang hanya mengulang daftar pekerjaan;
-- pengulangan alur penggunaan Web UI;
-- pengulangan status dokumen pada beberapa bagian.
-
-Informasi penting tetap dipertahankan dalam bentuk yang lebih ringkas, terutama:
+Audit versi sebelumnya mempertahankan informasi penting dalam bentuk yang lebih ringkas, terutama:
 
 - milestone historis;
 - fitur aktif;
@@ -634,9 +633,9 @@ Perubahan Production terbaru dan keputusan audit dicatat pada `docs/Dokumentasi_
 
 - Departemen aktif: 2
 - JOB master: 10, termasuk JOB HATCHERY pada Departemen HATCHERY dan JOB Kandang pada Departemen FARM
-- Karyawan: 30
+- Karyawan: 31
 - Seluruh 15 karyawan HATCHERY menggunakan JOB master HATCHERY
 - Deta dan Alda berada di HATCHERY dan tetap memiliki assignment harian seperti KANTIN, LONDRY, atau OFF
 - Total employee_schedules: 401
 - Tidak ditemukan duplikasi pasangan employee_id dan tanggal pada jadwal
-- 17 nama karyawan JOB Kandang sudah diverifikasi dari daftar yang diberikan, tetapi belum dimasukkan ke master employees
+- Daftar Kandang: 17 nama dari sumber; 1 sudah dimasukkan (HERI), 16 masih menunggu tahap berikutnya
