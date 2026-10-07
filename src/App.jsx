@@ -325,6 +325,7 @@ function App() {
   const [adminScheduleLoading, setAdminScheduleLoading] = useState(false)
   const [adminScheduleError, setAdminScheduleError] = useState('')
   const [adminScheduleSuccess, setAdminScheduleSuccess] = useState('')
+  const [scheduleRefresh, setScheduleRefresh] = useState(0)
 
   const dateRange = useMemo(() => getDateRange(startDate, endDate), [startDate, endDate])
   const invalidRange = Boolean(startDate && endDate && startDate > endDate)
@@ -575,6 +576,7 @@ function App() {
 
     setAdminScheduleSuccess(adminScheduleEditMode ? 'Jadwal berhasil diperbarui.' : 'Jadwal berhasil disimpan.')
     setAdminScheduleNote('')
+    setScheduleRefresh((value) => value + 1)
     setAdminScheduleLoading(false)
   }
 
@@ -700,7 +702,7 @@ function App() {
     return () => {
       cancelled = true
     }
-  }, [department, startDate, endDate, invalidRange])
+  }, [department, startDate, endDate, invalidRange, scheduleRefresh])
 
   useEffect(() => {
     const validIds = new Set(rows.map((row) => String(row.employeeId)))
