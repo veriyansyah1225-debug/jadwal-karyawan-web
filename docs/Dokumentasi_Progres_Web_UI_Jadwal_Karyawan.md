@@ -1,7 +1,7 @@
 # Dokumentasi Progres Pengembangan Web UI — Jadwal Karyawan
 
 **Status:** Draft / Living Document  
-**Versi:** 2.12  
+**Versi:** 2.13  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Database:** `database-jadwal-karyawan` / PostgreSQL 17 / Supabase
@@ -985,3 +985,18 @@ Fitur tidak mengubah master karyawan maupun kode jadwal.
 **Status:** code sudah diterapkan pada branch `main`; verifikasi browser Production masih diperlukan.
 
 **Commit:** `08be2601ba08933b0f51515743cc912ed8d520f4` dan `ee0caab6c988eb83c24fe62d2163881cb001cec5`
+
+
+### 11.16 Penempatan Tombol Hapus pada Form Edit
+
+Hasil pengujian UI menunjukkan tombol **Hapus Jadwal** belum terlihat ketika Admin sudah berada di form **Edit Jadwal**. Implementasi sebelumnya hanya menampilkan tombol hapus pada Detail Jadwal.
+
+Perubahan:
+- tombol **Hapus Jadwal** sekarang juga tersedia langsung pada form **Edit Jadwal**;
+- tombol hanya muncul pada mode edit, bukan saat Tambah Jadwal;
+- penghapusan tetap meminta konfirmasi;
+- setelah berhasil, modal ditutup dan tabel dimuat ulang.
+
+**Status:** code sudah masuk `main`; deployment Vercel sedang diproses.
+
+**Commit:** `0011e1c86ca79abdee8e99a21e2b8ff3ebc755d4`
