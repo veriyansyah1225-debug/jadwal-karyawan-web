@@ -1,7 +1,7 @@
 # Dokumentasi Progres Pengembangan Web UI — Jadwal Karyawan
 
 **Status:** Draft / Living Document  
-**Versi:** 2.3  
+**Versi:** 2.4  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Database:** `database-jadwal-karyawan` / PostgreSQL 17 / Supabase
@@ -536,8 +536,11 @@ Masukan setelah penggunaan pertama menunjukkan bahwa file Excel perlu memiliki f
 
 - format A3 landscape;
 - pembagian tanggal maksimal 16 tanggal per halaman;
-- ukuran teks dan tinggi baris yang lebih besar;
-- header tanggal dan nama karyawan yang lebih jelas;
+- font isi dan kode jadwal diperbesar lagi;
+- tinggi baris dinaikkan menjadi 10 mm;
+- kolom JOB dan Nama Karyawan diperlebar;
+- header tanggal dan nama karyawan dibuat lebih besar;
+- border tabel dibuat lebih gelap dan lebih tebal;
 - informasi bagian tanggal dan nomor halaman;
 - pagination vertikal untuk jumlah karyawan yang melebihi tinggi halaman.
 
@@ -749,6 +752,7 @@ Fokus saat ini tetap pada penyelesaian dan stabilisasi **master data + Web UI v1
 | v2.1 | Koreksi tanggal libur IB dan penambahan ARIF pada JOB MEKANIK | Selesai |
 | v2.2 | Penambahan export Excel dan PDF berdasarkan filter aktif | Selesai |
 | v2.3 | Penyempurnaan format Excel dan keterbacaan PDF untuk hasil cetak | Selesai |
+| v2.4 | Perbesar font dan pertegas border PDF | Selesai |
 
 ---
 
