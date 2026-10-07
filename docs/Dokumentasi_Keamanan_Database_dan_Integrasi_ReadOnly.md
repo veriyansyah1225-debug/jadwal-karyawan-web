@@ -277,9 +277,9 @@ Admin belum diberi fitur:
 
 Fitur tersebut akan dirancang setelah pondasi database dan Web UI lebih stabil.
 
-### Tidak menentukan RLS Admin/User final dulu
+### Pondasi RLS Admin mulai dibuat
 
-Model role dan hak akses admin akan dibahas kembali ketika authentication mulai dikembangkan.
+Authentication dan role Admin mulai dikembangkan. Tabel `public.admin_users` sudah dibuat dengan RLS: user authenticated hanya dapat membaca role miliknya sendiri yang aktif. Hak insert/update/delete terhadap tabel role tidak diberikan kepada client.
 
 ---
 
@@ -294,9 +294,9 @@ Model role dan hak akses admin akan dibahas kembali ketika authentication mulai 
 | Policy read-only jadwal | Selesai |
 | Akses Web UI ke database | Berhasil |
 | Verifikasi data Web vs database | Berhasil |
-| Login | Ditunda |
-| Admin CRUD | Ditunda |
-| RLS final Admin/User | Ditunda |
+| Login | Pondasi mulai diterapkan |
+| Admin CRUD | Belum dimulai |
+| RLS final Admin/User | Bertahap; role Admin sudah memiliki pondasi |
 | Modul Absensi | Ditunda |
 | Optimasi index | Ditunda |
 
@@ -311,9 +311,9 @@ Urutan besar yang disepakati:
 1. Stabilisasi Web UI dan integrasi data.
 2. Validasi aturan bisnis jadwal.
 3. Penyempurnaan database/view jika memang diperlukan.
-4. Authentication.
+4. Authentication dan Login Admin.
 5. RLS final berdasarkan role.
-6. Admin CRUD.
+6. Admin CRUD jadwal.
 7. Master data.
 8. Modul Absensi.
 9. Laporan dan export.
