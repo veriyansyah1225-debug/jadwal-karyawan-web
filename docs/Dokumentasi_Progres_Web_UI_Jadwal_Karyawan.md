@@ -1,7 +1,7 @@
 # Dokumentasi Progres Pengembangan Web UI — Jadwal Karyawan
 
 **Status:** Draft / Living Document  
-**Versi:** 2.11  
+**Versi:** 2.12  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Database:** `database-jadwal-karyawan` / PostgreSQL 17 / Supabase
@@ -966,3 +966,22 @@ Jika sel belum memiliki jadwal, tombol pada detail menggunakan label **Tambah Ja
 
 **Commit implementasi:** `5470d004d93c646c8aed0f8f568ea854cbc6f151`  
 **Commit penyegaran tabel setelah simpan:** `3a8271786d17ce0193ff1188f0afc30bf9a290f2`
+
+
+### 11.15 Hapus Jadwal Admin melalui Detail Sel
+
+Pada 2026-10-07, Web UI ditambahkan tombol **Hapus Jadwal** pada Detail Jadwal untuk Admin.
+
+Alur:
+1. Admin membuka sel yang sudah memiliki jadwal.
+2. Detail Jadwal menampilkan tombol **Hapus Jadwal**.
+3. Sistem meminta konfirmasi sebelum penghapusan.
+4. Jika dikonfirmasi, record `employee_schedules` dihapus berdasarkan `employee_id` dan `tanggal`.
+5. Setelah berhasil, detail ditutup dan tabel dimuat ulang.
+6. Sel kembali menjadi `—`, yang berarti **belum ada jadwal**, bukan otomatis Libur.
+
+Fitur tidak mengubah master karyawan maupun kode jadwal.
+
+**Status:** code sudah diterapkan pada branch `main`; verifikasi browser Production masih diperlukan.
+
+**Commit:** `08be2601ba08933b0f51515743cc912ed8d520f4` dan `ee0caab6c988eb83c24fe62d2163881cb001cec5`
