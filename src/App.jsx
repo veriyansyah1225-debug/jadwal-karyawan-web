@@ -309,6 +309,7 @@ function App() {
   const [session, setSession] = useState(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [adminLoginOpen, setAdminLoginOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [adminEmail, setAdminEmail] = useState('')
   const [adminPassword, setAdminPassword] = useState('')
   const [authLoading, setAuthLoading] = useState(false)
@@ -607,7 +608,7 @@ function App() {
           <div>☷ &nbsp; Kode Jadwal</div>
           <div>◷ &nbsp; Absensi</div>
           <div>▥ &nbsp; Laporan</div>
-          <div className="nav-settings">⚙ &nbsp; Pengaturan</div>
+          <button type="button" className={settingsOpen ? "nav-settings active" : "nav-settings"} onClick={() => setSettingsOpen(true)}>⚙ &nbsp; Pengaturan</button>
         </nav>
       </aside>
 
@@ -682,11 +683,6 @@ function App() {
                 )}
               </div>
               <button className="secondary export-button" type="button" onClick={() => exportExcel(filteredRows, dateRange, department, showJobColumn, startDate, endDate)} disabled={loading || filteredRows.length === 0}>Excel</button>
-              {isAdmin ? (
-                <button className="admin-status-button" type="button" onClick={handleAdminLogout}>Admin · Keluar</button>
-              ) : (
-                <button className="secondary export-button" type="button" onClick={() => { setAuthError(''); setAdminLoginOpen(true) }}>Admin</button>
-              )}
               <button className="secondary export-button" type="button" onClick={() => exportPdf(filteredRows, dateRange, department, showJobColumn, startDate, endDate)} disabled={loading || filteredRows.length === 0}>PDF</button>
               <button className="focus-toggle" type="button" onClick={() => setFocusMode((value) => !value)}>
                 {focusMode ? 'Kembalikan Tampilan' : 'Perbesar Jadwal'}
@@ -716,7 +712,32 @@ function App() {
         </section>
       </main>
 
-      {adminLoginOpen && (
+      {settingsOpen && (
+        <div className="modal-backdrop" onClick={() => setSettingsOpen(false)}>
+          <div className="modal settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-head">
+              <div>
+                <div className="modal-kicker">Konfigurasi Sistem</div>
+                <h2 id="settings-title">Pengaturan</h2>
+              </div>
+              <button className="modal-close" type="button" onClick={() => setSettingsOpen(false)} aria-label="Tutup">×</button>
+            </div>
+            <div className="settings-section">
+              <div>
+                <strong>Akses Admin</strong>
+                <p>{isAdmin ? 'Anda sedang login sebagai Admin.' : 'Login diperlukan untuk mengakses fitur pengelolaan jadwal.'}</p>
+              </div>
+              {isAdmin ? (
+                <button className="admin-status-button" type="button" onClick={handleAdminLogout}>Admin · Keluar</button>
+              ) : (
+                <button className="focus-toggle" type="button" onClick={() => { setAuthError(''); setAdminLoginOpen(true); setSettingsOpen(false) }}>Login Admin</button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+            {adminLoginOpen && (
         <div className="modal-backdrop" onClick={() => !authLoading && setAdminLoginOpen(false)}>
           <div className="modal admin-login-modal" role="dialog" aria-modal="true" aria-labelledby="admin-login-title" onClick={(e) => e.stopPropagation()}>
             <div className="modal-head">
