@@ -632,6 +632,17 @@ Export harus menghasilkan file yang tidak hanya dapat dibuka, tetapi juga layak 
 
 ---
 
+### 4.12 Pengembalian PDF ke A3 untuk laporan 1–31
+
+- Tanggal: 2026-10-07
+- Status: Production code
+- Commit: a50d49c5816745e85ffaa9233ab9f5fe567dfaca
+- Alasan: Format A4/F4 membuat rentang 1–31 terpecah menjadi beberapa blok horizontal, sehingga tidak sesuai kebutuhan laporan.
+- Keputusan: PDF kembali ke A3 landscape dan seluruh tanggal dalam rentang yang dipilih tetap berada dalam satu blok horizontal. Jika jumlah karyawan melebihi kapasitas halaman, pembagian hanya dilakukan secara vertikal.
+- Keterbacaan: font tetap diperbesar dan border tetap tegas seperti penyesuaian sebelumnya.
+- Verifikasi: kode sudah diterapkan pada main; hasil cetak fisik perlu diuji setelah deployment.
+
+
 ## 10. Status Dokumen
 
 Dokumen ini bersifat **living document**.
