@@ -819,3 +819,22 @@ Perubahan Production terbaru dan keputusan audit dicatat pada `docs/Dokumentasi_
 - Jadwal IB Oktober 2026: 48 record kode L untuk 12 karyawan, pada tanggal 4, 11, 18, 25
 - ARIF: karyawan FARM / MEKANIK dengan 4 record L pada 1, 8, 15, 22 Oktober 2026
 - Standar kode libur: `L` saja untuk input dan tampilan; `OFF` nonaktif/historis\n### v2.5 — PDF A4 dan F4\n\nExport PDF sekarang menyediakan dua pilihan ukuran kertas: **A4 landscape** dan **F4 landscape**. Pembagian tanggal disesuaikan dengan lebar masing-masing kertas agar font dan border tetap terbaca.\n\n- A4: 8 tanggal per blok horizontal.\n- F4: 10 tanggal per blok horizontal.\n- Tinggi baris: 10 mm.\n- Border tabel dibuat lebih tegas.\n- Jumlah halaman menyesuaikan jumlah tanggal dan karyawan.\n
+
+### v2.7 — Admin Tambah Jadwal
+
+**Status:** Production code / menunggu uji simpan browser
+
+Pondasi Admin Login yang sudah ada diperluas menjadi fitur awal pengelolaan jadwal.
+
+Web UI:
+- setelah login Admin, menu **Pengaturan** menampilkan **Pengelolaan Jadwal**;
+- Admin dapat membuka **Tambah Jadwal**;
+- form menyediakan karyawan, tanggal, kode jadwal aktif, dan keterangan;
+- penyimpanan menggunakan upsert berdasarkan `employee_id,tanggal`.
+
+Database:
+- `employee_schedules` memiliki policy INSERT/UPDATE/DELETE untuk Admin aktif;
+- publik tetap hanya memiliki akses SELECT;
+- unique index `employee_schedules_employee_date_unique` menjaga satu jadwal per karyawan per tanggal.
+
+Tahap ini belum mencakup hapus melalui UI, pengelolaan master data, atau edit langsung dari tabel.
