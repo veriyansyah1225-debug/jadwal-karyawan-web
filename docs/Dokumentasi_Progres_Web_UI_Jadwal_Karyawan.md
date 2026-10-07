@@ -1085,3 +1085,80 @@ Tidak dibuat policy DELETE untuk `employees`; desain fitur menggunakan status no
 `updated_at` juga sekarang diperbarui otomatis melalui trigger ketika data karyawan diubah.
 
 **Status:** implementasi sudah masuk `main`. Verifikasi browser Production setelah deployment masih diperlukan.
+
+
+### 11.20 Filter JOB di Master Karyawan — Cascading Departemen → JOB
+
+Pada 2026-10-07, filter JOB pada Master Karyawan dipindahkan dari header tabel ke area filter utama agar lebih konsisten dengan pola filter lainnya.
+
+Urutan filter:
+- Cari Karyawan;
+- Status;
+- Departemen;
+- JOB.
+
+Filter JOB mengikuti Departemen yang dipilih. Ketika Departemen berubah, pilihan JOB dikosongkan dan daftar JOB disesuaikan dengan departemen tersebut.
+
+Tampilan header tabel tetap menampilkan kolom JOB biasa, tanpa dropdown filter di header.
+
+### 11.21 Penataan Filter Periode dan Download Jadwal
+
+Pada 2026-10-07, area filter jadwal dirapikan agar kontrol periode berurutan:
+- Dari Tanggal;
+- Sampai Tanggal;
+- Pilih Bulan;
+- Departemen;
+- JOB;
+- Pilih Karyawan.
+
+**Pilih Bulan** menggunakan tampilan dropdown yang diseragamkan dengan kontrol pilihan karyawan. Pemilihan bulan tetap otomatis mengatur tanggal awal dan tanggal akhir sesuai bulan yang dipilih.
+
+Tombol export **Excel** dan **PDF** digabung menjadi satu tombol **Download Jadwal** dengan pilihan format Excel atau PDF.
+
+### 11.22 Mutasi / Pindah Jabatan Karyawan dengan Riwayat Posisi
+
+Pada 2026-10-07, sistem ditambahkan dukungan untuk perpindahan karyawan antar Departemen dan/atau JOB tanpa merusak histori.
+
+#### Web UI
+
+Pada Master Karyawan untuk karyawan aktif tersedia tombol **Pindah Jabatan**. Form mutasi berisi:
+- Karyawan;
+- Posisi saat ini;
+- Departemen Baru;
+- JOB Baru;
+- Tanggal Efektif;
+- Keterangan.
+
+Setelah disimpan, Web UI memuat ulang data master dan jadwal.
+
+#### Database
+
+Ditambahkan tabel **public.employee_position_history** untuk menyimpan histori posisi karyawan dengan field:
+- employee_id;
+- department_id;
+- job_id;
+- tanggal_mulai;
+- tanggal_selesai;
+- keterangan;
+- created_at;
+- updated_at.
+
+Ditambahkan constraint pencegah periode posisi yang tumpang tindih untuk karyawan yang sama.
+
+Tabel **public.employee_schedules** juga ditambah **department_id** sehingga histori jadwal dapat menyimpan Departemen pada saat jadwal tersebut berlaku, selain **job_id** yang sudah ada.
+
+#### Proses Mutasi
+
+Mutasi dilakukan melalui fungsi database **public.transfer_employee_position(...)** dengan akses hanya untuk Admin aktif. Proses tersebut:
+1. memvalidasi karyawan, Departemen, dan JOB baru;
+2. menutup posisi lama pada satu hari sebelum tanggal efektif;
+3. membuat histori posisi baru;
+4. memperbarui posisi aktif pada employees;
+5. memperbarui department_id dan job_id pada jadwal mulai tanggal efektif, sementara jadwal sebelum tanggal efektif tetap dipertahankan sebagai histori lama.
+
+Riwayat jabatan lama tidak dibuat secara otomatis apabila tanggal historisnya tidak diketahui. Riwayat baru mulai tercatat ketika mutasi dilakukan melalui fitur **Pindah Jabatan**.
+
+**Status:** fitur Web UI dan database sudah diterapkan pada branch main. Verifikasi browser Production setelah deployment masih diperlukan.
+
+**Commit Web UI:** `c078b3e2d0ff02249c594cbc3a6809b6c64a4d88`  
+**Commit CSS:** `22df61a39d65e896faec4c6feddf0704f1abd3bd`
