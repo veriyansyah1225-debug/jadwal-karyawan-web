@@ -375,6 +375,7 @@ function App() {
   const [userManagementLoading, setUserManagementLoading] = useState(false)
   const [userManagementError, setUserManagementError] = useState('')
   const [userResendLoadingId, setUserResendLoadingId] = useState('')
+  const [userDeleteLoadingId, setUserDeleteLoadingId] = useState('')
   const [inviteActivation, setInviteActivation] = useState(false)
   const [invitePassword, setInvitePassword] = useState('')
   const [invitePasswordConfirm, setInvitePasswordConfirm] = useState('')
@@ -1000,6 +1001,57 @@ function App() {
     }
 
     setManagedUsers((current) => current.map((item) => item.user_id === user.user_id ? { ...item, aktif: nextActive } : item))
+  }
+
+  async function deleteUnactivatedUser(user) {
+    if (!supabase || !isAdmin || !user || user.user_id === session?.user?.id) return
+
+    const confirmed = window.confirm(
+      'Hapus akun percobaan ini secara permanen?\\n\\n' +
+      'Nama: ' + (user.nama || '—') + '\\n' +
+      'Email: ' + (user.email || '—') + '\\n\\n' +
+      'Tindakan ini hanya tersedia untuk akun yang belum diaktivasi.'
+    )
+    if (!confirmed) return
+
+    setUserDeleteLoadingId(user.user_id)
+    setUserManagementError('')
+
+    const { data: refreshedSession, error: refreshError } = await supabase.auth.refreshSession()
+    if (refreshError || !refreshedSession.session) {
+      setUserManagementError('Sesi Admin sudah berakhir. Silakan login kembali.')
+      setUserDeleteLoadingId('')
+      return
+    }
+    setSession(refreshedSession.session)
+
+    const { data, error: functionError } = await supabase.functions.invoke('admin-delete-unactivated-user', {
+      body: { user_id: user.user_id },
+    })
+
+    if (functionError) {
+      let detail = ''
+      try {
+        const body = await functionError.context?.json?.()
+        detail = body?.error || ''
+      } catch {
+        // Abaikan jika response bukan JSON.
+      }
+      setUserManagementError(detail || functionError.message || 'Gagal menghapus akun.')
+      setUserDeleteLoadingId('')
+      return
+    }
+
+    if (data?.error) {
+      setUserManagementError(data.error)
+      setUserDeleteLoadingId('')
+      return
+    }
+
+    setUserDeleteLoadingId('')
+    setScheduleRefresh((value) => value + 1)
+    setUserManagementError('')
+    window.alert(data?.message || 'Akun berhasil dihapus.')
   }
 
   async function resendManagedUserInvite(user) {
@@ -1763,6 +1815,15 @@ function App() {
                               </button>
                               <button type="button" className="secondary" onClick={() => toggleManagedUser(user)}>
                                 {user.aktif ? 'Nonaktifkan' : 'Aktifkan'}
+                              </button>
+                              <button
+                                type="button"
+                                className="secondary danger"
+                                onClick={() => deleteUnactivatedUser(user)}
+                                disabled={userResendLoadingId === user.user_id || userDeleteLoadingId === user.user_id}
+                                title="Hanya untuk akun yang belum membuat password"
+                              >
+                                {userDeleteLoadingId === user.user_id ? 'Menghapus...' : 'Hapus Akun'}
                               </button>
                             </div>
                           )}
