@@ -32,3 +32,32 @@
 .detail-action-error {
   margin-bottom: 12px;
 }
+
+
+/* Master Karyawan */
+.employee-master-card .title{align-items:center}
+.employee-master-filters{grid-template-columns:2fr 1fr 1fr}
+.employee-master-table-wrap{max-height:68vh}
+.employee-master-table{min-width:1100px}
+.employee-master-table th,.employee-master-table td{padding:0 10px}
+.employee-master-table .employee-master-name{text-align:left;min-width:220px}
+.employee-status{display:inline-flex;align-items:center;justify-content:center;min-width:76px;height:28px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:800}
+.employee-status.active{background:#e8f6eb;color:#21653a}
+.employee-status.inactive{background:#fff0f0;color:#a52f2f}
+.table-action-button{width:auto;height:32px;padding:0 10px;background:#eef5ff;color:#1265c5;border:1px solid #cfe2f8;border-radius:7px;font-size:12px}
+.table-action-button:hover{background:#dceeff}
+.employee-form-modal{max-width:700px}
+.employee-form{display:grid;gap:14px}
+.employee-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.employee-form label{display:grid;gap:7px;font-size:12px;font-weight:800;color:#25364d}
+.employee-form input,.employee-form select,.employee-form textarea{width:100%;border:1px solid #ccd7e5;border-radius:8px;background:#fff;color:#25364d;font:inherit}
+.employee-form input,.employee-form select{height:40px;padding:0 11px}
+.employee-form textarea{min-height:82px;padding:10px 11px;resize:vertical}
+.employee-form input:focus,.employee-form select:focus,.employee-form textarea:focus{outline:2px solid #b8d8fa;outline-offset:1px}
+.employee-status-editor{padding:12px;background:#f7f9fc;border:1px solid #e4e9f1;border-radius:10px}
+.employee-status-toggle{display:flex;gap:8px;flex-wrap:wrap}
+.status-choice{width:auto;height:36px;padding:0 12px;background:#fff;color:#25364d;border:1px solid #d7dee9}
+.status-choice.active{background:#e8f6eb;color:#21653a;border-color:#b9ddc2}
+.status-choice.inactive{background:#fff0f0;color:#a52f2f;border-color:#e5bcbc}
+.employee-form-success{padding:10px 12px;border:1px solid #b9ddc2;border-radius:8px;background:#eef9f0;color:#21653a;font-size:12px;font-weight:700}
+@media(max-width:700px){.employee-form-grid{grid-template-columns:1fr}.employee-master-filters{grid-template-columns:1fr}.employee-master-card .title{align-items:flex-start;flex-direction:column}.employee-master-card .title button{width:100%}}
