@@ -943,6 +943,14 @@ function App() {
     setUserFormError('')
     setUserFormSuccess('')
 
+    const { data: refreshedSession, error: refreshError } = await supabase.auth.refreshSession()
+    if (refreshError || !refreshedSession.session) {
+      setUserFormError('Sesi Admin sudah berakhir. Silakan login kembali.')
+      setUserFormLoading(false)
+      return
+    }
+    setSession(refreshedSession.session)
+
     const { data, error: functionError } = await supabase.functions.invoke('admin-create-user', {
       body: {
         nama,
@@ -954,7 +962,14 @@ function App() {
     })
 
     if (functionError) {
-      setUserFormError(functionError.message || 'Gagal membuat akun pengguna.')
+      let detail = ''
+      try {
+        const body = await functionError.context?.json?.()
+        detail = body?.error || ''
+      } catch {
+        // Abaikan jika response bukan JSON.
+      }
+      setUserFormError(detail || functionError.message || 'Gagal membuat akun pengguna.')
       setUserFormLoading(false)
       return
     }
