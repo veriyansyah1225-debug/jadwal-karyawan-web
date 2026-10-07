@@ -832,6 +832,7 @@ function App() {
                 }}>Tambah Jadwal</button>
               )}
             </div>
+            <div className="settings-section">
               <div>
                 <strong>Akses Admin</strong>
                 <p>{isAdmin ? 'Anda sedang login sebagai Admin.' : 'Login diperlukan untuk mengakses fitur pengelolaan jadwal.'}</p>
