@@ -1,7 +1,7 @@
 # Dokumentasi Perubahan dan Audit Web UI — Jadwal Karyawan
 
 **Status:** Living Document  
-**Versi:** 1.6  
+**Versi:** 1.7  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Branch produksi:** `main`  
@@ -272,11 +272,12 @@ Perubahan terakhir pada master data dan jadwal:
 
 - JOB Kandang tersedia pada FARM;
 - seluruh 17 karyawan Kandang sudah ditambahkan sebagai karyawan FARM / Kandang;
-- 115 record libur Kandang Oktober 2026 sudah dimasukkan sebagai kode L;
+- 68 record libur Kandang Oktober 2026 sudah dimasukkan sebagai kode L;
+- 1 record CT untuk RIDWAN pada 1 Oktober 2026;
 - kode OFF sudah dinormalisasi ke L dan dinonaktifkan;
 - desain kode libur sudah diubah menjadi satu standar: L untuk Libur pada input dan tampilan.
 
-Total `employee_schedules` saat ini = 518.
+Total `employee_schedules` saat ini = 470.
 
 ---
 
@@ -298,12 +299,14 @@ Bagian yang perlu dijaga konsistensinya:
 
 ### Hasil audit
 
-Dokumentasi progres diperbarui menjadi versi 1.7 untuk mencatat:
+Dokumentasi progres diperbarui menjadi versi 1.9 untuk mencatat:
 
 - jumlah karyawan menjadi 47;
 - seluruh 17 karyawan Kandang sudah menjadi karyawan FARM;
 - seluruh 17 karyawan menggunakan JOB Kandang;
-- 115 record libur Kandang Oktober 2026 sudah dimasukkan sebagai L;
+- 68 record libur Kandang Oktober 2026 sudah dimasukkan sebagai L;
+- 1 record CT untuk RIDWAN pada 1 Oktober 2026;
+- total employee_schedules menjadi 470 setelah koreksi jadwal;
 - OFF dinormalisasi menjadi L dan dinonaktifkan;
 - Web UI tidak lagi menampilkan OFF;
 - perubahan tersebut dicatat sebagai perubahan desain/standarisasi, bukan hanya perubahan visual.
