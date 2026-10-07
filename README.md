@@ -11,8 +11,9 @@ Web UI untuk sistem **Jadwal & Absensi Karyawan** berbasis PostgreSQL/Supabase.
 - Integrasi data: Web UI berhasil membaca `v_jadwal_karyawan`
 - Database access: read-only untuk pengguna tanpa login pada tahap saat ini
 - Deployment Vercel: sudah tersedia
-- Authentication: belum diimplementasikan
-- Input/edit jadwal: belum diimplementasikan
+- Authentication: login Admin sudah tersedia
+- Master Karyawan: Admin dapat tambah/edit nama, kode, departemen, JOB, status aktif/berhenti, tanggal masuk/berhenti, dan keterangan
+- Input/edit jadwal: sudah diimplementasikan untuk Admin
 - Modul absensi: belum diimplementasikan
 - Laporan/export: belum diimplementasikan
 
