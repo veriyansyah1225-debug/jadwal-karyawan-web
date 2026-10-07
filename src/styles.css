@@ -202,3 +202,28 @@
   .focus-mode .wrap{height:calc(100vh - 165px);max-height:none}
   .focus-mode .mobile-header{display:none}
 }
+
+/* Landscape focus mode on mobile */
+@media(max-width:900px) and (orientation:landscape){
+  .focus-mode .main{
+    padding:10px 12px 12px;
+  }
+  .focus-mode .main>.card{
+    min-height:calc(100vh - 22px);
+  }
+  .focus-mode .wrap{
+    height:calc(100vh - 122px);
+    max-height:none;
+  }
+  .focus-mode .mobile-bottom-nav{
+    display:none;
+  }
+  .focus-mode .mobile-header{
+    min-height:46px;
+    padding:5px 12px;
+  }
+  .focus-mode .mobile-header-button{
+    width:34px;
+    height:34px;
+  }
+}
