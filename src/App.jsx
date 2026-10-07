@@ -216,8 +216,10 @@ function App() {
         if (item.nama_job) row.jobs.add(item.nama_job)
 
         const dateKey = String(item.tanggal)
-        if (item.kode_jadwal) {
-          row.codes[dateKey] = item.kode_jadwal
+        const normalizedCode = item.kode_jadwal === 'OFF' ? 'L' : item.kode_jadwal
+
+        if (normalizedCode) {
+          row.codes[dateKey] = normalizedCode
         } else if (item.nama_job) {
           row.codes[dateKey] = item.nama_job
           row.assignmentDays.add(dateKey)
@@ -225,7 +227,7 @@ function App() {
 
         row.details[dateKey] = {
           date: dateKey,
-          code: item.kode_jadwal || '',
+          code: normalizedCode || '',
           assignment: item.nama_job || '',
           note: item.keterangan || '',
         }
@@ -369,7 +371,7 @@ function App() {
 
         <section className="card">
           <h3>Legenda Kode Jadwal</h3>
-          <div className="legend">{[['P','Shift Pagi'],['S','Shift Sore'],['M','Shift Malam'],['L','Libur'],['OFF','Libur'],['CT','Cuti']].map(([code,label]) => <div key={code}><span className={code}>{code}</span>{label}</div>)}</div>
+          <div className="legend">{[['P','Shift Pagi'],['S','Shift Sore'],['M','Shift Malam'],['L','Libur'],['CT','Cuti']].map(([code,label]) => <div key={code}><span className={code}>{code}</span>{label}</div>)}</div>
         </section>
       </main>
 
