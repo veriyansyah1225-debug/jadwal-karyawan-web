@@ -460,6 +460,56 @@ function App() {
 
     let cancelled = false
 
+    async function handleInviteCallback() {
+      const params = new URLSearchParams(window.location.search)
+      const code = params.get('code')
+      if (!code) return false
+
+      setAuthReady(false)
+      setAuthError('Memproses undangan akun...')
+
+      // Jika link undangan dibuka pada browser yang masih menyimpan sesi
+      // Admin, keluarkan sesi lama terlebih dahulu agar sesi pengguna baru
+      // tidak tertukar dengan sesi Admin.
+      await supabase.auth.signOut()
+
+      const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+      if (exchangeError || !data.session?.user?.id) {
+        setSession(null)
+        setUserProfile(null)
+        setIsAdmin(false)
+        setAuthError(exchangeError?.message || 'Link undangan tidak dapat diproses.')
+        setAuthReady(true)
+        return true
+      }
+
+      window.history.replaceState({}, document.title, window.location.pathname)
+
+      const { data: profile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('user_id,nama,role,aktif,employee_id')
+        .eq('user_id', data.session.user.id)
+        .eq('aktif', true)
+        .maybeSingle()
+
+      if (profileError || !profile) {
+        await supabase.auth.signOut()
+        setSession(null)
+        setUserProfile(null)
+        setIsAdmin(false)
+        setAuthError('Undangan berhasil diproses, tetapi akun belum memiliki akses aktif. Silakan hubungi Admin.')
+        setAuthReady(true)
+        return true
+      }
+
+      setSession(data.session)
+      setUserProfile(profile)
+      setIsAdmin(profile.role === 'admin')
+      setAuthError('')
+      setAuthReady(true)
+      return true
+    }
+
     async function loadUserAccess(userId) {
       const { data: profile, error: profileError } = await supabase
         .from('user_profiles')
@@ -483,12 +533,16 @@ function App() {
       return true
     }
 
-    supabase.auth.getSession().then(async ({ data }) => {
+    ;(async () => {
+      const inviteHandled = await handleInviteCallback()
+      if (cancelled || inviteHandled) return
+
+      const { data } = await supabase.auth.getSession()
       if (cancelled) return
       setSession(data.session || null)
       if (data.session?.user?.id) await loadUserAccess(data.session.user.id)
       if (!cancelled) setAuthReady(true)
-    })
+    })()
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       if (cancelled) return
