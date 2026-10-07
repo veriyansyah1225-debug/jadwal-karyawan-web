@@ -703,3 +703,47 @@ Setiap perubahan Production yang relevan harus ditambahkan sebagai catatan baru 
 - keputusan.
 
 **Tujuan utama:** menjaga agar kondisi Web UI, database, deployment, dan dokumentasi selalu menggambarkan sistem yang sama.\n### 4.11 Penyesuaian PDF untuk Cetak A4 dan F4\n\n- **Tanggal:** 2026-10-07\n- **Status:** Production code\n- **Commit:** `5512332402122dfbc836201589d276e54b9ac538` dan `8d48945be5c84aef09456f71b180942f67d954a6`\n- **Perubahan:** PDF tidak lagi menggunakan A3 sebagai format cetak utama. Export dipisahkan menjadi **PDF A4 landscape** dan **PDF F4 landscape**.\n- **A4:** maksimal 8 tanggal per blok horizontal.\n- **F4:** maksimal 10 tanggal per blok horizontal.\n- **Keterbacaan:** ukuran font, tinggi baris 10 mm, serta border dibuat lebih tegas agar sesuai untuk pencetakan langsung.\n- **Dampak:** jumlah halaman akan bertambah sesuai jumlah tanggal dan jumlah karyawan, tetapi setiap halaman mengikuti ukuran kertas tujuan.\n- **Verifikasi:** kode sudah diterapkan pada branch `main`; hasil cetak fisik masih perlu diverifikasi setelah deployment Vercel.\n
+
+### 4.11 Admin Login dan Pengelolaan Jadwal — Tahap Tambah Jadwal
+
+**Status:** Production code / menunggu uji simpan dari browser  
+**Tanggal:** 2026-10-07
+
+#### Database
+
+Role Admin yang sebelumnya sudah dibuat kini diperluas untuk penulisan `employee_schedules`.
+
+Policy RLS yang diterapkan pada `public.employee_schedules`:
+- `admin_insert_employee_schedules` — INSERT untuk role authenticated yang terdaftar sebagai Admin aktif;
+- `admin_update_employee_schedules` — UPDATE untuk Admin aktif;
+- `admin_delete_employee_schedules` — DELETE untuk Admin aktif;
+- policy SELECT publik tetap dipertahankan untuk kebutuhan Web UI read-only.
+
+Database juga sudah memiliki unique index `employee_schedules_employee_date_unique` pada `(employee_id, tanggal)` untuk memastikan satu karyawan tidak memiliki lebih dari satu record jadwal pada tanggal yang sama.
+
+#### Web UI
+
+Setelah login Admin, menu **Pengaturan** sekarang menyediakan bagian **Pengelolaan Jadwal** dengan tombol **Tambah Jadwal**.
+
+Form Admin tahap pertama menyediakan:
+- pilihan karyawan;
+- tanggal;
+- kode jadwal aktif;
+- keterangan opsional;
+- tombol **Simpan Jadwal**.
+
+Penyimpanan menggunakan Supabase Client dan operasi upsert pada pasangan `employee_id,tanggal`. Dengan demikian, bila tanggal yang sama sudah memiliki jadwal, data jadwal pada tanggal tersebut diperbarui, bukan membuat record duplikat.
+
+Kode jadwal yang tersedia mengikuti master aktif, sehingga `OFF` yang sudah dinonaktifkan tidak muncul pada form.
+
+#### Batas tahap
+
+Tahap ini belum membuka pengelolaan master karyawan/JOB/kode jadwal dan belum menyediakan tombol hapus pada Web UI. Fitur edit visual langsung dari sel jadwal juga belum dibuat.
+
+#### Verifikasi
+
+- role Admin pada akun yang digunakan sudah berhasil terdeteksi oleh Web UI;
+- policy INSERT/UPDATE/DELETE Admin sudah terdaftar pada `employee_schedules`;
+- unique index `(employee_id,tanggal)` tersedia;
+- perubahan kode Web UI sudah masuk branch `main`;
+- pengujian penyimpanan record dari browser belum dilakukan pada tahap dokumentasi ini.
