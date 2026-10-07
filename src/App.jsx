@@ -397,8 +397,7 @@ function App() {
 
       if (queryError || !data || data.role !== 'admin') {
         setIsAdmin(false)
-        return
-      }
+        return      }
 
       setIsAdmin(true)
     }
@@ -797,8 +796,7 @@ function App() {
                           <input type="checkbox" checked={selectedEmployeeSet.has(key)} onChange={() => toggleEmployee(key)} />
                           <span>{row.name}</span>
                         </label>
-                      )
-                    })}
+                      )                    })}
                   </div>
                   <div className="employee-picker-footer">
                     {selectedEmployees.length ? `${selectedEmployees.length} karyawan dipilih` : 'Semua karyawan ditampilkan'}
@@ -1012,7 +1010,7 @@ function App() {
                     </button>
                   )}
                 </div>
-                {adminDeleteError && <div className="state error detail-action-error">{adminDeleteError}</div>
+                {adminDeleteError && <div className="state error detail-action-error">{adminDeleteError}</div>}
               </div>
             )}
             <div className="detail-grid">
