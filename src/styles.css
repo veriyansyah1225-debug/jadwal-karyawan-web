@@ -2,3 +2,33 @@
 .export-button{width:auto;height:36px;padding:0 12px}.export-button:disabled{opacity:.55;cursor:not-allowed}
 .admin-status-button{width:auto;height:36px;padding:0 12px;background:#e8f5eb;color:#21653a;border:1px solid #b9ddc2;font-weight:800}.admin-status-button:hover{background:#dff0e3}.admin-login-modal{max-width:460px}.admin-login-form{display:grid;gap:14px}.admin-login-form label{display:grid;gap:7px;font-size:12px;font-weight:800;color:#25364d}.admin-login-form input{width:100%;height:40px;padding:0 11px;border:1px solid #ccd7e5;border-radius:8px;background:#fff;color:#25364d}.admin-login-form input:focus{outline:2px solid #b8d8fa;outline-offset:1px}.admin-login-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}.admin-login-actions button{width:auto;min-width:90px}.admin-login-form .state.error{padding:10px;font-size:12px;justify-content:flex-start;text-align:left}.nav-settings{width:100%;text-align:left;background:transparent;color:inherit;border:0;border-radius:8px;padding:10px 12px;font:inherit;font-weight:600;cursor:pointer}.nav-settings:hover,.nav-settings.active{background:#eef3f8;color:#1265c5}.settings-modal{max-width:520px}.settings-section{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px;background:#f7f9fc;border:1px solid #e4e9f1;border-radius:10px}.settings-section p{margin:5px 0 0;color:var(--muted);font-size:13px}.settings-section button{width:auto;white-space:nowrap}@media(max-width:560px){.settings-section{align-items:flex-start;flex-direction:column}.settings-section button{width:100%}}
 .admin-schedule-modal{max-width:520px}.admin-schedule-form{display:grid;gap:14px}.admin-schedule-form label{display:grid;gap:7px;font-size:12px;font-weight:800;color:#25364d}.admin-schedule-form select,.admin-schedule-form input,.admin-schedule-form textarea{width:100%;border:1px solid #ccd7e5;border-radius:8px;background:#fff;color:#25364d;font:inherit}.admin-schedule-form select,.admin-schedule-form input{height:40px;padding:0 11px}.admin-schedule-form textarea{min-height:82px;padding:10px 11px;resize:vertical}.admin-schedule-form select:focus,.admin-schedule-form input:focus,.admin-schedule-form textarea:focus{outline:2px solid #b8d8fa;outline-offset:1px}.admin-schedule-success{padding:10px 12px;border:1px solid #b9ddc2;border-radius:8px;background:#eef9f0;color:#21653a;font-size:12px;font-weight:700}
+
+.detail-actions-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.danger-button {
+  border: 1px solid #d45a5a;
+  background: #fff1f1;
+  color: #a52f2f;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.danger-button:hover {
+  background: #ffe5e5;
+}
+
+.danger-button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.detail-action-error {
+  margin-bottom: 12px;
+}
