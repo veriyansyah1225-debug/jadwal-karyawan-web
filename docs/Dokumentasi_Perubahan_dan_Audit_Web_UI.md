@@ -1,7 +1,7 @@
 # Dokumentasi Perubahan dan Audit Web UI — Jadwal Karyawan
 
 **Status:** Living Document  
-**Versi:** 2.2  
+**Versi:** 2.3  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Branch produksi:** `main`  
@@ -686,6 +686,52 @@ Export harus menghasilkan file yang tidak hanya dapat dibuka, tetapi juga layak 
 - Pengaturan sekarang menampilkan status Admin dan tombol Login Admin / keluar.
 - Dampak: area tabel tetap fokus pada filter, navigasi periode, export, dan jadwal.
 
+
+### 4.17 Audit Integrasi Read-only setelah Login Admin
+
+- **Tanggal:** 2026-10-07
+- **Status:** Production code / perbaikan diterapkan
+- **Commit Web UI:** `4e91dad3f69c5682609c1b59775e6678c8e54543` dan `d2b4852de3595b01f9f9ed307c66b573de3697f5`
+
+#### Temuan
+
+Setelah fitur Login Admin aktif, sesi Supabase pada browser berubah menjadi role `authenticated`. Policy SELECT yang ada pada tabel master publik dan jadwal sebelumnya hanya berlaku untuk role `anon`.
+
+Akibatnya, ketika sesi Admin masih aktif:
+- query `departments` tidak memperoleh daftar departemen;
+- dropdown Departemen tampil kosong walaupun state aplikasi masih memiliki nilai `FARM`;
+- query jadwal dan master data yang ikut membaca tabel dengan RLS SELECT `anon` berpotensi gagal.
+
+Temuan ini sesuai dengan kondisi pada screenshot pengujian Web Production tanggal 2026-10-07: heading masih menunjukkan `Jadwal FARM`, tetapi dropdown Departemen tidak memiliki opsi yang dapat dipilih dan tabel menampilkan kondisi tanpa karyawan.
+
+#### Keputusan teknis
+
+Daripada memperluas policy SELECT database hanya untuk mengakomodasi sesi Admin, Web UI menggunakan dua Supabase Client:
+
+1. `supabase` — client utama dengan session untuk Authentication, pemeriksaan role Admin, dan operasi tulis yang memang harus menggunakan role `authenticated`.
+2. `publicSupabase` — client read-only tanpa persistensi session untuk query data publik.
+
+Query read-only berikut dipindahkan ke `publicSupabase`:
+- `departments`;
+- `v_jadwal_karyawan`;
+- `employees` untuk kebutuhan form Admin;
+- `schedule_codes` untuk kebutuhan form Admin.
+
+Operasi Authentication dan penyimpanan jadwal Admin tetap menggunakan `supabase` yang memiliki session.
+
+#### Dampak keamanan
+
+Perubahan ini mempertahankan model keamanan yang sudah diterapkan:
+- data publik tetap dibaca melalui role `anon`;
+- session Admin tidak digunakan untuk query publik;
+- INSERT/UPDATE/DELETE `employee_schedules` tetap melewati policy RLS Admin pada role `authenticated`;
+- tidak ada service-role key atau secret yang dipindahkan ke frontend.
+
+#### Hasil
+
+Masalah yang terlihat pada screenshot diidentifikasi sebagai konflik antara session Admin dan policy SELECT `anon`, bukan hilangnya data Departemen di PostgreSQL. Perbaikan Web UI sudah diterapkan pada `main`.
+
+**Verifikasi Production browser masih diperlukan:** buka ulang Web Production setelah deployment terbaru dan pastikan dropdown Departemen menampilkan `FARM` dan `HATCHERY`, lalu pastikan tabel jadwal FARM kembali tampil.
 
 ## 10. Status Dokumen
 
