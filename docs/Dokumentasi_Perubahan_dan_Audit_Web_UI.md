@@ -1,7 +1,7 @@
 # Dokumentasi Perubahan dan Audit Web UI — Jadwal Karyawan
 
 **Status:** Living Document  
-**Versi:** 2.4  
+**Versi:** 2.5  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Branch produksi:** `main`  
@@ -733,7 +733,41 @@ Masalah yang terlihat pada screenshot diidentifikasi sebagai konflik antara sess
 
 **Verifikasi Production browser masih diperlukan:** buka ulang Web Production setelah deployment terbaru dan pastikan dropdown Departemen menampilkan `FARM` dan `HATCHERY`, lalu pastikan tabel jadwal FARM kembali tampil.
 
-## 10. Status Dokumen
+### 4.19 Tampilan Bulan Tanpa Jadwal Menggunakan Master Karyawan
+
+- **Tanggal:** 2026-10-07
+- **Status:** Production code / menunggu verifikasi browser
+- **Commit Web UI:** `39e825316f9ef42b25982d4d9a4df05ac65d7db0`
+
+#### Masalah
+
+Sebelumnya baris tabel dibentuk hanya dari `v_jadwal_karyawan`. Jika suatu bulan belum memiliki record jadwal sama sekali, query view menghasilkan data kosong sehingga daftar karyawan juga tidak tampil.
+
+#### Perubahan
+
+Web UI sekarang melakukan dua pembacaan read-only:
+
+1. master karyawan aktif dari `employees`, termasuk Departemen dan JOB master;
+2. jadwal pada rentang tanggal dari `v_jadwal_karyawan`.
+
+Keduanya kemudian digabungkan berdasarkan `employee_id`.
+
+Akibatnya, ketika November 2026 belum memiliki jadwal:
+- seluruh karyawan aktif Departemen yang dipilih tetap tampil;
+- setiap tanggal tanpa record jadwal menampilkan `—`;
+- `—` tidak berarti Libur;
+- `L` tetap menjadi kode Libur;
+- tidak ada INSERT record kosong ke database.
+
+#### Pertimbangan performa
+
+Pendekatan ini tidak menambah jumlah record database. Untuk skala master saat ini, query master karyawan dan jadwal dibatasi pada kebutuhan halaman dan dilakukan secara paralel.
+
+#### Verifikasi
+
+Kode perubahan sudah masuk branch `main`. Belum ada GitHub Actions workflow pada commit ini, sehingga build otomatis melalui workflow tidak tersedia. Verifikasi browser/Vercel diperlukan untuk memastikan relasi Supabase `employees -> jobs/departments` dan tampilan bulan kosong bekerja sesuai harapan.
+
+### 10. Status Dokumen
 
 Dokumen ini bersifat **living document**.
 
