@@ -315,6 +315,7 @@ function App() {
   const [authLoading, setAuthLoading] = useState(false)
   const [authError, setAuthError] = useState('')
   const [adminScheduleOpen, setAdminScheduleOpen] = useState(false)
+  const [adminScheduleEditMode, setAdminScheduleEditMode] = useState(false)
   const [adminEmployees, setAdminEmployees] = useState([])
   const [adminScheduleCodes, setAdminScheduleCodes] = useState([])
   const [adminEmployeeId, setAdminEmployeeId] = useState('')
@@ -572,9 +573,24 @@ function App() {
       return
     }
 
-    setAdminScheduleSuccess('Jadwal berhasil disimpan.')
+    setAdminScheduleSuccess(adminScheduleEditMode ? 'Jadwal berhasil diperbarui.' : 'Jadwal berhasil disimpan.')
     setAdminScheduleNote('')
     setAdminScheduleLoading(false)
+  }
+
+  function openAdminScheduleEditor(row, date, detail) {
+    if (!isAdmin) return
+
+    const codeId = adminScheduleCodes.find((item) => item.kode === detail?.code)?.id
+    setAdminScheduleEditMode(Boolean(detail?.code))
+    setAdminEmployeeId(String(row.employeeId))
+    setAdminScheduleDate(date)
+    setAdminScheduleCodeId(codeId ? String(codeId) : '')
+    setAdminScheduleNote(detail?.note || '')
+    setAdminScheduleError('')
+    setAdminScheduleSuccess('')
+    setSelectedCell(null)
+    setAdminScheduleOpen(true)
   }
 
   useEffect(() => {
@@ -825,6 +841,7 @@ function App() {
               </div>
               {isAdmin && (
                 <button className="focus-toggle" type="button" onClick={() => {
+                  setAdminScheduleEditMode(false)
                   setAdminScheduleError('')
                   setAdminScheduleSuccess('')
                   setAdminScheduleOpen(true)
@@ -876,7 +893,7 @@ function App() {
             <div className="modal-head">
               <div>
                 <div className="modal-kicker">Pengelolaan Jadwal</div>
-                <h2 id="admin-schedule-title">Tambah Jadwal</h2>
+                <h2 id="admin-schedule-title">{adminScheduleEditMode ? 'Edit Jadwal' : 'Tambah Jadwal'}</h2>
               </div>
               <button className="modal-close" type="button" onClick={() => !adminScheduleLoading && setAdminScheduleOpen(false)} aria-label="Tutup">×</button>
             </div>
@@ -922,6 +939,17 @@ function App() {
               </div>
               <button className="modal-close" type="button" onClick={() => setSelectedCell(null)} aria-label="Tutup">×</button>
             </div>
+            {isAdmin && (
+              <div className="detail-actions">
+                <button
+                  className="focus-toggle"
+                  type="button"
+                  onClick={() => openAdminScheduleEditor(selectedCell.row, selectedCell.date, selectedCell.detail)}
+                >
+                  {selectedCell.detail?.code ? 'Edit Jadwal' : 'Tambah Jadwal'}
+                </button>
+              </div>
+            )}
             <div className="detail-grid">
               <div><span>Departemen</span><strong>{selectedCell.row.department}</strong></div>
               <div><span>JOB</span><strong>{selectedCell.row.job || '—'}</strong></div>
