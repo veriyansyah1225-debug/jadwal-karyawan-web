@@ -1671,7 +1671,7 @@ function App() {
             <div className="settings-section">
               <div>
                 <strong>Akun Pengguna</strong>
-                <p>{userProfile?.nama || session?.user?.email || 'Pengguna'} · {userProfile?.role || '—'}</p>
+                <p>{userProfile?.nama || session?.user?.email || 'Pengguna'} · {session?.user?.email || ''}</p>
               </div>
               <button className="admin-status-button" type="button" onClick={handleLogout}>Keluar</button>
             </div>
