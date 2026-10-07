@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { supabase, supabase, supabaseConfigured } from './lib/supabase'
+import { supabase, supabaseConfigured } from './lib/supabase'
 import jsPDF from 'jspdf'
 import * as XLSX from 'xlsx-js-style'
 
