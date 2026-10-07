@@ -443,3 +443,23 @@ Perubahan ini tidak membuka hak tulis baru kepada publik.
 Perbaikan kode sudah masuk `main` pada commit `4e91dad3f69c5682609c1b59775e6678c8e54543` dan `d2b4852de3595b01f9f9ed307c66b573de3697f5`.
 
 Verifikasi browser setelah deployment terbaru masih diperlukan.
+
+
+## 17. Penyesuaian Policy SELECT untuk Role Authenticated
+
+Pengujian browser menunjukkan dropdown Departemen tetap kosong ketika Admin login. Audit PostgreSQL mengonfirmasi policy SELECT masih hanya memiliki role `anon`.
+
+Policy SELECT berikut sekarang berlaku untuk `anon, authenticated`:
+- `anon_read_departments`
+- `anon_read_employees`
+- `anon_read_jobs`
+- `anon_read_schedule_codes`
+- `anon_read_employee_schedules`
+
+Perubahan hanya memperluas hak baca kepada role authenticated. Tidak ada perluasan hak tulis.
+
+INSERT/UPDATE/DELETE `employee_schedules` tetap dibatasi oleh policy Admin aktif.
+
+Verifikasi PostgreSQL setelah migration menunjukkan kelima policy SELECT memiliki roles `{anon,authenticated}`.
+
+**Status:** database sudah diperbaiki. Verifikasi browser setelah refresh masih diperlukan.
