@@ -1,7 +1,7 @@
 # Dokumentasi Progres Pengembangan Web UI — Jadwal Karyawan
 
 **Status:** Draft / Living Document  
-**Versi:** 2.15  
+**Versi:** 2.16  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Database:** `database-jadwal-karyawan` / PostgreSQL 17 / Supabase
@@ -1115,6 +1115,32 @@ Pada 2026-10-07, area filter jadwal dirapikan agar kontrol periode berurutan:
 
 Tombol export **Excel** dan **PDF** digabung menjadi satu tombol **Download Jadwal** dengan pilihan format Excel atau PDF.
 
+
+
+### 11.23 Penyempurnaan Mode Perbesar Jadwal — Tampilan Khusus Jadwal
+
+Pada 2026-10-07, mode **Perbesar Jadwal** disempurnakan agar ketika aktif pengguna hanya melihat area kerja jadwal.
+
+Perubahan Web UI:
+- Sidebar disembunyikan saat mode Perbesar aktif.
+- Header utama/mobile header disembunyikan.
+- Navigasi bawah mobile disembunyikan.
+- Filter periode, Departemen, JOB, dan Karyawan disembunyikan.
+- Kontrol Download Jadwal disembunyikan.
+- Kontrol Tampilkan/Sembunyikan JOB disembunyikan.
+- Legenda kode jadwal disembunyikan.
+- Area tabel jadwal menjadi fokus utama dan menggunakan ruang layar semaksimal mungkin.
+- Tombol **Perbesar Jadwal** berubah menjadi **Kecilkan Jadwal** saat mode aktif.
+- Tombol **Kecilkan Jadwal** mengembalikan tampilan normal.
+- Pada perangkat mobile, mode ini tetap mencoba fullscreen dan orientasi landscape bila browser mendukung; jika tidak didukung, mode fokus tetap berjalan sebagai fallback.
+
+Perubahan ini hanya memengaruhi tampilan dan tidak mengubah data PostgreSQL.
+
+**Status:** Code sudah diterapkan pada branch main; verifikasi visual Production setelah deployment terbaru masih perlu dilakukan.
+
+**Commit label tombol:** 70212fc4d30a40a24680a271336631ce38e7d2c1
+**Commit mode tampilan:** 15c431cf00425cf4b1c13bb65c16417005681f87
+
 ### 11.22 Mutasi / Pindah Jabatan Karyawan dengan Riwayat Posisi
 
 Pada 2026-10-07, sistem ditambahkan dukungan untuk perpindahan karyawan antar Departemen dan/atau JOB tanpa merusak histori.
@@ -1162,3 +1188,45 @@ Riwayat jabatan lama tidak dibuat secara otomatis apabila tanggal historisnya ti
 
 **Commit Web UI:** `c078b3e2d0ff02249c594cbc3a6809b6c64a4d88`  
 **Commit CSS:** `22df61a39d65e896faec4c6feddf0704f1abd3bd`
+
+
+## 20. Ringkasan Status Saat Ini — 2026-10-07
+
+### Sudah dibuat / tersimpan di project
+
+- Database PostgreSQL/Supabase sebagai sumber data utama.
+- Web UI React + Vite dan deployment Production Vercel.
+- Tabel jadwal dengan rentang tanggal dan pilihan bulan.
+- Filter Departemen, JOB, dan multi-select Karyawan.
+- Detail jadwal per sel.
+- Export Excel dan PDF.
+- Mode Perbesar Jadwal dengan tampilan khusus jadwal dan tombol Kecilkan Jadwal.
+- Responsive/mobile UI dan percobaan fullscreen + landscape pada mode Perbesar.
+- Login Admin dan pemeriksaan role Admin.
+- RLS dasar untuk akses baca publik dan operasi tulis Admin pada scope yang sudah diterapkan.
+- Tambah, edit, dan hapus jadwal melalui alur Admin.
+- Master Karyawan dasar untuk tambah/edit/status nonaktif.
+- Filter JOB Master Karyawan berdasarkan Departemen.
+- Mutasi/Pindah Jabatan dengan histori posisi dan penyesuaian jadwal mulai tanggal efektif.
+- Stabilisasi data master dan jadwal Oktober 2026 yang sudah didokumentasikan sebelumnya.
+
+### Sudah dibuat tetapi masih perlu verifikasi Production / pengujian menyeluruh
+
+- Verifikasi menyeluruh CRUD jadwal Admin setelah perubahan terbaru.
+- Verifikasi visual mode Perbesar pada berbagai ukuran layar/mobile browser, terutama apakah fullscreen dan orientation lock diizinkan browser.
+- Verifikasi Production untuk perubahan Master Karyawan dan Mutasi/Pindah Jabatan setelah deployment terkait.
+- Pengujian RLS dan hak akses secara menyeluruh untuk semua tabel, termasuk skenario pengguna publik dan Admin.
+
+### Belum dibuat / masih menjadi pekerjaan berikutnya
+
+- Modul Absensi Web UI.
+- Laporan operasional yang lebih lengkap.
+- Audit log perubahan yang lengkap untuk seluruh aktivitas Admin.
+- Penyempurnaan pengelolaan Master Departemen, JOB, dan Kode Jadwal melalui UI.
+- Validasi aturan bisnis JOB master vs assignment secara final.
+- Pengujian dan penyempurnaan operasional/backup.
+- Custom domain, jika nanti diperlukan.
+
+### Catatan tentang belum disimpan
+
+Perubahan kode yang sudah dikirim ke repository main dianggap **sudah tersimpan di GitHub**. Yang belum tersimpan bukan perubahan kode, melainkan beberapa hasil verifikasi/pengujian Production dan fitur yang memang belum dikembangkan. Dokumen ini menjadi acuan status agar pekerjaan baru tidak tertukar dengan pekerjaan yang sudah masuk repository.
