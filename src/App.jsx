@@ -326,6 +326,8 @@ function App() {
   const [adminScheduleError, setAdminScheduleError] = useState('')
   const [adminScheduleSuccess, setAdminScheduleSuccess] = useState('')
   const [scheduleRefresh, setScheduleRefresh] = useState(0)
+  const [adminDeleteLoading, setAdminDeleteLoading] = useState(false)
+  const [adminDeleteError, setAdminDeleteError] = useState('')
 
   const dateRange = useMemo(() => getDateRange(startDate, endDate), [startDate, endDate])
   const invalidRange = Boolean(startDate && endDate && startDate > endDate)
@@ -593,6 +595,34 @@ function App() {
     setAdminScheduleSuccess('')
     setSelectedCell(null)
     setAdminScheduleOpen(true)
+  }
+
+  async function handleAdminScheduleDelete() {
+    if (!supabase || !isAdmin || !selectedCell?.detail?.code) return
+
+    const confirmed = window.confirm(
+      `Hapus jadwal ${selectedCell.row.name} pada ${formatDisplayDate(selectedCell.date)}? Tindakan ini tidak dapat dibatalkan.`,
+    )
+    if (!confirmed) return
+
+    setAdminDeleteLoading(true)
+    setAdminDeleteError('')
+
+    const { error: deleteError } = await supabase
+      .from('employee_schedules')
+      .delete()
+      .eq('employee_id', Number(selectedCell.row.employeeId))
+      .eq('tanggal', selectedCell.date)
+
+    if (deleteError) {
+      setAdminDeleteError(deleteError.message)
+      setAdminDeleteLoading(false)
+      return
+    }
+
+    setSelectedCell(null)
+    setAdminDeleteLoading(false)
+    setScheduleRefresh((value) => value + 1)
   }
 
   useEffect(() => {
@@ -943,13 +973,26 @@ function App() {
             </div>
             {isAdmin && (
               <div className="detail-actions">
-                <button
-                  className="focus-toggle"
-                  type="button"
-                  onClick={() => openAdminScheduleEditor(selectedCell.row, selectedCell.date, selectedCell.detail)}
-                >
-                  {selectedCell.detail?.code ? 'Edit Jadwal' : 'Tambah Jadwal'}
-                </button>
+                <div className="detail-actions-group">
+                  <button
+                    className="focus-toggle"
+                    type="button"
+                    onClick={() => openAdminScheduleEditor(selectedCell.row, selectedCell.date, selectedCell.detail)}
+                  >
+                    {selectedCell.detail?.code ? 'Edit Jadwal' : 'Tambah Jadwal'}
+                  </button>
+                  {selectedCell.detail?.code && (
+                    <button
+                      className="danger-button"
+                      type="button"
+                      onClick={handleAdminScheduleDelete}
+                      disabled={adminDeleteLoading}
+                    >
+                      {adminDeleteLoading ? 'Menghapus...' : 'Hapus Jadwal'}
+                    </button>
+                  )}
+                </div>
+                {adminDeleteError && <div className="state error detail-action-error">{adminDeleteError}</div>
               </div>
             )}
             <div className="detail-grid">
