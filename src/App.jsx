@@ -335,6 +335,9 @@ function App() {
   const [employeeMasterSearch, setEmployeeMasterSearch] = useState('')
   const [employeeMasterStatus, setEmployeeMasterStatus] = useState('aktif')
   const [employeeMasterDepartment, setEmployeeMasterDepartment] = useState('')
+  const [employeeMasterJobs, setEmployeeMasterJobs] = useState([])
+  const [employeeMasterJobFilterOpen, setEmployeeMasterJobFilterOpen] = useState(false)
+  const [employeeMasterJobSearch, setEmployeeMasterJobSearch] = useState('')
   const [employeeFormOpen, setEmployeeFormOpen] = useState(false)
   const [employeeFormEditMode, setEmployeeFormEditMode] = useState(false)
   const [employeeFormId, setEmployeeFormId] = useState('')
@@ -613,17 +616,42 @@ function App() {
     }
   }, [isAdmin, scheduleRefresh])
 
+  const employeeMasterJobOptions = useMemo(
+    () => [...new Set(employeeMasterRows.map((employee) => employee.jobs?.nama_job).filter(Boolean))].sort((a, b) => a.localeCompare(b)),
+    [employeeMasterRows],
+  )
+
+  const filteredEmployeeMasterJobOptions = useMemo(() => {
+    const query = employeeMasterJobSearch.trim().toLowerCase()
+    return employeeMasterJobOptions.filter((item) => !query || item.toLowerCase().includes(query))
+  }, [employeeMasterJobOptions, employeeMasterJobSearch])
+
   const filteredEmployeeMasterRows = useMemo(() => {
     const query = employeeMasterSearch.trim().toLowerCase()
 
     return employeeMasterRows
       .filter((employee) => employeeMasterStatus === 'semua' || (employeeMasterStatus === 'aktif' ? employee.aktif : !employee.aktif))
       .filter((employee) => !employeeMasterDepartment || String(employee.department_id || '') === String(employeeMasterDepartment))
+      .filter((employee) => employeeMasterJobs.length === 0 || employeeMasterJobs.includes(employee.jobs?.nama_job || ''))
       .filter((employee) => !query || [employee.nama, employee.kode_karyawan, employee.departments?.nama_departemen, employee.jobs?.nama_job]
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(query)))
       .sort((a, b) => String(a.nama || '').localeCompare(String(b.nama || '')))
-  }, [employeeMasterRows, employeeMasterStatus, employeeMasterDepartment, employeeMasterSearch])
+  }, [employeeMasterRows, employeeMasterStatus, employeeMasterDepartment, employeeMasterJobs, employeeMasterSearch])
+
+  function toggleEmployeeMasterJob(jobName) {
+    setEmployeeMasterJobs((current) => current.includes(jobName)
+      ? current.filter((item) => item !== jobName)
+      : [...current, jobName])
+  }
+
+  function selectAllEmployeeMasterJobs() {
+    setEmployeeMasterJobs(employeeMasterJobOptions)
+  }
+
+  function clearEmployeeMasterJobs() {
+    setEmployeeMasterJobs([])
+  }
 
   const employeeFormJobs = useMemo(
     () => masterJobs.filter((item) => !employeeFormDepartmentId || !item.department_id || String(item.department_id) === String(employeeFormDepartmentId)),
@@ -967,7 +995,32 @@ function App() {
                     <th>Kode</th>
                     <th className="employee-master-name">Nama Karyawan</th>
                     <th>Departemen</th>
-                    <th>JOB</th>
+                    <th className="employee-job-filter-header">
+                      <div className="excel-filter">
+                        <button type="button" className={`excel-filter-trigger${employeeMasterJobs.length ? ' active' : ''}`} onClick={() => setEmployeeMasterJobFilterOpen((open) => !open)}>
+                          <span>JOB{employeeMasterJobs.length ? ` (${employeeMasterJobs.length})` : ''}</span><span className="excel-filter-icon">▾</span>
+                        </button>
+                        {employeeMasterJobFilterOpen && (
+                          <div className="excel-filter-menu">
+                            <div className="excel-filter-search"><input value={employeeMasterJobSearch} onChange={(e) => setEmployeeMasterJobSearch(e.target.value)} placeholder="Cari JOB..." autoFocus /></div>
+                            <div className="excel-filter-actions">
+                              <button type="button" onClick={selectAllEmployeeMasterJobs}>Pilih Semua</button>
+                              <button type="button" onClick={clearEmployeeMasterJobs}>Hapus Semua</button>
+                            </div>
+                            <div className="excel-filter-list">
+                              {filteredEmployeeMasterJobOptions.length === 0 && <div className="excel-filter-empty">JOB tidak ditemukan.</div>}
+                              {filteredEmployeeMasterJobOptions.map((item) => (
+                                <label key={item} className="excel-filter-option">
+                                  <input type="checkbox" checked={employeeMasterJobs.includes(item)} onChange={() => toggleEmployeeMasterJob(item)} />
+                                  <span>{item}</span>
+                                </label>
+                              ))}
+                            </div>
+                            <div className="excel-filter-footer">{employeeMasterJobs.length ? `${employeeMasterJobs.length} JOB dipilih` : 'Semua JOB ditampilkan'}</div>
+                          </div>
+                        )}
+                      </div>
+                    </th>
                     <th>Tanggal Masuk</th>
                     <th>Tanggal Berhenti</th>
                     <th>Status</th>
