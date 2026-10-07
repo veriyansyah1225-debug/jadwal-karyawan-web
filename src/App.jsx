@@ -351,6 +351,15 @@ function App() {
   const [employeeFormLoading, setEmployeeFormLoading] = useState(false)
   const [employeeFormError, setEmployeeFormError] = useState('')
   const [employeeFormSuccess, setEmployeeFormSuccess] = useState('')
+  const [transferFormOpen, setTransferFormOpen] = useState(false)
+  const [transferEmployee, setTransferEmployee] = useState(null)
+  const [transferDepartmentId, setTransferDepartmentId] = useState('')
+  const [transferJobId, setTransferJobId] = useState('')
+  const [transferEffectiveDate, setTransferEffectiveDate] = useState('')
+  const [transferNote, setTransferNote] = useState('')
+  const [transferLoading, setTransferLoading] = useState(false)
+  const [transferError, setTransferError] = useState('')
+  const [transferSuccess, setTransferSuccess] = useState('')
 
   const dateRange = useMemo(() => getDateRange(startDate, endDate), [startDate, endDate])
   const invalidRange = Boolean(startDate && endDate && startDate > endDate)
@@ -648,6 +657,61 @@ function App() {
     setEmployeeFormError('')
     setEmployeeFormSuccess('')
     setEmployeeFormOpen(true)
+  }
+
+  function openTransferForm(employee) {
+    if (!isAdmin || !employee) return
+    setTransferEmployee(employee)
+    setTransferDepartmentId(String(employee.department_id || ''))
+    setTransferJobId(String(employee.job_id || ''))
+    setTransferEffectiveDate('')
+    setTransferNote('')
+    setTransferError('')
+    setTransferSuccess('')
+    setTransferFormOpen(true)
+  }
+
+  const transferFormJobs = useMemo(
+    () => masterJobs.filter((item) => !transferDepartmentId || !item.department_id || String(item.department_id) === String(transferDepartmentId)),
+    [masterJobs, transferDepartmentId],
+  )
+
+  async function handleTransferSave(event) {
+    event.preventDefault()
+    if (!supabase || !isAdmin || !transferEmployee) return
+
+    if (!transferDepartmentId || !transferEffectiveDate) {
+      setTransferError('Departemen baru dan tanggal efektif wajib diisi.')
+      return
+    }
+
+    if (String(transferDepartmentId) === String(transferEmployee.department_id || '') && String(transferJobId || '') === String(transferEmployee.job_id || '')) {
+      setTransferError('Departemen dan JOB baru harus berbeda dari posisi saat ini.')
+      return
+    }
+
+    setTransferLoading(true)
+    setTransferError('')
+    setTransferSuccess('')
+
+    const { error: transferSaveError } = await supabase.rpc('transfer_employee_position', {
+      p_employee_id: Number(transferEmployee.id),
+      p_department_id: Number(transferDepartmentId),
+      p_job_id: transferJobId ? Number(transferJobId) : null,
+      p_tanggal_efektif: transferEffectiveDate,
+      p_keterangan: transferNote.trim() || null,
+    })
+
+    if (transferSaveError) {
+      setTransferError(transferSaveError.message)
+      setTransferLoading(false)
+      return
+    }
+
+    setTransferSuccess('Perpindahan jabatan berhasil disimpan.')
+    setTransferLoading(false)
+    setTransferFormOpen(false)
+    setScheduleRefresh((value) => value + 1)
   }
 
   async function handleEmployeeFormSave(event) {
@@ -998,7 +1062,12 @@ function App() {
                       <td><span className={employee.aktif ? 'employee-status active' : 'employee-status inactive'}>{employee.aktif ? 'Aktif' : 'Berhenti'}</span></td>
                       {isAdmin && (
                         <td>
-                          <button className="table-action-button" type="button" onClick={() => openEmployeeForm(employee)}>Edit</button>
+                          <div className="table-action-group">
+                            <button className="table-action-button" type="button" onClick={() => openEmployeeForm(employee)}>Edit</button>
+                            {employee.aktif && (
+                              <button className="table-action-button transfer-action-button" type="button" onClick={() => openTransferForm(employee)}>Pindah Jabatan</button>
+                            )}
+                          </div>
                         </td>
                       )}
                     </tr>
@@ -1289,6 +1358,60 @@ function App() {
               <div className="admin-login-actions">
                 <button className="secondary" type="button" onClick={() => setEmployeeFormOpen(false)} disabled={employeeFormLoading}>Batal</button>
                 <button className="focus-toggle" type="submit" disabled={employeeFormLoading}>{employeeFormLoading ? 'Menyimpan...' : 'Simpan Karyawan'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {transferFormOpen && transferEmployee && (
+        <div className="modal-backdrop" onClick={() => !transferLoading && setTransferFormOpen(false)}>
+          <div className="modal employee-form-modal" role="dialog" aria-modal="true" aria-labelledby="transfer-form-title" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-head">
+              <div>
+                <div className="modal-kicker">Mutasi Karyawan</div>
+                <h2 id="transfer-form-title">Pindah Jabatan</h2>
+              </div>
+              <button className="modal-close" type="button" onClick={() => !transferLoading && setTransferFormOpen(false)} aria-label="Tutup">×</button>
+            </div>
+
+            <form className="employee-form" onSubmit={handleTransferSave}>
+              <div className="transfer-current-position">
+                <div><span>Karyawan</span><strong>{transferEmployee.nama}</strong></div>
+                <div><span>Posisi Saat Ini</span><strong>{transferEmployee.departments?.nama_departemen || '—'} / {transferEmployee.jobs?.nama_job || '—'}</strong></div>
+              </div>
+
+              <div className="employee-form-grid">
+                <label>Departemen Baru *
+                  <select value={transferDepartmentId} onChange={(e) => { setTransferDepartmentId(e.target.value); setTransferJobId('') }} required>
+                    <option value="">Pilih departemen</option>
+                    {masterDepartments.map((item) => <option key={item.id} value={item.id}>{item.nama_departemen}</option>)}
+                  </select>
+                </label>
+                <label>JOB Baru
+                  <select value={transferJobId} onChange={(e) => setTransferJobId(e.target.value)}>
+                    <option value="">Belum ditentukan</option>
+                    {transferFormJobs.map((item) => <option key={item.id} value={item.id}>{item.nama_job}</option>)}
+                  </select>
+                </label>
+                <label>Tanggal Efektif *
+                  <input type="date" value={transferEffectiveDate} onChange={(e) => setTransferEffectiveDate(e.target.value)} required />
+                </label>
+                <label>Keterangan
+                  <input value={transferNote} onChange={(e) => setTransferNote(e.target.value)} placeholder="Contoh: Mutasi internal" />
+                </label>
+              </div>
+
+              <div className="state transfer-info">
+                Jadwal sebelum tanggal efektif tetap menjadi riwayat posisi lama. Jadwal mulai tanggal efektif akan mengikuti Departemen dan JOB baru.
+              </div>
+
+              {transferError && <div className="state error">{transferError}</div>}
+              {transferSuccess && <div className="employee-form-success">{transferSuccess}</div>}
+
+              <div className="admin-login-actions">
+                <button className="secondary" type="button" onClick={() => setTransferFormOpen(false)} disabled={transferLoading}>Batal</button>
+                <button className="focus-toggle" type="submit" disabled={transferLoading}>{transferLoading ? 'Menyimpan...' : 'Simpan Perubahan'}</button>
               </div>
             </form>
           </div>
