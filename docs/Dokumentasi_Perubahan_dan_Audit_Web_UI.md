@@ -962,3 +962,34 @@ Aturan:
 #### Verifikasi
 
 Commit sudah masuk branch `main`. Status Vercel untuk commit ini masih **Pending** dan perlu diverifikasi setelah deployment selesai.
+
+### 4.24 Audit Perbaikan Build Vercel — JSX Error Detail Jadwal
+
+- **Tanggal:** 2026-10-07
+- **Status:** Perbaikan diterapkan / deployment Vercel menunggu hasil
+- **Commit Web UI:** 473a1f10873b846cc1afddf36ccc890f56f92786
+
+#### Temuan
+
+Deployment Vercel gagal pada proses npm run build dengan esbuild menunjuk ke src/App.jsx sekitar baris 1015. Kesalahan terjadi pada blok JSX yang menampilkan adminDeleteError di **Detail Jadwal**.
+
+Ekspresi conditional rendering belum memiliki kurung kurawal penutup setelah elemen `<div>`, sehingga parser JSX menganggap struktur berikutnya tidak valid.
+
+#### Perbaikan
+
+Penutupan blok diperbaiki dari bentuk yang belum lengkap menjadi:
+
+```jsx
+{adminDeleteError && <div className="state error detail-action-error">{adminDeleteError}</div>}
+```
+
+Perubahan hanya memperbaiki sintaks JSX. Tidak ada perubahan pada:
+- schema PostgreSQL;
+- policy RLS;
+- data master;
+- record employee_schedules;
+- aturan DELETE Admin.
+
+#### Verifikasi
+
+Commit perbaikan sudah masuk branch main. Status Vercel untuk commit ini masih **Pending** saat audit diperbarui. Setelah deployment berhasil, perlu dilakukan verifikasi browser Production untuk memastikan form Edit Jadwal dan Hapus Jadwal dapat digunakan kembali.
