@@ -1038,3 +1038,50 @@ Hasil verifikasi pengguna:
 Dengan verifikasi ini, error build pada `adminDeleteError` dinyatakan selesai. Tahap berikutnya adalah pengujian fungsional CRUD jadwal secara menyeluruh sebelum menambah fitur baru.
 
 **Status:** Terverifikasi Production.
+
+
+### 11.19 Master Karyawan — CRUD Admin Dasar
+
+Pada 2026-10-07, Web UI ditambahkan modul **Master Karyawan** pada menu **Karyawan**.
+
+Fitur yang tersedia:
+
+- daftar karyawan dari tabel `public.employees`;
+- pencarian berdasarkan nama atau kode karyawan;
+- filter status Aktif / Berhenti / Semua;
+- filter Departemen;
+- Admin dapat menambah karyawan;
+- Admin dapat mengubah nama karyawan;
+- Admin dapat mengubah kode/ID karyawan;
+- Admin dapat mengubah Departemen;
+- Admin dapat mengubah JOB;
+- Admin dapat mengubah status Aktif / Berhenti;
+- Admin dapat mengisi tanggal masuk;
+- Admin dapat mengisi tanggal berhenti;
+- Admin dapat mengisi keterangan;
+- karyawan tidak dihapus permanen dari UI.
+
+Status **Berhenti** menggunakan field `employees.aktif = false`, sehingga record karyawan tetap dipertahankan untuk menjaga relasi dengan histori jadwal dan data absensi yang akan datang.
+
+Perubahan nama tidak memerlukan perubahan pada `employee_schedules` karena jadwal tetap mereferensikan `employee_id`.
+
+### Perubahan Database Master Karyawan
+
+Tabel `public.employees` ditambah:
+
+- `tanggal_masuk date`;
+- `tanggal_keluar date`;
+- `keterangan text`.
+
+Ditambahkan constraint agar tanggal keluar tidak lebih awal daripada tanggal masuk.
+
+Policy RLS baru:
+
+- `admin_insert_employees` — INSERT untuk Admin aktif;
+- `admin_update_employees` — UPDATE untuk Admin aktif.
+
+Tidak dibuat policy DELETE untuk `employees`; desain fitur menggunakan status nonaktif/berhenti, bukan penghapusan permanen.
+
+`updated_at` juga sekarang diperbarui otomatis melalui trigger ketika data karyawan diubah.
+
+**Status:** implementasi sudah masuk `main`. Verifikasi browser Production setelah deployment masih diperlukan.
