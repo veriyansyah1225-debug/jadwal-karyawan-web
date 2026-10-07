@@ -653,6 +653,16 @@ Export harus menghasilkan file yang tidak hanya dapat dibuka, tetapi juga layak 
 - Tidak ada perubahan pada data, database, atau format isi PDF.
 
 
+### 4.14 Penghilangan teks informasi internal dari tampilan jadwal
+
+- Tanggal: 2026-10-07
+- Status: Production code
+- Commit: 30b1620eed82ad621b94870dad7871d95565a059
+- Perubahan: teks `Sumber: Supabase / v_jadwal_karyawan · Export mengikuti filter yang sedang aktif.` dihapus dari area judul jadwal.
+- Perubahan: catatan `Data produksi berasal dari v_jadwal_karyawan...` di bawah tabel juga dihapus.
+- Dampak: tampilan jadwal menjadi lebih ringkas; fungsi filter, tabel, export, dan sumber data tidak berubah.
+
+
 ## 10. Status Dokumen
 
 Dokumen ini bersifat **living document**.
