@@ -1308,15 +1308,11 @@ function App() {
             </div>
             <div className="settings-section">
               <div>
-                <strong>Akses Admin</strong>
-                <p>{isAdmin ? 'Anda sedang login sebagai Admin.' : 'Login diperlukan untuk mengakses fitur pengelolaan jadwal.'}</p>
+                <strong>Akun Pengguna</strong>
+                <p>{userProfile?.nama || session?.user?.email || 'Pengguna'} · {userProfile?.role || '—'}</p>
               </div>
-              {isAdmin ? (
-                <button className="admin-status-button" type="button" onClick={handleLogout}>Admin · Keluar</button>
-              ) : (
-                <button className="focus-toggle" type="button" onClick={() => { setAuthError(''); setAdminLoginOpen(true); setSettingsOpen(false) }}>Login Admin</button>
-              )}
-            </div>
+              <button className="admin-status-button" type="button" onClick={handleLogout}>Keluar</button>
+            </div>>
           </div>
         </div>
       )}
@@ -1327,12 +1323,12 @@ function App() {
             <div className="modal-head">
               <div>
                 <div className="modal-kicker">Akses Terbatas</div>
-                <h2 id="admin-login-title">Login Admin</h2>
+                <h2 id="admin-login-title">Masuk ke Sistem</h2>
               </div>
               <button className="modal-close" type="button" onClick={() => !authLoading && setAdminLoginOpen(false)} aria-label="Tutup">×</button>
             </div>
             <form className="admin-login-form" onSubmit={handleLogin}>
-              <label>Email Admin<input type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} autoComplete="username" required /></label>
+              <label>Email<input type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} autoComplete="username" required /></label>
               <label>Password<input type="password" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} autoComplete="current-password" required /></label>
               {authError && <div className="state error">{authError}</div>}
               <div className="admin-login-actions">
