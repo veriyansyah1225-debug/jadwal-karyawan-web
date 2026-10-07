@@ -36,7 +36,7 @@
 
 /* Master Karyawan */
 .employee-master-card .title{align-items:center}
-.employee-master-filters{grid-template-columns:2fr 1fr 1fr}
+.employee-master-filters{grid-template-columns:2fr 1fr 1fr 1fr}
 .employee-master-table-wrap{max-height:68vh}
 .employee-master-table{min-width:1100px}
 .employee-master-table th,.employee-master-table td{padding:0 10px}
