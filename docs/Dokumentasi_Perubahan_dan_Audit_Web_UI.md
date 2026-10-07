@@ -1,7 +1,7 @@
 # Dokumentasi Perubahan dan Audit Web UI — Jadwal Karyawan
 
 **Status:** Living Document  
-**Versi:** 1.2  
+**Versi:** 1.3  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Branch produksi:** `main`  
@@ -194,7 +194,7 @@ Detail pembagian JOB internal HATCHERY ditunda sampai database stabil.
 
 #### Perubahan
 
-JOB master `Kandang` ditambahkan ke Departemen FARM.
+JOB master `Kandang` tersedia pada Departemen FARM.
 
 Hasil verifikasi database:
 
@@ -205,35 +205,49 @@ Hasil verifikasi database:
 
 #### Batas perubahan
 
-Penambahan ini **belum memasukkan karyawan** dari daftar Kandang ke tabel `employees`.
-
-Daftar sumber yang diterima berisi 17 nama:
-
-1. HERI
-2. REHAN
-3. ANDRE YUNUS MENO
-4. JUMADI
-5. AGUS DWI LAKSONO
-6. RICO KRISMUNTO
-7. RIDWAN
-8. FERRY GUNAWAN
-9. GANDI SEPTIO
-10. ADITIA SRI ANDANA
-11. FEBRI DWI SAPUTRA
-12. ELVIS NUR HIDAYAT
-13. ADITIA
-14. URAY IMAY INNUDDIN
-15. JEPRI APO
-16. TEGUH ARI WIBOWO
-17. MARNO
-
-Nama-nama tersebut akan dimasukkan **satu per satu** sesuai arahan pengguna.
-
-#### Keputusan
-
-Penambahan master JOB dilakukan lebih dahulu agar setiap karyawan yang nanti dimasukkan sudah memiliki referensi JOB yang jelas.
+Penambahan JOB dilakukan lebih dahulu agar setiap karyawan yang dimasukkan sudah memiliki referensi JOB yang jelas.
 
 Jadwal Oktober pada gambar **belum dimasukkan** pada tahap ini. Data master karyawan dan data jadwal sengaja dipisahkan untuk mencegah kesalahan pemasukan data.
+
+---
+
+### 4.5 Penambahan Karyawan HERI sebagai FARM / Kandang
+
+**Status:** Production / Database aktif  
+**Tanggal:** 2026-10-07
+
+#### Sumber
+
+Daftar yang diberikan pengguna menunjukkan:
+
+- Nama: **HERI**
+- JOB: **Kandang**
+
+#### Perubahan database
+
+Karyawan HERI dimasukkan ke `public.employees` dengan:
+
+- employee_id = 31;
+- nama = HERI;
+- Departemen = FARM;
+- JOB master = Kandang;
+- aktif = true.
+
+#### Verifikasi
+
+Setelah pemasukan:
+
+- HERI berhasil tersimpan pada master karyawan;
+- JOB Kandang tersedia dan menjadi referensi HERI;
+- tidak ada duplikasi nama `HERI` pada master sebelum pemasukan;
+- tidak ada perubahan pada 401 record `employee_schedules`;
+- jadwal Oktober dari gambar **belum dimasukkan** untuk HERI.
+
+#### Batas perubahan
+
+Perubahan ini hanya memasukkan **master karyawan**. Tanda jadwal seperti L, CT, dan OFF pada gambar belum diproses.
+
+Enam belas nama Kandang lainnya masih akan dimasukkan satu per satu.
 
 ---
 
@@ -254,7 +268,12 @@ Web UI Production:
 
 PostgreSQL/Supabase tetap menjadi sumber data utama.
 
-Perubahan terakhir hanya menambahkan master JOB `Kandang`. Tidak ada perubahan pada 401 record jadwal yang sudah ada.
+Perubahan terakhir pada master data:
+
+- JOB Kandang tersedia pada FARM;
+- HERI sudah ditambahkan sebagai karyawan FARM / Kandang.
+
+Tidak ada perubahan pada 401 record jadwal yang sudah ada.
 
 ---
 
@@ -271,16 +290,17 @@ Bagian yang perlu dijaga konsistensinya:
 - fitur yang sudah Production;
 - fitur yang masih Preview atau belum dibuat;
 - jumlah master JOB;
+- jumlah karyawan;
 - status pemasukan karyawan FARM.
 
 ### Hasil audit
 
-Dokumentasi progres diperbarui dari versi 1.3 menjadi versi 1.4 untuk mencatat:
+Dokumentasi progres diperbarui dari versi 1.4 menjadi versi 1.5 untuk mencatat:
 
-- jumlah JOB master menjadi 10;
-- JOB `Kandang` berada pada Departemen FARM;
-- 17 nama Kandang sudah diverifikasi dari sumber yang diberikan;
-- 17 nama tersebut belum dimasukkan sebagai karyawan;
+- jumlah karyawan menjadi 31;
+- HERI sudah menjadi karyawan FARM;
+- HERI menggunakan JOB Kandang;
+- 16 nama Kandang lainnya masih belum dimasukkan;
 - proses pemasukan karyawan FARM dilakukan bertahap satu per satu.
 
 ---
@@ -292,7 +312,7 @@ Perubahan yang tercatat di dokumen ini **tidak berarti** bahwa fitur berikut sud
 - login;
 - authentication;
 - CRUD jadwal;
-- pengelolaan master karyawan;
+- pengelolaan master karyawan melalui Web UI;
 - pengelolaan JOB melalui Web UI;
 - pengelolaan kode jadwal;
 - absensi;
