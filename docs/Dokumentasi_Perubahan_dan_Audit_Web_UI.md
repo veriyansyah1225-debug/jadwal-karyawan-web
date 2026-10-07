@@ -1,7 +1,7 @@
 # Dokumentasi Perubahan dan Audit Web UI — Jadwal Karyawan
 
 **Status:** Living Document  
-**Versi:** 2.0  
+**Versi:** 2.1  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Branch produksi:** `main`  
@@ -364,6 +364,56 @@ Enam belas nama Kandang lainnya masih akan dimasukkan satu per satu.
 
 ---
 
+### 4.9 Penyempurnaan Format Export Excel dan PDF
+
+**Status:** Production / Web UI diperbarui  
+**Tanggal:** 2026-10-07
+
+#### Masukan pengguna
+
+Hasil penggunaan export menunjukkan dua masalah:
+
+- file Excel berhasil diunduh tetapi belum memiliki format visual yang memadai;
+- PDF memiliki format visual, tetapi teks dan angka terlalu kecil ketika dicetak.
+
+#### Perubahan Web UI
+
+Export Excel diperbarui menggunakan library yang mendukung styling cell.
+
+Format yang ditambahkan:
+
+- judul dan informasi Departemen/periode;
+- header tabel dengan format visual;
+- border tabel;
+- perataan teks;
+- warna sel mengikuti kode jadwal P, S, M, L, dan CT;
+- lebar kolom dan tinggi baris yang lebih sesuai;
+- freeze pane;
+- autofilter;
+- pengaturan halaman landscape untuk pencetakan.
+
+Export PDF diperbarui dengan prinsip **memprioritaskan keterbacaan hasil cetak**, bukan memaksakan seluruh tanggal Oktober pada satu halaman.
+
+Perubahan PDF:
+
+- tetap menggunakan A3 landscape;
+- tanggal dibagi menjadi beberapa bagian horizontal, maksimal 16 tanggal per halaman;
+- ukuran teks dan tinggi baris diperbesar;
+- header tanggal dan nama karyawan dibuat lebih jelas;
+- informasi bagian tanggal dan nomor halaman ditambahkan;
+- data karyawan tetap dipaginasi secara vertikal jika jumlah karyawan melebihi tinggi halaman.
+
+#### Batas perubahan
+
+Perubahan hanya menyentuh format file hasil export. Data yang diekspor, filter aktif, sumber view jadwal, dan perilaku read-only tetap sama.
+
+#### Verifikasi
+
+Pengguna sudah memverifikasi bahwa file Excel dan PDF dapat diunduh sebelum penyempurnaan ini. Perubahan ini ditujukan untuk memperbaiki kualitas tampilan dan keterbacaan hasil download/print.
+
+Build lokal otomatis belum dapat diverifikasi pada lingkungan pengembangan saat perubahan ini karena akses jaringan untuk instalasi dependency tidak tersedia. Karena itu, status perubahan ini dicatat sebagai **Production code / menunggu verifikasi download-print setelah deployment** sampai hasil file baru diuji.
+
+
 ## 5. Kondisi Production Saat Ini
 
 ### Web UI
@@ -541,6 +591,12 @@ Tanggal IB dikoreksi berdasarkan sumber terbaru menjadi 4, 11, 18, dan 25 Oktobe
 **Keputusan:** diterapkan pada Web UI.
 
 Export menjadi fitur read-only yang menggunakan hasil filter aktif. Excel dan PDF tidak mengubah data database dan dapat digunakan sebelum Authentication/CRUD selesai.
+
+### Keputusan D-012 — Penyempurnaan format export Excel dan PDF
+
+**Keputusan:** diterapkan pada Web UI.
+
+Export harus menghasilkan file yang tidak hanya dapat dibuka, tetapi juga layak digunakan secara operasional. Excel menggunakan styling pada cell dan pengaturan halaman, sedangkan PDF menggunakan pembagian tanggal ke beberapa halaman A3 landscape agar ukuran teks lebih terbaca saat dicetak.
 
 ### Keputusan D-011 — Perubahan desain: L menjadi satu-satunya kode libur
 
