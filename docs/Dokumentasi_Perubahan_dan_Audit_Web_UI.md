@@ -1,7 +1,7 @@
 # Dokumentasi Perubahan dan Audit Web UI — Jadwal Karyawan
 
 **Status:** Living Document  
-**Versi:** 2.1  
+**Versi:** 2.2  
 **Tanggal:** 2026-10-07  
 **Repository:** `veriyansyah1225-debug/jadwal-karyawan-web`  
 **Branch produksi:** `main`  
@@ -414,6 +414,26 @@ Pengguna sudah memverifikasi bahwa file Excel dan PDF dapat diunduh sebelum peny
 Build lokal otomatis belum dapat diverifikasi pada lingkungan pengembangan saat perubahan ini karena akses jaringan untuk instalasi dependency tidak tersedia. Karena itu, status perubahan ini dicatat sebagai **Production code / menunggu verifikasi download-print setelah deployment** sampai hasil file baru diuji.
 
 
+### 4.10 Penyesuaian Lanjutan Keterbacaan PDF
+
+**Status:** Production code / menunggu verifikasi hasil cetak  
+**Tanggal:** 2026-10-07
+
+Berdasarkan masukan lanjutan, ukuran font PDF diperbesar kembali dan garis border tabel dibuat lebih tegas.
+
+Perubahan:
+
+- tinggi baris PDF dinaikkan menjadi 10 mm;
+- lebar kolom JOB dan Nama Karyawan diperbesar;
+- ukuran font isi dinaikkan;
+- ukuran kode jadwal P/S/M/L/CT dinaikkan;
+- ukuran font header tanggal dan nama karyawan dinaikkan;
+- warna garis border dibuat lebih gelap;
+- ketebalan garis border dinaikkan;
+- lebar kolom tanggal sedikit diperbesar dengan tetap mempertahankan pembagian maksimal 16 tanggal per halaman.
+
+Tujuan perubahan adalah agar hasil cetak A3 lebih mudah dibaca dan garis antar-kolom lebih jelas.
+
 ## 5. Kondisi Production Saat Ini
 
 ### Web UI
@@ -591,6 +611,12 @@ Tanggal IB dikoreksi berdasarkan sumber terbaru menjadi 4, 11, 18, dan 25 Oktobe
 **Keputusan:** diterapkan pada Web UI.
 
 Export menjadi fitur read-only yang menggunakan hasil filter aktif. Excel dan PDF tidak mengubah data database dan dapat digunakan sebelum Authentication/CRUD selesai.
+
+### Keputusan D-013 — Perbesar font dan pertegas border PDF
+
+**Keputusan:** diterapkan pada Web UI.
+
+PDF menggunakan font yang lebih besar, baris yang lebih tinggi, dan border tabel yang lebih tegas untuk meningkatkan keterbacaan hasil cetak A3.
 
 ### Keputusan D-012 — Penyempurnaan format export Excel dan PDF
 
