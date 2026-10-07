@@ -1011,9 +1011,6 @@ function App() {
         <section className="card">
           <div className="filters">
             <div><label>Dari Tanggal</label><input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></div>
-            <div><label>Sampai Tanggal</label><input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} /></div>
-            <div><label>Departemen</label><select value={department} onChange={(e) => { setDepartment(e.target.value); setJob(''); setSelectedEmployees([]) }}>{departments.map((item) => <option key={item} value={item}>{item}</option>)}</select></div>
-            <div><label>JOB</label><select value={job} onChange={(e) => { setJob(e.target.value); setSelectedEmployees([]) }}><option value="">Semua</option>{jobs.map((item) => <option key={item}>{item}</option>)}</select></div>
             <div className="month-picker filter-month-picker">
               <label>Pilih Bulan</label>
               <button className="employee-picker-trigger" type="button" onClick={() => setMonthPickerOpen((open) => !open)}>
@@ -1023,18 +1020,14 @@ function App() {
               {monthPickerOpen && (
                 <div className="month-picker-menu">
                   {MONTHS.map((month, index) => (
-                    <button
-                      type="button"
-                      key={month}
-                      className={new Date(startDate + 'T00:00:00').getMonth() === index ? 'month-option active' : 'month-option'}
-                      onClick={() => selectMonth(index)}
-                    >
-                      {month}
-                    </button>
+                    <button type="button" key={month} className={new Date(startDate + 'T00:00:00').getMonth() === index ? 'month-option active' : 'month-option'} onClick={() => selectMonth(index)}>{month}</button>
                   ))}
                 </div>
               )}
             </div>
+            <div><label>Sampai Tanggal</label><input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} /></div>
+            <div><label>Departemen</label><select value={department} onChange={(e) => { setDepartment(e.target.value); setJob(''); setSelectedEmployees([]) }}>{departments.map((item) => <option key={item} value={item}>{item}</option>)}</select></div>
+            <div><label>JOB</label><select value={job} onChange={(e) => { setJob(e.target.value); setSelectedEmployees([]) }}><option value="">Semua</option>{jobs.map((item) => <option key={item}>{item}</option>)}</select></div>
             <div className="employee-filter">
               <label>Pilih Karyawan</label>
               <button type="button" className="employee-picker-trigger" onClick={() => setEmployeePickerOpen((open) => !open)}>
