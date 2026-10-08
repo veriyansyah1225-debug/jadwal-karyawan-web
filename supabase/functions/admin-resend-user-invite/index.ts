@@ -74,23 +74,9 @@ Deno.serve(async (req: Request) => {
       }, 400)
     }
 
-    const { data: scopes, error: scopeError } = await supabaseAdmin
-      .from('user_access_scopes')
-      .select('department_id')
-      .eq('user_id', targetUserId)
-
-    if (scopeError) {
-      return json({ error: scopeError.message }, 400)
-    }
-
     const email = String(profile.email || authUser.email || '').trim().toLowerCase()
     if (!email) {
       return json({ error: 'Email pengguna tidak ditemukan.' }, 400)
-    }
-
-    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(targetUserId)
-    if (deleteError) {
-      return json({ error: deleteError.message }, 400)
     }
 
     const { data: invited, error: inviteError } =
@@ -101,49 +87,13 @@ Deno.serve(async (req: Request) => {
 
     if (inviteError || !invited.user) {
       return json({
-        error: inviteError?.message ?? 'Akun lama sudah dihapus, tetapi undangan baru gagal dibuat. Silakan hubungi Admin untuk pemulihan akun.',
+        error: inviteError?.message ?? 'Undangan baru gagal dibuat.',
       }, 400)
-    }
-
-    const newUserId = invited.user.id
-
-    const { error: newProfileError } = await supabaseAdmin
-      .from('user_profiles')
-      .insert({
-        user_id: newUserId,
-        nama: profile.nama,
-        email,
-        role: profile.role,
-        aktif: profile.aktif,
-        employee_id: profile.employee_id,
-      })
-
-    if (newProfileError) {
-      await supabaseAdmin.auth.admin.deleteUser(newUserId)
-      return json({ error: newProfileError.message }, 400)
-    }
-
-    if ((scopes || []).length > 0) {
-      const { error: newScopeError } = await supabaseAdmin
-        .from('user_access_scopes')
-        .insert(
-          scopes.map((scope) => ({
-            user_id: newUserId,
-            department_id: scope.department_id,
-          }))
-        )
-
-      if (newScopeError) {
-        await supabaseAdmin.from('user_profiles').delete().eq('user_id', newUserId)
-        await supabaseAdmin.auth.admin.deleteUser(newUserId)
-        return json({ error: newScopeError.message }, 400)
-      }
     }
 
     return json({
       ok: true,
-      old_user_id: targetUserId,
-      user_id: newUserId,
+      user_id: targetUserId,
       message: 'Undangan baru berhasil dikirim ke email pengguna.',
     })
   } catch (error) {
