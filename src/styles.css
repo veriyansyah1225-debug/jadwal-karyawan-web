@@ -285,3 +285,40 @@
   text-align: center;
   font-size: 13px;
 }
+
+
+/* Bulk monthly schedule editor */
+.schedule-name-button{
+  border:0;
+  background:transparent;
+  color:inherit;
+  font:inherit;
+  font-weight:600;
+  text-align:left;
+  padding:6px 4px;
+  border-radius:8px;
+  cursor:pointer;
+}
+.schedule-name-button:hover{background:#eef3f8;color:#153c66}
+.schedule-name-button:focus-visible{outline:2px solid #3b82f6;outline-offset:2px}
+.bulk-schedule-modal{max-width:760px;width:min(760px,calc(100vw - 32px))}
+.bulk-schedule-period{margin-top:4px;color:#68758a;font-size:13px}
+.bulk-schedule-form{display:flex;flex-direction:column;gap:16px}
+.bulk-schedule-help{padding:12px 14px;border:1px solid #dbe3ec;border-radius:10px;background:#f7f9fc;color:#526174;line-height:1.55;font-size:13px}
+.bulk-schedule-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.bulk-schedule-field{display:flex;flex-direction:column;gap:7px}
+.bulk-schedule-field>span{display:flex;align-items:center;gap:8px;font-size:13px;color:#334155}
+.bulk-schedule-field input{width:100%}
+.schedule-code-badge{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:28px;padding:0 7px;border-radius:7px;background:#eef3f8;color:#142033;font-size:12px}
+.schedule-code-badge.L{background:#ffd0d0}
+.schedule-code-badge.M{background:#ffe9a8}
+.schedule-code-badge.P{background:#c9f2cf}
+.schedule-code-badge.S{background:#cbe2fb}
+.schedule-code-badge.CT{background:#ded0ff}
+.bulk-schedule-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.bulk-schedule-success{padding:10px 12px;border-radius:9px;background:#eaf8ee;color:#206b35;font-size:13px}
+@media(max-width:700px){
+  .bulk-schedule-modal{width:calc(100vw - 20px);max-height:calc(100vh - 24px);overflow:auto}
+  .bulk-schedule-grid{grid-template-columns:1fr}
+  .schedule-name-button{padding:8px 4px}
+}
