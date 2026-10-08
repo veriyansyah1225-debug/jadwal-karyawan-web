@@ -1400,6 +1400,7 @@ function App() {
           .delete()
           .eq('employee_id', Number(bulkScheduleEmployee.employeeId))
           .in('tanggal', staleDates)
+          .not('schedule_code_id', 'is', null)
         if (deleteError) throw new Error(deleteError.message)
       }
 
