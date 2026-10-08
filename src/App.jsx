@@ -383,6 +383,13 @@ function App() {
   const [inviteActivationError, setInviteActivationError] = useState('')
   const [inviteActivationSuccess, setInviteActivationSuccess] = useState('')
   const [mobileNavHidden, setMobileNavHidden] = useState(false)
+  const [bulkScheduleOpen, setBulkScheduleOpen] = useState(false)
+  const [bulkScheduleEmployee, setBulkScheduleEmployee] = useState(null)
+  const [bulkScheduleValues, setBulkScheduleValues] = useState({})
+  const [bulkScheduleLoading, setBulkScheduleLoading] = useState(false)
+  const [bulkScheduleSaving, setBulkScheduleSaving] = useState(false)
+  const [bulkScheduleError, setBulkScheduleError] = useState('')
+  const [bulkScheduleSuccess, setBulkScheduleSuccess] = useState('')
 
   const dateRange = useMemo(() => getDateRange(startDate, endDate), [startDate, endDate])
   const invalidRange = Boolean(startDate && endDate && startDate > endDate)
@@ -1278,6 +1285,151 @@ function App() {
     setAdminScheduleOpen(true)
   }
 
+  async function openBulkScheduleEditor(row) {
+    if (!supabase || !isAdmin) return
+
+    const monthDate = new Date(startDate + 'T00:00:00')
+    const monthStart = toInputDate(getMonthStart(monthDate))
+    const monthEnd = toInputDate(getMonthEnd(monthDate))
+    setBulkScheduleEmployee(row)
+    setBulkScheduleValues({})
+    setBulkScheduleError('')
+    setBulkScheduleSuccess('')
+    setBulkScheduleOpen(true)
+    setBulkScheduleLoading(true)
+
+    try {
+      const { data, error: queryError } = await supabase
+        .from('employee_schedules')
+        .select('tanggal,schedule_code_id,keterangan,schedule_codes(kode)')
+        .eq('employee_id', Number(row.employeeId))
+        .gte('tanggal', monthStart)
+        .lte('tanggal', monthEnd)
+        .not('schedule_code_id', 'is', null)
+        .order('tanggal')
+
+      if (queryError) throw new Error(queryError.message)
+
+      const grouped = {}
+      for (const item of data || []) {
+        const code = item.schedule_codes?.kode
+        if (!code) continue
+        const normalizedCode = code === 'OFF' ? 'L' : code
+        if (!grouped[normalizedCode]) grouped[normalizedCode] = []
+        grouped[normalizedCode].push(Number(String(item.tanggal).slice(-2)))
+      }
+
+      const values = {}
+      for (const item of adminScheduleCodes) {
+        values[item.kode] = (grouped[item.kode] || []).join(', ')
+      }
+      setBulkScheduleValues(values)
+    } catch (queryError) {
+      setBulkScheduleError(queryError.message || 'Gagal memuat jadwal karyawan.')
+    } finally {
+      setBulkScheduleLoading(false)
+    }
+  }
+
+  function updateBulkScheduleValue(code, value) {
+    setBulkScheduleValues((current) => ({ ...current, [code]: value }))
+  }
+
+  function parseBulkScheduleDates(value, monthStart, monthEnd) {
+    const daysInMonth = Number(monthEnd.slice(-2))
+    const values = String(value || '')
+      .split(/[\\s,;]+/)
+      .map((item) => item.trim())
+      .filter(Boolean)
+    const dates = []
+    for (const item of values) {
+      if (!/^\\d{1,2}$/.test(item)) {
+        throw new Error('Tanggal harus berupa nomor 1 sampai ' + daysInMonth + '.')
+      }
+      const day = Number(item)
+      if (day < 1 || day > daysInMonth) {
+        throw new Error('Tanggal ' + day + ' tidak ada pada bulan yang dipilih.')
+      }
+      const date = monthStart.slice(0, 8) + String(day).padStart(2, '0')
+      if (!dates.includes(date)) dates.push(date)
+    }
+    return dates.sort()
+  }
+
+  async function handleBulkScheduleSave(event) {
+    event.preventDefault()
+    if (!supabase || !isAdmin || !bulkScheduleEmployee) return
+
+    setBulkScheduleSaving(true)
+    setBulkScheduleError('')
+    setBulkScheduleSuccess('')
+
+    try {
+      const monthDate = new Date(startDate + 'T00:00:00')
+      const monthStart = toInputDate(getMonthStart(monthDate))
+      const monthEnd = toInputDate(getMonthEnd(monthDate))
+      const desiredByDate = new Map()
+
+      for (const code of adminScheduleCodes) {
+        const dates = parseBulkScheduleDates(bulkScheduleValues[code.kode], monthStart, monthEnd)
+        const codeId = Number(code.id)
+        for (const date of dates) {
+          if (desiredByDate.has(date) && desiredByDate.get(date).code !== code.kode) {
+            throw new Error('Tanggal ' + Number(date.slice(-2)) + ' dimasukkan ke lebih dari satu kode jadwal.')
+          }
+          desiredByDate.set(date, { code: code.kode, codeId })
+        }
+      }
+
+      const { data: existing, error: existingError } = await supabase
+        .from('employee_schedules')
+        .select('tanggal,schedule_code_id,keterangan')
+        .eq('employee_id', Number(bulkScheduleEmployee.employeeId))
+        .gte('tanggal', monthStart)
+        .lte('tanggal', monthEnd)
+        .not('schedule_code_id', 'is', null)
+
+      if (existingError) throw new Error(existingError.message)
+
+      const existingByDate = new Map((existing || []).map((item) => [String(item.tanggal), item]))
+      const staleDates = [...existingByDate.keys()].filter((date) => !desiredByDate.has(date))
+
+      if (staleDates.length) {
+        const { error: deleteError } = await supabase
+          .from('employee_schedules')
+          .delete()
+          .eq('employee_id', Number(bulkScheduleEmployee.employeeId))
+          .in('tanggal', staleDates)
+        if (deleteError) throw new Error(deleteError.message)
+      }
+
+      const desiredRows = [...desiredByDate.entries()].map(([date, item]) => ({
+        date,
+        codeId: item.codeId,
+      }))
+
+      if (desiredRows.length) {
+        const payload = desiredRows.map((item) => ({
+          employee_id: Number(bulkScheduleEmployee.employeeId),
+          tanggal: item.date,
+          schedule_code_id: item.codeId,
+          keterangan: existingByDate.get(item.date)?.keterangan || null,
+        }))
+        const { error: upsertError } = await supabase
+          .from('employee_schedules')
+          .upsert(payload, { onConflict: 'employee_id,tanggal' })
+        if (upsertError) throw new Error(upsertError.message)
+      }
+
+      setBulkScheduleSuccess('Jadwal ' + bulkScheduleEmployee.name + ' untuk ' + MONTHS[monthDate.getMonth()] + ' ' + monthDate.getFullYear() + ' berhasil diperbarui.')
+      setScheduleRefresh((value) => value + 1)
+    } catch (saveError) {
+      setBulkScheduleError(saveError.message || 'Gagal menyimpan jadwal.')
+    } finally {
+      setBulkScheduleSaving(false)
+    }
+  }
+
   async function deleteAdminSchedule(employeeId, date, employeeName) {
     if (!supabase || !isAdmin) return false
 
@@ -1747,7 +1899,7 @@ function App() {
             <div className="wrap">
               <table>
                 <thead><tr>{showJobColumn && <th className="sticky-job">JOB</th>}<th className={showJobColumn ? "sticky-name" : "sticky-name no-job"}>Nama Karyawan</th>{dateRange.map(({ value, day, dayName }) => <th key={value} className={dayName === "MG" ? "sunday-header" : ""}>{day}<br /><span>{dayName}</span></th>)}</tr></thead>
-                <tbody>{filteredRows.map((row) => <tr key={row.employeeId || row.name}>{showJobColumn && <td className="sticky-job group">{row.job || '—'}</td>}<td className={showJobColumn ? "sticky-name" : "sticky-name no-job"}>{row.name}</td>{dateRange.map(({ value }) => { const code = row.codes?.[value] || ''; const assignment = row.assignmentDays?.has(value); const detail = row.details?.[value]; return <td key={value}><button type="button" className={code ? assignment ? 'cell-button assignment' : `cell-button ${code}` : 'cell-button empty'} onClick={() => setSelectedCell({ row, date: value, detail })} title="Klik untuk melihat detail">{code || '—'}</button></td> })}</tr>)}</tbody>
+                <tbody>{filteredRows.map((row) => <tr key={row.employeeId || row.name}>{showJobColumn && <td className="sticky-job group">{row.job || '—'}</td>}<td className={showJobColumn ? "sticky-name" : "sticky-name no-job"}>{isAdmin ? <button type="button" className="schedule-name-button" onClick={() => openBulkScheduleEditor(row)} title="Atur jadwal bulanan">{row.name}</button> : row.name}</td>{dateRange.map(({ value }) => { const code = row.codes?.[value] || ''; const assignment = row.assignmentDays?.has(value); const detail = row.details?.[value]; return <td key={value}><button type="button" className={code ? assignment ? 'cell-button assignment' : `cell-button ${code}` : 'cell-button empty'} onClick={() => setSelectedCell({ row, date: value, detail })} title="Klik untuk melihat detail">{code || '—'}</button></td> })}</tr>)}</tbody>
               </table>
             </div>
           )}
@@ -1949,6 +2101,49 @@ function App() {
                 <button className="focus-toggle" type="submit" disabled={userFormLoading}>{userFormLoading ? 'Membuat...' : 'Buat & Kirim Undangan'}</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {bulkScheduleOpen && (
+        <div className="modal-backdrop" onClick={() => !bulkScheduleSaving && setBulkScheduleOpen(false)}>
+          <div className="modal bulk-schedule-modal" role="dialog" aria-modal="true" aria-labelledby="bulk-schedule-title" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-head">
+              <div>
+                <div className="modal-kicker">Pengaturan Jadwal Bulanan</div>
+                <h2 id="bulk-schedule-title">{bulkScheduleEmployee?.name || 'Karyawan'}</h2>
+                <div className="bulk-schedule-period">{MONTHS[Number(startDate.slice(5, 7)) - 1]} {startDate.slice(0, 4)}</div>
+              </div>
+              <button className="modal-close" type="button" onClick={() => !bulkScheduleSaving && setBulkScheduleOpen(false)} aria-label="Tutup">×</button>
+            </div>
+            {bulkScheduleLoading ? (
+              <div className="state">Memuat jadwal...</div>
+            ) : (
+              <form className="bulk-schedule-form" onSubmit={handleBulkScheduleSave}>
+                <div className="bulk-schedule-help">
+                  Isi nomor tanggal dipisahkan koma. Contoh: <strong>L = 1, 6, 9, 10</strong> atau <strong>M = 2, 3, 4, 10, 12, 13</strong>. Tanggal yang tidak masuk ke kode mana pun akan dikosongkan sehingga karyawan dianggap masuk kerja.
+                </div>
+                <div className="bulk-schedule-grid">
+                  {adminScheduleCodes.map((item) => (
+                    <label className="bulk-schedule-field" key={item.id}>
+                      <span><b className={'schedule-code-badge ' + item.kode}>{item.kode}</b>{item.nama}</span>
+                      <input
+                        value={bulkScheduleValues[item.kode] || ''}
+                        onChange={(e) => updateBulkScheduleValue(item.kode, e.target.value)}
+                        placeholder="Contoh: 1, 6, 9, 10"
+                        inputMode="numeric"
+                      />
+                    </label>
+                  ))}
+                </div>
+                {bulkScheduleError && <div className="state error">{bulkScheduleError}</div>}
+                {bulkScheduleSuccess && <div className="bulk-schedule-success">{bulkScheduleSuccess}</div>}
+                <div className="bulk-schedule-actions">
+                  <button className="secondary" type="button" onClick={() => setBulkScheduleOpen(false)} disabled={bulkScheduleSaving}>Tutup</button>
+                  <button className="focus-toggle" type="submit" disabled={bulkScheduleSaving}>{bulkScheduleSaving ? 'Menyimpan...' : 'Simpan Jadwal Bulan Ini'}</button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
