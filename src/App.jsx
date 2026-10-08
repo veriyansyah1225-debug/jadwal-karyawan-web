@@ -518,9 +518,20 @@ function App() {
         authData = result.data
         authError = result.error
       } else {
-        // Supabase juga dapat memproses invitation melalui URL fragment
+        // Supabase dapat memproses invitation melalui URL fragment
         // (#access_token=...&refresh_token=...&type=invite) secara otomatis.
-        const currentSession = await supabase.auth.getSession()
+        // Pada beberapa callback, pemrosesan session berlangsung sedikit
+        // setelah halaman aplikasi mulai dimuat, jadi beri Auth client
+        // kesempatan menyelesaikannya sebelum menyatakan invitation gagal.
+        let currentSession = await supabase.auth.getSession()
+
+        if (!currentSession.error && !currentSession.data.session) {
+          for (const delay of [100, 300, 700]) {
+            await new Promise((resolve) => setTimeout(resolve, delay))
+            currentSession = await supabase.auth.getSession()
+            if (currentSession.error || currentSession.data.session) break
+          }
+        }
 
         if (currentSession.error) {
           authError = currentSession.error
