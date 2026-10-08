@@ -1,12 +1,15 @@
 # Log Perubahan Web UI — 8 Oktober 2026
 
 ## Proyek
+
 DIVISI PERBAIKAN DATABASE
 
 ## Repository
+
 `veriyansyah1225-debug/jadwal-karyawan-web`
 
 ## Tanggal
+
 **8 Oktober 2026**
 
 ## Tujuan Log
@@ -161,6 +164,133 @@ Pengujian tersebut membuktikan bahwa email yang sebelumnya digunakan dapat digun
 
 ---
 
+## Perubahan #4 — Perbaikan Resend Invitation Agar Tidak Menghapus Akun Terlebih Dahulu
+
+### Bagian yang diubah
+
+**File:**
+`supabase/functions/admin-resend-user-invite/index.ts`
+
+**Area:**
+Edge Function `admin-resend-user-invite`.
+
+### Masalah sebelum perubahan
+
+Sebelum perbaikan, proses resend invitation melakukan urutan:
+
+```text
+Admin klik Resend
+      ↓
+Auth user lama dihapus
+      ↓
+Invite user baru dibuat
+      ↓
+Profile dan scope dibuat kembali
+```
+
+Masalahnya, jika pengiriman invitation baru gagal, misalnya karena:
+
+```text
+email rate limit exceeded
+```
+
+maka akun lama sudah terlanjur dihapus.
+
+Pengujian langsung membuktikan dampaknya:
+
+```text
+Resend invitation
+      ↓
+Email rate limit exceeded
+      ↓
+Auth user hilang
+      ↓
+user_profiles hilang
+      ↓
+user_access_scopes hilang
+```
+
+Ini merupakan risiko kehilangan akun/access state yang nyata.
+
+### Perubahan yang dilakukan
+
+Proses resend diubah agar **tidak lagi menghapus Auth user lama**.
+
+Bagian berikut dihapus dari alur resend:
+
+- penghapusan Auth user lama;
+- pembuatan Auth user pengganti;
+- penghapusan/reinsert `user_profiles`;
+- penghapusan/reinsert `user_access_scopes`.
+
+Sekarang alurnya:
+
+```text
+Admin klik Resend
+      ↓
+Supabase mengirim invitation ke Auth user yang sama
+      ↓
+Jika gagal → akun tetap ada
+      ↓
+Jika berhasil → user menerima invitation baru
+```
+
+Dengan demikian, kegagalan pengiriman email tidak lagi menyebabkan akun testing/pengguna terhapus.
+
+### Commit
+
+Perubahan tercatat pada commit:
+
+```text
+176b2d15bb835059785e67941884cb716acb9a38
+```
+
+### Deployment
+
+Edge Function `admin-resend-user-invite` telah dideploy ke Supabase:
+
+```text
+Function : admin-resend-user-invite
+Version  : 2
+Status   : ACTIVE
+Verify JWT : true
+```
+
+### Retest
+
+Setelah deployment, dibuat akun testing baru dalam kondisi:
+
+- Auth user ada;
+- `email_confirmed_at` masih NULL;
+- `user_profiles` ada;
+- `user_access_scopes` ada.
+
+Admin kemudian menjalankan **Resend Invitation**.
+
+Hasil pemeriksaan database setelah resend:
+
+```text
+Auth user        : tetap ada
+Auth user ID     : tetap sama
+user_profiles    : tetap ada
+user_access_scopes : tetap ada
+email_confirmed_at : tetap NULL
+```
+
+**Hasil: BERHASIL — akun tidak lagi terhapus ketika resend gagal/terkena email rate limit.**
+
+### Klasifikasi
+
+**High — Account / Access Loss Risk**
+
+Masalah ini bukan sekadar UI error karena sebelumnya dapat menyebabkan data profil, scope akses, dan akun Auth pengguna hilang akibat kegagalan pengiriman invitation.
+
+### Status
+
+**CLOSED — Fixed and Retested**
+
+---
+
 ## Commit Perubahan
 
 Perbaikan utama callback invitation tercatat pada commit:
@@ -169,15 +299,24 @@ Perbaikan utama callback invitation tercatat pada commit:
 66d85766a77947449841179f2467b81be3496f11
 ```
 
+Perbaikan Edge Function resend invitation tercatat pada commit:
+
+```text
+176b2d15bb835059785e67941884cb716acb9a38
+```
+
 Perubahan tersebut berada pada:
 
 ```text
 src/App.jsx
+supabase/functions/admin-resend-user-invite/index.ts
 ```
 
 ---
 
 ## Dampak Perubahan
+
+### Callback invitation
 
 ### Sebelum
 
@@ -191,13 +330,45 @@ Web UI mengenali callback invitation dengan benar dan dapat melanjutkan user ke 
 
 User kemudian dapat membuat password dan melakukan login.
 
-### Klasifikasi
+### Resend invitation
+
+### Sebelum
+
+Kegagalan pengiriman invitation baru dapat terjadi setelah Auth user lama dihapus sehingga akun dan data profile/scope dapat hilang.
+
+### Sesudah
+
+Resend menggunakan Auth user yang sama. Kegagalan pengiriman tidak menghapus akun, profile, atau scope akses pengguna.
+
+---
+
+## Catatan Rate Limit Email
+
+Pada pengujian setelah perbaikan, ditemukan bahwa Supabase dapat mengembalikan:
+
+```text
+email rate limit exceeded
+```
+
+ketika pengiriman email invitation dilakukan terlalu sering pada project yang sama.
+
+Ini **bukan perubahan atau bug yang diperbaiki pada aplikasi** dalam perubahan #4. Yang diperbaiki adalah dampak fatal sebelumnya: akun tidak lagi dihapus ketika pengiriman invitation gagal.
+
+Rate limit email dicatat sebagai **batasan/temuan konfigurasi provider email** dan akan dibahas terpisah pada audit, tanpa mengubah business rule aplikasi.
+
+---
+
+## Klasifikasi Keseluruhan Perubahan
+
+Perubahan callback invitation:
 
 **Medium — Functional / Authentication Flow Bug**
 
-Perubahan ini bukan perbaikan terhadap vulnerability database.
+Perubahan resend invitation:
 
-Tidak ditemukan bukti bahwa masalah tersebut menyebabkan:
+**High — Account / Access Loss Risk**
+
+Tidak ditemukan bukti bahwa perubahan tersebut menyebabkan:
 
 - kebocoran data;
 - privilege escalation;
@@ -219,22 +390,35 @@ Perbaikan telah diuji dengan:
 - delete akun testing;
 - re-invite email yang sama;
 - pembuatan password baru;
-- login kembali.
+- login kembali;
+- resend invitation;
+- pemeriksaan keberadaan Auth user setelah resend;
+- pemeriksaan `user_profiles` setelah resend;
+- pemeriksaan `user_access_scopes` setelah resend;
+- pengujian kondisi email rate limit.
 
 ---
 
 ## Catatan Audit
 
-Perubahan ini merupakan **perbaikan aktual pada Web UI**, sedangkan hasil audit database sebelumnya tidak memerlukan perubahan database.
+Perubahan ini merupakan **perbaikan aktual pada Web UI dan Edge Function**, sedangkan hasil audit database sebelumnya tidak memerlukan perubahan struktur database.
 
-Dengan demikian, untuk perubahan yang tercatat pada 8 Oktober 2026:
+Dengan demikian, perubahan yang tercatat pada 8 Oktober 2026:
 
 ```text
-Database changes : 0
-Web UI changes   : 1 area
-File changed     : src/App.jsx
-Main issue       : Invitation callback recognition
-Status           : Fixed and Retested
+Database schema changes : 0
+Web UI changes          : 1 area
+Edge Function changes   : 1 area
+Files changed           :
+  - src/App.jsx
+  - supabase/functions/admin-resend-user-invite/index.ts
+
+Main issues:
+  1. Invitation callback recognition
+  2. Account loss risk during resend invitation
+
+Status:
+  Fixed and Retested
 ```
 
 Dokumen ini dibuat sebagai log perubahan agar riwayat perbaikan dapat ditelusuri dari repository.
