@@ -1338,12 +1338,12 @@ function App() {
   function parseBulkScheduleDates(value, monthStart, monthEnd) {
     const daysInMonth = Number(monthEnd.slice(-2))
     const values = String(value || '')
-      .split(/[\\s,;]+/)
+      .split(/[\s,;]+/)
       .map((item) => item.trim())
       .filter(Boolean)
     const dates = []
     for (const item of values) {
-      if (!/^\\d{1,2}$/.test(item)) {
+      if (!/^\d{1,2}$/.test(item)) {
         throw new Error('Tanggal harus berupa nomor 1 sampai ' + daysInMonth + '.')
       }
       const day = Number(item)
