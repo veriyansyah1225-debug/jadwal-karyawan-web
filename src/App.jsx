@@ -485,8 +485,9 @@ function App() {
       const hashAccessToken = hashParams.get('access_token')
       const hashRefreshToken = hashParams.get('refresh_token')
       const isInviteLink = Boolean(
+        queryType === 'invite' ||
         code ||
-        (tokenHash && queryType === 'invite') ||
+        tokenHash ||
         (hashType === 'invite' && (hashAccessToken || hashRefreshToken)),
       )
 
