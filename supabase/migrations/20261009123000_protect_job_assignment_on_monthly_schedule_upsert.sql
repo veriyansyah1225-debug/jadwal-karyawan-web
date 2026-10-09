@@ -1,3 +1,7 @@
+-- This repository migration mirrors the follow-up change already applied
+-- to Supabase under remote migration version 20261009115514.
+-- Reconcile remote/local migration history before deploying these files to prod.
+
 CREATE OR REPLACE FUNCTION public.save_employee_monthly_schedule(
   p_employee_id bigint,
   p_month_start date,
@@ -36,10 +40,8 @@ BEGIN
     RAISE EXCEPTION 'Karyawan tidak ditemukan.' USING ERRCODE = '22023';
   END IF;
 
-  -- Serialize monthly schedule changes for this employee.
   PERFORM 1 FROM public.employees e WHERE e.id = p_employee_id FOR UPDATE;
 
-  -- Validate all payload rows before any deletion.
   IF EXISTS (
     SELECT 1 FROM jsonb_to_recordset(p_rows) AS x(date date, "codeId" bigint)
     WHERE x.date IS NULL OR x.date < p_month_start OR x.date > p_month_end OR x."codeId" IS NULL
@@ -62,14 +64,12 @@ BEGIN
     RAISE EXCEPTION 'Kode jadwal tidak ditemukan atau tidak aktif.' USING ERRCODE = '22023';
   END IF;
 
-  -- Never silently replace a job assignment with a schedule code.
   IF EXISTS (
     SELECT 1 FROM jsonb_to_recordset(p_rows) AS x(date date, "codeId" bigint)
     JOIN public.employee_schedules es
       ON es.employee_id = p_employee_id AND es.tanggal = x.date AND es.job_id IS NOT NULL
   ) THEN
-    RAISE EXCEPTION 'Ada tanggal yang sudah memiliki penugasan pekerjaan. Selesaikan konflik tersebut terlebih dahulu.'
-      USING ERRCODE = '23505';
+    RAISE EXCEPTION 'Ada tanggal yang sudah memiliki penugasan pekerjaan. Selesaikan konflik tersebut terlebih dahulu.' USING ERRCODE = '23505';
   END IF;
 
   DELETE FROM public.employee_schedules es
