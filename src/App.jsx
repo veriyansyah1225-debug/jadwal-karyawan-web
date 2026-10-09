@@ -1393,46 +1393,18 @@ function App() {
         }
       }
 
-      const { data: existing, error: existingError } = await supabase
-        .from('employee_schedules')
-        .select('tanggal,schedule_code_id,keterangan')
-        .eq('employee_id', Number(bulkScheduleEmployee.employeeId))
-        .gte('tanggal', monthStart)
-        .lte('tanggal', monthEnd)
-        .not('schedule_code_id', 'is', null)
-
-      if (existingError) throw new Error(existingError.message)
-
-      const existingByDate = new Map((existing || []).map((item) => [String(item.tanggal), item]))
-      const staleDates = [...existingByDate.keys()].filter((date) => !desiredByDate.has(date))
-
-      if (staleDates.length) {
-        const { error: deleteError } = await supabase
-          .from('employee_schedules')
-          .delete()
-          .eq('employee_id', Number(bulkScheduleEmployee.employeeId))
-          .in('tanggal', staleDates)
-          .not('schedule_code_id', 'is', null)
-        if (deleteError) throw new Error(deleteError.message)
-      }
-
-      const desiredRows = [...desiredByDate.entries()].map(([date, item]) => ({
+      const rows = [...desiredByDate.entries()].map(([date, item]) => ({
         date,
         codeId: item.codeId,
       }))
 
-      if (desiredRows.length) {
-        const payload = desiredRows.map((item) => ({
-          employee_id: Number(bulkScheduleEmployee.employeeId),
-          tanggal: item.date,
-          schedule_code_id: item.codeId,
-          keterangan: existingByDate.get(item.date)?.keterangan || null,
-        }))
-        const { error: upsertError } = await supabase
-          .from('employee_schedules')
-          .upsert(payload, { onConflict: 'employee_id,tanggal' })
-        if (upsertError) throw new Error(upsertError.message)
-      }
+      const { error: saveError } = await supabase.rpc('save_employee_monthly_schedule', {
+        p_employee_id: Number(bulkScheduleEmployee.employeeId),
+        p_month_start: monthStart,
+        p_month_end: monthEnd,
+        p_rows: rows,
+      })
+      if (saveError) throw new Error(saveError.message)
 
       setBulkScheduleSuccess('Jadwal ' + bulkScheduleEmployee.name + ' untuk ' + MONTHS[monthDate.getMonth()] + ' ' + monthDate.getFullYear() + ' berhasil diperbarui.')
       setScheduleRefresh((value) => value + 1)
