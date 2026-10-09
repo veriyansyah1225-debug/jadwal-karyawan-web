@@ -1,3 +1,8 @@
+-- This repository migration mirrors the atomic monthly schedule RPC already applied
+-- to Supabase under remote migration version 20261009114906.
+-- Keep the remote version in the audit record; do not run this file against the
+-- production project as a new migration without first reconciling migration history.
+
 CREATE OR REPLACE FUNCTION public.save_employee_monthly_schedule(
   p_employee_id bigint,
   p_month_start date,
@@ -43,20 +48,14 @@ BEGIN
       USING ERRCODE = '22023';
   END IF;
 
-  -- Serialize monthly schedule changes for this employee.
   PERFORM 1 FROM public.employees e WHERE e.id = p_employee_id FOR UPDATE;
 
-  -- Validate all payload rows before any deletion.
   IF EXISTS (
     SELECT 1
     FROM jsonb_to_recordset(p_rows) AS x(date date, "codeId" bigint)
-    WHERE x.date IS NULL
-       OR x.date < p_month_start
-       OR x.date > p_month_end
-       OR x."codeId" IS NULL
+    WHERE x.date IS NULL OR x.date < p_month_start OR x.date > p_month_end OR x."codeId" IS NULL
   ) THEN
-    RAISE EXCEPTION 'Ada tanggal atau kode jadwal tidak valid.'
-      USING ERRCODE = '22023';
+    RAISE EXCEPTION 'Ada tanggal atau kode jadwal tidak valid.' USING ERRCODE = '22023';
   END IF;
 
   IF EXISTS (
@@ -65,8 +64,7 @@ BEGIN
     GROUP BY x.date
     HAVING count(*) > 1
   ) THEN
-    RAISE EXCEPTION 'Satu tanggal tidak boleh memiliki lebih dari satu kode jadwal.'
-      USING ERRCODE = '22023';
+    RAISE EXCEPTION 'Satu tanggal tidak boleh memiliki lebih dari satu kode jadwal.' USING ERRCODE = '22023';
   END IF;
 
   IF EXISTS (
@@ -75,21 +73,16 @@ BEGIN
     LEFT JOIN public.schedule_codes sc ON sc.id = x."codeId"
     WHERE sc.id IS NULL OR sc.aktif IS DISTINCT FROM true
   ) THEN
-    RAISE EXCEPTION 'Kode jadwal tidak ditemukan atau tidak aktif.'
-      USING ERRCODE = '22023';
+    RAISE EXCEPTION 'Kode jadwal tidak ditemukan atau tidak aktif.' USING ERRCODE = '22023';
   END IF;
 
-  -- Never silently replace a job assignment with a schedule code.
   IF EXISTS (
     SELECT 1
     FROM jsonb_to_recordset(p_rows) AS x(date date, "codeId" bigint)
     JOIN public.employee_schedules es
-      ON es.employee_id = p_employee_id
-     AND es.tanggal = x.date
-     AND es.job_id IS NOT NULL
+      ON es.employee_id = p_employee_id AND es.tanggal = x.date AND es.job_id IS NOT NULL
   ) THEN
-    RAISE EXCEPTION 'Ada tanggal yang sudah memiliki penugasan pekerjaan. Selesaikan konflik tersebut terlebih dahulu.'
-      USING ERRCODE = '23505';
+    RAISE EXCEPTION 'Ada tanggal yang sudah memiliki penugasan pekerjaan. Selesaikan konflik tersebut terlebih dahulu.' USING ERRCODE = '23505';
   END IF;
 
   DELETE FROM public.employee_schedules es
@@ -97,24 +90,19 @@ BEGIN
     AND es.tanggal BETWEEN p_month_start AND p_month_end
     AND es.schedule_code_id IS NOT NULL
     AND NOT EXISTS (
-      SELECT 1
-      FROM jsonb_to_recordset(p_rows) AS x(date date, "codeId" bigint)
+      SELECT 1 FROM jsonb_to_recordset(p_rows) AS x(date date, "codeId" bigint)
       WHERE x.date = es.tanggal
     );
 
-  INSERT INTO public.employee_schedules
-    (employee_id, tanggal, schedule_code_id, keterangan)
+  INSERT INTO public.employee_schedules (employee_id, tanggal, schedule_code_id, keterangan)
   SELECT p_employee_id, x.date, x."codeId", es.keterangan
   FROM jsonb_to_recordset(p_rows) AS x(date date, "codeId" bigint)
   LEFT JOIN public.employee_schedules es
-    ON es.employee_id = p_employee_id
-   AND es.tanggal = x.date
-   AND es.schedule_code_id IS NOT NULL
+    ON es.employee_id = p_employee_id AND es.tanggal = x.date AND es.schedule_code_id IS NOT NULL
   ON CONFLICT (employee_id, tanggal)
   DO UPDATE SET
     schedule_code_id = EXCLUDED.schedule_code_id,
-    keterangan = COALESCE(public.employee_schedules.keterangan, EXCLUDED.keterangan),
-    job_id = NULL;
+    keterangan = COALESCE(public.employee_schedules.keterangan, EXCLUDED.keterangan);
 END;
 $function$;
 
