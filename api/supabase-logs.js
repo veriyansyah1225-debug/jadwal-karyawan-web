@@ -1,3 +1,26 @@
+import crypto from 'node:crypto';
+
+function hasValidLogAccess(req, accessToken) {
+  const cookieHeader = req.headers.cookie || '';
+  const cookie = cookieHeader.split(';').map((part) => part.trim()).find((part) => part.startsWith('riwayat_log_access='));
+  if (!cookie) return false;
+  const value = decodeURIComponent(cookie.slice('riwayat_log_access='.length));
+  const [expiryText, suppliedSignature] = value.split('.');
+  const expiry = Number(expiryText);
+  if (!Number.isInteger(expiry) || expiry <= Math.floor(Date.now() / 1000) || !suppliedSignature) return false;
+  const expectedSignature = crypto.createHmac('sha256', accessToken).update('riwayat-log:' + expiryText).digest('hex');
+  const supplied = Buffer.from(suppliedSignature, 'hex');
+  const expected = Buffer.from(expectedSignature, 'hex');
+  return supplied.length === expected.length && crypto.timingSafeEqual(supplied, expected);
+}
+
+function sanitizeLogMessage(value) {
+  return String(value || 'Tidak ada pesan tambahan.')
+    .replace(/(https?:\\/\\/[^\\s?]+)\\?[^\\s]*/gi, '$1?[parameter disembunyikan]')
+    .replace(/((?:access_token|refresh_token|apikey|api_key|authorization|password|token)=)[^&\\s]+/gi, '$1[disembunyikan]')
+    .slice(0, 500);
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
@@ -40,6 +63,10 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: 'Riwayat log hanya dapat diakses oleh Admin.' });
     }
 
+    if (!hasValidLogAccess(req, accessToken)) {
+      return res.status(403).json({ error: 'Verifikasi kode diperlukan atau sudah kedaluwarsa.' });
+    }
+
     const end = new Date();
     const start = new Date(end.getTime() - 24 * 60 * 60 * 1000);
     const sql = [
@@ -66,8 +93,14 @@ export default async function handler(req, res) {
       return res.status(502).json({ error: 'Gagal mengambil log dari Supabase. Periksa token dan izin analytics_logs_read.' });
     }
 
+    const logs = (Array.isArray(payload?.result) ? payload.result : []).map((log) => ({
+      ...log,
+      path: String(log.path || '').split('?')[0],
+      event_message: sanitizeLogMessage(log.event_message),
+    }));
+
     return res.status(200).json({
-      logs: Array.isArray(payload?.result) ? payload.result : [],
+      logs,
       windowStart: start.toISOString(),
       windowEnd: end.toISOString(),
       limit: 100,
