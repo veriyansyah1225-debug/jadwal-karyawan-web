@@ -695,7 +695,7 @@ function App() {
       setSupabaseLogsError('Menu ini hanya tersedia untuk Admin yang sudah login.')
       return
     }
-    if (!/^\\d{6}$/.test(supabaseLogsCode)) {
+    if (!/^\d{6}$/.test(supabaseLogsCode)) {
       setSupabaseLogsError('Masukkan PIN angka 6 digit.')
       return
     }
@@ -1848,7 +1848,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
                     autoComplete="off"
                     maxLength={6}
                     value={supabaseLogsCode}
-                    onChange={(event) => setSupabaseLogsCode(event.target.value.replace(/\\D/g, '').slice(0, 6))}
+                    onChange={(event) => setSupabaseLogsCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
                     placeholder="Masukkan 6 digit PIN"
                     style={{ width: 220, textAlign: 'center', letterSpacing: '0.35em' }}
                     disabled={supabaseLogsVerifyLoading}
