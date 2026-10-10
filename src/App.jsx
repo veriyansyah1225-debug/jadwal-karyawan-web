@@ -1313,7 +1313,7 @@ function App() {
     try {
       const { data, error: queryError } = await supabase
         .from('employee_schedules')
-        .select('tanggal,schedule_code_id,keterangan,schedule_codes(kode)')
+        .select('tanggal,schedule_code_id,schedule_codes(kode)')
         .eq('employee_id', Number(row.employeeId))
         .gte('tanggal', monthStart)
         .lte('tanggal', monthEnd)
@@ -1343,7 +1343,7 @@ function App() {
     }
   }
 
-  function updateBulkScheduleValue(code, value) {
+function updateBulkScheduleValue(code, value) {
     setBulkScheduleValues((current) => ({ ...current, [code]: value }))
   }
 
