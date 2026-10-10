@@ -336,6 +336,9 @@ function App() {
   const [supabaseLogsLoading, setSupabaseLogsLoading] = useState(false)
   const [supabaseLogsError, setSupabaseLogsError] = useState('')
   const [supabaseLogsWindow, setSupabaseLogsWindow] = useState(null)
+  const [supabaseLogsVerified, setSupabaseLogsVerified] = useState(false)
+  const [supabaseLogsCode, setSupabaseLogsCode] = useState('')
+  const [supabaseLogsVerifyLoading, setSupabaseLogsVerifyLoading] = useState(false)
   const [employeeMasterRows, setEmployeeMasterRows] = useState([])
   const [masterDepartments, setMasterDepartments] = useState([])
   const [masterJobs, setMasterJobs] = useState([])
@@ -651,6 +654,7 @@ function App() {
 
   async function loadSupabaseLogs() {
     if (!isAdmin || !session?.access_token) {
+      setSupabaseLogsVerified(false)
       setSupabaseLogsError('Menu ini hanya tersedia untuk Admin yang sudah login.')
       return
     }
@@ -658,6 +662,19 @@ function App() {
     setSupabaseLogsLoading(true)
     setSupabaseLogsError('')
     try {
+      const gateResponse = await fetch('/api/supabase-logs-verify', {
+        headers: { Authorization: 'Bearer ' + session.access_token },
+      })
+      const gatePayload = await gateResponse.json()
+      if (!gateResponse.ok) throw new Error(gatePayload?.error || 'Gagal memeriksa verifikasi.')
+      if (!gatePayload.verified) {
+        setSupabaseLogsVerified(false)
+        setSupabaseLogs([])
+        setSupabaseLogsWindow(null)
+        return
+      }
+
+      setSupabaseLogsVerified(true)
       const response = await fetch('/api/supabase-logs', {
         headers: { Authorization: 'Bearer ' + session.access_token },
       })
@@ -669,6 +686,40 @@ function App() {
       setSupabaseLogsError(logError.message || 'Gagal mengambil log Supabase.')
     } finally {
       setSupabaseLogsLoading(false)
+    }
+  }
+
+  async function handleVerifySupabaseLogs(event) {
+    event.preventDefault()
+    if (!isAdmin || !session?.access_token) {
+      setSupabaseLogsError('Menu ini hanya tersedia untuk Admin yang sudah login.')
+      return
+    }
+    if (!/^\\d{6}$/.test(supabaseLogsCode)) {
+      setSupabaseLogsError('Masukkan PIN angka 6 digit.')
+      return
+    }
+
+    setSupabaseLogsVerifyLoading(true)
+    setSupabaseLogsError('')
+    try {
+      const response = await fetch('/api/supabase-logs-verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + session.access_token,
+        },
+        body: JSON.stringify({ pin: supabaseLogsCode }),
+      })
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload?.error || 'Verifikasi gagal.')
+      setSupabaseLogsCode('')
+      setSupabaseLogsVerified(true)
+      await loadSupabaseLogs()
+    } catch (verifyError) {
+      setSupabaseLogsError(verifyError.message || 'Verifikasi gagal.')
+    } finally {
+      setSupabaseLogsVerifyLoading(false)
     }
   }
 
@@ -1780,33 +1831,61 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
                 <h2>Log Error Supabase</h2>
                 <div className="meta">Maksimal 100 catatan · 24 jam terakhir · khusus Admin</div>
               </div>
-              <button className="focus-toggle" type="button" onClick={loadSupabaseLogs} disabled={supabaseLogsLoading}>
+              {supabaseLogsVerified && <button className="focus-toggle" type="button" onClick={loadSupabaseLogs} disabled={supabaseLogsLoading}>
                 {supabaseLogsLoading ? 'Memuat...' : 'Muat Ulang'}
-              </button>
+              </button>}
             </div>
-            {supabaseLogsWindow && <p className="meta">Periode: {new Date(supabaseLogsWindow.start).toLocaleString('id-ID')} – {new Date(supabaseLogsWindow.end).toLocaleString('id-ID')}</p>}
-            {supabaseLogsError && <div className="state error">{supabaseLogsError}</div>}
-            {supabaseLogsLoading && <div className="state">Mengambil log dari Supabase...</div>}
-            {!supabaseLogsLoading && !supabaseLogsError && supabaseLogs.length === 0 && <div className="state">Tidak ada log error pada rentang waktu ini, atau belum ada konfigurasi log yang sesuai.</div>}
-            {!supabaseLogsLoading && supabaseLogs.length > 0 && (
-              <div className="wrap">
-                <table>
-                  <thead><tr><th>Waktu</th><th>Status</th><th>Metode</th><th>Endpoint</th><th>Pesan</th></tr></thead>
-                  <tbody>
-                    {supabaseLogs.map((log, index) => (
-                      <tr key={String(log.timestamp || index) + '-' + index}>
-                        <td>{log.timestamp ? new Date(log.timestamp).toLocaleString('id-ID') : '—'}</td>
-                        <td><span className={Number(log.status) >= 400 ? 'employee-status inactive' : 'employee-status active'}>{log.status || '—'}</span></td>
-                        <td>{log.method || '—'}</td>
-                        <td>{log.path || '—'}</td>
-                        <td>{log.event_message || 'Tidak ada pesan tambahan.'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            {!supabaseLogsVerified ? (
+              <div className="state">
+                <h3>Verifikasi akses</h3>
+                <p>Masukkan PIN angka 6 digit untuk membuka Riwayat Aktivitas. Verifikasi berlaku selama 10 menit.</p>
+                <form onSubmit={handleVerifySupabaseLogs} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
+                  <input
+                    aria-label="PIN Riwayat Aktivitas"
+                    type="password"
+                    inputMode="numeric"
+                    pattern="[0-9]{6}"
+                    autoComplete="off"
+                    maxLength={6}
+                    value={supabaseLogsCode}
+                    onChange={(event) => setSupabaseLogsCode(event.target.value.replace(/\\D/g, '').slice(0, 6))}
+                    placeholder="Masukkan 6 digit PIN"
+                    style={{ width: 220, textAlign: 'center', letterSpacing: '0.35em' }}
+                    disabled={supabaseLogsVerifyLoading}
+                  />
+                  <button className="focus-toggle" type="submit" disabled={supabaseLogsVerifyLoading || supabaseLogsCode.length !== 6}>
+                    {supabaseLogsVerifyLoading ? 'Memverifikasi...' : 'Verifikasi'}
+                  </button>
+                </form>
+                {supabaseLogsError && <div className="state error">{supabaseLogsError}</div>}
               </div>
+            ) : (
+              <>
+                {supabaseLogsWindow && <p className="meta">Periode: {new Date(supabaseLogsWindow.start).toLocaleString('id-ID')} – {new Date(supabaseLogsWindow.end).toLocaleString('id-ID')}</p>}
+                {supabaseLogsError && <div className="state error">{supabaseLogsError}</div>}
+                {supabaseLogsLoading && <div className="state">Mengambil log dari Supabase...</div>}
+                {!supabaseLogsLoading && !supabaseLogsError && supabaseLogs.length === 0 && <div className="state">Tidak ada log error pada rentang waktu ini, atau belum ada konfigurasi log yang sesuai.</div>}
+                {!supabaseLogsLoading && supabaseLogs.length > 0 && (
+                  <div className="wrap">
+                    <table>
+                      <thead><tr><th>Waktu</th><th>Status</th><th>Metode</th><th>Endpoint</th><th>Pesan</th></tr></thead>
+                      <tbody>
+                        {supabaseLogs.map((log, index) => (
+                          <tr key={String(log.timestamp || index) + '-' + index}>
+                            <td>{log.timestamp ? new Date(log.timestamp).toLocaleString('id-ID') : '—'}</td>
+                            <td><span className={Number(log.status) >= 400 ? 'employee-status inactive' : 'employee-status active'}>{log.status || '—'}</span></td>
+                            <td>{log.method || '—'}</td>
+                            <td>{log.path || '—'}</td>
+                            <td>{log.event_message || 'Tidak ada pesan tambahan.'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                <p className="meta">Catatan: log teknis tidak selalu menyimpan data yang dikirim atau nilai sebelum/sesudah perubahan.</p>
+              </>
             )}
-            <p className="meta">Catatan: log teknis tidak selalu menyimpan data yang dikirim atau nilai sebelum/sesudah perubahan.</p>
           </section>
         ) : activeTab === 'employees' ? (
           <section className="card employee-master-card">
