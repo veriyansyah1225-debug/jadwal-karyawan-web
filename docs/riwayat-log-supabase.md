@@ -21,3 +21,18 @@ Token Management API hanya boleh disimpan sebagai environment variable server-si
 - Riwayat lama di luar rentang waktu log yang tersedia tidak ditambahkan.
 - Fitur ini tidak mengubah schema database atau data jadwal.
 - Setelah variabel lingkungan disimpan, deployment perlu dibuat ulang agar fungsi server membaca konfigurasi baru.
+
+
+## Verifikasi PIN sebelum melihat log
+
+Menu Riwayat Aktivitas meminta PIN numerik 6 digit setelah login Admin. Verifikasi berlaku 10 menit melalui cookie `HttpOnly`, `Secure`, dan `SameSite=Strict`; endpoint log memvalidasi cookie di server sehingga pemeriksaan tidak hanya mengandalkan UI browser.
+
+Tambahkan environment variable **Preview saja** di Vercel:
+
+- `RIWAYAT_LOG_PIN`: PIN numerik 6 digit. Simpan sebagai **Secret**. Jangan gunakan PIN yang sama dengan PIN/perangkat/akun lain.
+- `SUPABASE_ACCESS_TOKEN` tetap sebagai **Secret**, dengan izin hanya membaca log proyek yang diperlukan.
+- `SUPABASE_PROJECT_REF` dapat bertipe **Config** dan harus berisi ref proyek V1.
+
+Setelah menambahkan atau mengubah variabel, buat deployment Preview baru. Jangan mengaktifkan fitur di Production sebelum pengujian akses selesai.
+
+**Batasan:** pembatasan percobaan PIN saat ini menggunakan memori proses serverless sebagai pengaman best-effort; itu bukan rate limiter terdistribusi yang persisten. Sebelum Production, tambahkan pembatasan percobaan yang persisten (misalnya Vercel Firewall/layanan rate-limit) atau gunakan autentikasi faktor kedua yang dikelola terpusat. Jangan menganggap in-memory limit cukup untuk menghadapi percobaan otomatis lintas banyak instance.
