@@ -1393,18 +1393,23 @@ function App() {
         }
       }
 
+      // Load every schedule row in this month, including placement rows such as KANTIN/LONDRY.
       const { data: existing, error: existingError } = await supabase
         .from('employee_schedules')
-        .select('tanggal,schedule_code_id,keterangan')
+        .select('tanggal,schedule_code_id,job_id,department_id,keterangan')
         .eq('employee_id', Number(bulkScheduleEmployee.employeeId))
         .gte('tanggal', monthStart)
         .lte('tanggal', monthEnd)
-        .not('schedule_code_id', 'is', null)
 
       if (existingError) throw new Error(existingError.message)
 
       const existingByDate = new Map((existing || []).map((item) => [String(item.tanggal), item]))
-      const staleDates = [...existingByDate.keys()].filter((date) => !desiredByDate.has(date))
+      const existingCodeDates = new Set(
+        (existing || [])
+          .filter((item) => item.schedule_code_id !== null)
+          .map((item) => String(item.tanggal)),
+      )
+      const staleDates = [...existingCodeDates].filter((date) => !desiredByDate.has(date))
 
       if (staleDates.length) {
         const { error: deleteError } = await supabase
@@ -1426,6 +1431,8 @@ function App() {
           employee_id: Number(bulkScheduleEmployee.employeeId),
           tanggal: item.date,
           schedule_code_id: item.codeId,
+          job_id: null,
+          department_id: existingByDate.get(item.date)?.department_id ?? null,
           keterangan: existingByDate.get(item.date)?.keterangan || null,
         }))
         const { error: upsertError } = await supabase
@@ -1443,7 +1450,7 @@ function App() {
     }
   }
 
-  async function deleteAdminSchedule(employeeId, date, employeeName) {
+async function deleteAdminSchedule(employeeId, date, employeeName) {
     if (!supabase || !isAdmin) return false
 
     const confirmed = window.confirm(
