@@ -4,7 +4,7 @@ Fitur ini menampilkan hingga 100 permintaan API Supabase yang berstatus HTTP 400
 
 ## Environment variables di Vercel
 
-Atur di proyek Vercel V1 (jadwal-karyawan-web) untuk environment Production dan Preview yang ingin diuji:
+Untuk pengujian, atur variabel berikut di proyek Vercel V1 (`jadwal-karyawan-web`) pada environment **Preview saja**. Jangan tambahkan token Management API ke Production sebelum fitur ditinjau dan disetujui:
 
 - VITE_SUPABASE_URL: URL Supabase V1 yang sudah dipakai aplikasi.
 - VITE_SUPABASE_ANON_KEY: anon/publishable key Supabase V1 yang sudah dipakai aplikasi.
