@@ -2141,7 +2141,9 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
             ) : (
               <form className="bulk-schedule-form" onSubmit={handleBulkScheduleSave}>
                 <div className="bulk-schedule-help">
-                  Isi nomor tanggal dipisahkan koma. Contoh: <strong>L = 1, 6, 9, 10</strong> atau <strong>M = 2, 3, 4, 10, 12, 13</strong>. Tanggal yang tidak masuk ke kode mana pun akan dikosongkan sehingga karyawan dianggap masuk kerja.
+                  Atur tanggal libur/cuti berdasarkan kode di bawah. Contoh: <strong>L = 1, 6, 9, 10</strong> atau <strong>CT = 12, 20</strong>.
+                  <br />
+                  <strong>Penting:</strong> perubahan ini hanya mengubah kode jadwal (P/S/M/L/CT). Penempatan JOB seperti KANTIN dan LONDRY pada tanggal lain tetap dipertahankan. Jika suatu tanggal yang sedang berisi penempatan JOB Anda isi sebagai L atau CT, penempatan pada tanggal itu akan diganti menjadi kode libur/cuti.
                 </div>
                 <div className="bulk-schedule-grid">
                   {adminScheduleCodes.map((item) => (
