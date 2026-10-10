@@ -4,7 +4,12 @@ function hasValidLogAccess(req, accessToken) {
   const cookieHeader = req.headers.cookie || '';
   const cookie = cookieHeader.split(';').map((part) => part.trim()).find((part) => part.startsWith('riwayat_log_access='));
   if (!cookie) return false;
-  const value = decodeURIComponent(cookie.slice('riwayat_log_access='.length));
+  let value;
+  try {
+    value = decodeURIComponent(cookie.slice('riwayat_log_access='.length));
+  } catch {
+    return false;
+  }
   const [expiryText, suppliedSignature] = value.split('.');
   const expiry = Number(expiryText);
   if (!Number.isInteger(expiry) || expiry <= Math.floor(Date.now() / 1000) || !suppliedSignature) return false;
