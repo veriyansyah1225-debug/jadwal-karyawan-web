@@ -16,8 +16,8 @@ function hasValidLogAccess(req, accessToken) {
 
 function sanitizeLogMessage(value) {
   return String(value || 'Tidak ada pesan tambahan.')
-    .replace(/(https?:\\/\\/[^\\s?]+)\\?[^\\s]*/gi, '$1?[parameter disembunyikan]')
-    .replace(/((?:access_token|refresh_token|apikey|api_key|authorization|password|token)=)[^&\\s]+/gi, '$1[disembunyikan]')
+    .replace(/(https?:\/\/[^\s?]+)\?[^\s]*/gi, '$1?[parameter disembunyikan]')
+    .replace(/((?:access_token|refresh_token|apikey|api_key|authorization|password|token)=)[^&\s]+/gi, '$1[disembunyikan]')
     .slice(0, 500);
 }
 
