@@ -10,7 +10,8 @@ create index if not exists login_history_user_id_idx on public.login_history (us
 
 alter table public.login_history enable row level security;
 
-grant select, insert on public.login_history to authenticated;
+grant select on public.login_history to authenticated;
+grant insert (user_id, user_agent) on public.login_history to authenticated;
 
 create policy login_history_admin_read
   on public.login_history for select to authenticated
