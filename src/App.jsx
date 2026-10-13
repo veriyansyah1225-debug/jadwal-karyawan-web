@@ -332,7 +332,7 @@ function App() {
   const [adminDeleteLoading, setAdminDeleteLoading] = useState(false)
   const [adminDeleteError, setAdminDeleteError] = useState('')
   const [activeTab, setActiveTab] = useState('schedule')
-  const [activeLogTab, setActiveLogTab] = useState('errors')
+  const [activeLogTab, setActiveLogTab] = useState('')
   const [supabaseLogsLoaded, setSupabaseLogsLoaded] = useState(false)
   const [loginDateTo, setLoginDateTo] = useState(toInputDate(new Date()))
   const [loginDateFrom, setLoginDateFrom] = useState(toInputDate(new Date(Date.now() - 6 * 24 * 60 * 60 * 1000)))
@@ -781,6 +781,7 @@ function App() {
       if (!response.ok) throw new Error(payload?.error || 'Verifikasi gagal.')
       setSupabaseLogsCode('')
       setSupabaseLogsVerified(true)
+      setActiveLogTab('')
       setSupabaseLogsLoaded(false)
       setSupabaseLogs([])
       setSupabaseLogsError('')
@@ -2007,7 +2008,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
               </>
             )}
           </section>
-            ) : (
+            ) : activeLogTab === 'login' ? (
               <section className="card">
                 <div className="title">
                   <div>
@@ -2055,6 +2056,10 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
                     </div>
                   </>
                 )}
+              </section>
+            ) : (
+              <section className="card">
+                <div className="state">Pilih tab <strong>Log Error</strong> atau <strong>Riwayat Login User</strong> untuk membuka data.</div>
               </section>
             )}
           </>
