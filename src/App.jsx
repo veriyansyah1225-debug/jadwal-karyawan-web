@@ -332,6 +332,7 @@ function App() {
   const [adminDeleteLoading, setAdminDeleteLoading] = useState(false)
   const [adminDeleteError, setAdminDeleteError] = useState('')
   const [activeTab, setActiveTab] = useState('schedule')
+  const [activeLogTab, setActiveLogTab] = useState('errors')
   const [supabaseLogs, setSupabaseLogs] = useState([])
   const [supabaseLogsLoading, setSupabaseLogsLoading] = useState(false)
   const [supabaseLogsError, setSupabaseLogsError] = useState('')
@@ -1803,7 +1804,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
         <nav className="nav">
           <button type="button" className={activeTab === 'schedule' ? 'nav-settings active' : 'nav-settings'} onClick={() => setActiveTab('schedule')}>⌂ &nbsp; Jadwal Karyawan</button>
           <button type="button" className={activeTab === 'employees' ? 'nav-settings active' : 'nav-settings'} onClick={() => setActiveTab('employees')}>♟ &nbsp; Karyawan</button>
-          {isAdmin && <button type="button" className={activeTab === 'logs' ? 'nav-settings active' : 'nav-settings'} onClick={() => { setActiveTab('logs'); loadSupabaseLogs() }}>◷ &nbsp; Riwayat Aktivitas</button>}
+          {isAdmin && <button type="button" className={activeTab === 'logs' ? 'nav-settings active' : 'nav-settings'} onClick={() => setActiveTab('logs')}>◷ &nbsp; Riwayat Aktivitas</button>}
           <div>▦ &nbsp; Departemen</div>
           <div>▣ &nbsp; JOB</div>
           <div>☷ &nbsp; Kode Jadwal</div>
@@ -1825,6 +1826,14 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
         <p className="sub">{activeTab === 'employees' ? 'Kelola data master karyawan dan status kepegawaian.' : activeTab === 'logs' ? 'Log permintaan API Supabase yang gagal dalam 24 jam terakhir.' : 'Frontend awal berdasarkan Prototype UI v2'}</p>
 
         {activeTab === 'logs' ? (
+          <>
+            <section className="card log-tabs-card">
+              <div className="log-tabs" role="tablist" aria-label="Riwayat Aktivitas">
+                <button type="button" role="tab" aria-selected={activeLogTab === 'errors'} className={activeLogTab === 'errors' ? 'log-tab active' : 'log-tab'} onClick={() => setActiveLogTab('errors')}>Log Error</button>
+                <button type="button" role="tab" aria-selected={activeLogTab === 'login'} className={activeLogTab === 'login' ? 'log-tab active' : 'log-tab'} onClick={() => setActiveLogTab('login')}>Riwayat Login User</button>
+              </div>
+            </section>
+            {activeLogTab === 'errors' ? (
           <section className="card">
             <div className="title">
               <div>
@@ -1887,6 +1896,21 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
               </>
             )}
           </section>
+            ) : (
+              <section className="card">
+                <div className="title">
+                  <div>
+                    <h2>Riwayat Login User</h2>
+                    <div className="meta">Khusus Admin · data hanya akan dimuat saat diperlukan</div>
+                  </div>
+                </div>
+                <div className="state">
+                  <h3>Integrasi riwayat login belum diaktifkan</h3>
+                  <p>Tab ini belum mengambil data dari database. Sumber audit login dan endpoint pembacaan akan disiapkan terlebih dahulu agar aksesnya tetap terbatas untuk Admin.</p>
+                </div>
+              </section>
+            )}
+          </>
         ) : activeTab === 'employees' ? (
           <section className="card employee-master-card">
             <div className="title">
