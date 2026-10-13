@@ -811,6 +811,17 @@ function App() {
       return
     }
 
+    // Catat login berhasil. Kegagalan pencatatan tidak boleh menghalangi login.
+    try {
+      const { error: historyInsertError } = await supabase.from('login_history').insert({
+        user_id: data.user.id,
+        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 1000) : null,
+      })
+      if (historyInsertError) console.warn('Riwayat login tidak berhasil dicatat.')
+    } catch {
+      console.warn('Riwayat login tidak berhasil dicatat.')
+    }
+
     setSession(data.session)
     setUserProfile(profile)
     setIsAdmin(profile.role === 'admin')
