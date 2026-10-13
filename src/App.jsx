@@ -705,7 +705,12 @@ function App() {
       })))
       setLoginHistoryLoaded(true)
     } catch (historyError) {
-      setLoginHistoryError(historyError.message || 'Gagal mengambil riwayat login.')
+      const message = historyError.message || ''
+      if (message.includes("Could not find the table 'public.login_history'") || message.includes('schema cache')) {
+        setLoginHistoryError('Tabel riwayat login belum tersedia di database. Migrasi login_history perlu diterapkan pada Supabase V1 terlebih dahulu.')
+      } else {
+        setLoginHistoryError(message || 'Gagal mengambil riwayat login.')
+      }
       setLoginHistoryLoaded(false)
     } finally {
       setLoginHistoryLoading(false)
