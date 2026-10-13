@@ -1904,6 +1904,38 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
         <p className="sub">{activeTab === 'employees' ? 'Kelola data master karyawan dan status kepegawaian.' : activeTab === 'logs' ? 'Log permintaan API Supabase yang gagal dalam 24 jam terakhir.' : 'Frontend awal berdasarkan Prototype UI v2'}</p>
 
         {activeTab === 'logs' ? (
+          !supabaseLogsVerified ? (
+            <section className="card">
+              <div className="title">
+                <div>
+                  <h2>Verifikasi Riwayat Aktivitas</h2>
+                  <div className="meta">Khusus Admin · verifikasi berlaku selama 10 menit</div>
+                </div>
+              </div>
+              <div className="state">
+                <p>Masukkan PIN angka 6 digit untuk membuka menu Log Error dan Riwayat Login User.</p>
+                <form onSubmit={handleVerifySupabaseLogs} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
+                  <input
+                    aria-label="PIN Riwayat Aktivitas"
+                    type="password"
+                    inputMode="numeric"
+                    pattern="[0-9]{6}"
+                    autoComplete="off"
+                    maxLength={6}
+                    value={supabaseLogsCode}
+                    onChange={(event) => setSupabaseLogsCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="Masukkan 6 digit PIN"
+                    style={{ width: 220, textAlign: 'center', letterSpacing: '0.35em' }}
+                    disabled={supabaseLogsVerifyLoading}
+                  />
+                  <button className="focus-toggle" type="submit" disabled={supabaseLogsVerifyLoading || supabaseLogsCode.length !== 6}>
+                    {supabaseLogsVerifyLoading ? 'Memverifikasi...' : 'Verifikasi'}
+                  </button>
+                </form>
+                {supabaseLogsError && <div className="state error">{supabaseLogsError}</div>}
+              </div>
+            </section>
+          ) : (
           <>
             <section className="card log-tabs-card">
               <div className="log-tabs" role="tablist" aria-label="Riwayat Aktivitas">
@@ -2026,6 +2058,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
               </section>
             )}
           </>
+          )
         ) : activeTab === 'employees' ? (
           <section className="card employee-master-card">
             <div className="title">
