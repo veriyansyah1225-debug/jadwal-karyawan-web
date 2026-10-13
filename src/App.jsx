@@ -660,6 +660,58 @@ function App() {
     }
   }, [])
 
+  async function loadLoginHistory() {
+    if (!isAdmin || !session?.user?.id) {
+      setLoginHistoryError('Riwayat login hanya dapat diakses oleh Admin.')
+      return
+    }
+    if (!loginDateFrom || !loginDateTo || loginDateFrom > loginDateTo) {
+      setLoginHistoryError('Rentang tanggal tidak valid.')
+      return
+    }
+
+    setLoginHistoryLoading(true)
+    setLoginHistoryError('')
+    try {
+      const start = new Date(loginDateFrom + 'T00:00:00')
+      const endExclusive = new Date(loginDateTo + 'T00:00:00')
+      endExclusive.setDate(endExclusive.getDate() + 1)
+
+      const { data: history, error: historyError } = await supabase
+        .from('login_history')
+        .select('id,user_id,created_at,user_agent')
+        .gte('created_at', start.toISOString())
+        .lt('created_at', endExclusive.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(500)
+
+      if (historyError) throw historyError
+
+      const userIds = [...new Set((history || []).map((item) => item.user_id).filter(Boolean))]
+      let profilesById = {}
+      if (userIds.length) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from('user_profiles')
+          .select('user_id,nama,email')
+          .in('user_id', userIds)
+        if (profilesError) throw profilesError
+        profilesById = Object.fromEntries((profiles || []).map((item) => [item.user_id, item]))
+      }
+
+      setLoginHistoryRows((history || []).map((item) => ({
+        ...item,
+        nama: profilesById[item.user_id]?.nama || 'Nama tidak tersedia',
+        email: profilesById[item.user_id]?.email || '—',
+      })))
+      setLoginHistoryLoaded(true)
+    } catch (historyError) {
+      setLoginHistoryError(historyError.message || 'Gagal mengambil riwayat login.')
+      setLoginHistoryLoaded(false)
+    } finally {
+      setLoginHistoryLoading(false)
+    }
+  }
+
   async function loadSupabaseLogs() {
     if (!isAdmin || !session?.access_token) {
       setSupabaseLogsVerified(false)
