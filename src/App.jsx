@@ -332,6 +332,14 @@ function App() {
   const [adminDeleteLoading, setAdminDeleteLoading] = useState(false)
   const [adminDeleteError, setAdminDeleteError] = useState('')
   const [activeTab, setActiveTab] = useState('schedule')
+  const [activeLogTab, setActiveLogTab] = useState('')
+  const [supabaseLogsLoaded, setSupabaseLogsLoaded] = useState(false)
+  const [loginDateTo, setLoginDateTo] = useState(toInputDate(new Date()))
+  const [loginDateFrom, setLoginDateFrom] = useState(toInputDate(new Date(Date.now() - 6 * 24 * 60 * 60 * 1000)))
+  const [loginHistoryRows, setLoginHistoryRows] = useState([])
+  const [loginHistoryLoading, setLoginHistoryLoading] = useState(false)
+  const [loginHistoryLoaded, setLoginHistoryLoaded] = useState(false)
+  const [loginHistoryError, setLoginHistoryError] = useState('')
   const [supabaseLogs, setSupabaseLogs] = useState([])
   const [supabaseLogsLoading, setSupabaseLogsLoading] = useState(false)
   const [supabaseLogsError, setSupabaseLogsError] = useState('')
@@ -652,6 +660,63 @@ function App() {
     }
   }, [])
 
+  async function loadLoginHistory() {
+    if (!isAdmin || !session?.user?.id) {
+      setLoginHistoryError('Riwayat login hanya dapat diakses oleh Admin.')
+      return
+    }
+    if (!loginDateFrom || !loginDateTo || loginDateFrom > loginDateTo) {
+      setLoginHistoryError('Rentang tanggal tidak valid.')
+      return
+    }
+
+    setLoginHistoryLoading(true)
+    setLoginHistoryError('')
+    try {
+      const start = new Date(loginDateFrom + 'T00:00:00')
+      const endExclusive = new Date(loginDateTo + 'T00:00:00')
+      endExclusive.setDate(endExclusive.getDate() + 1)
+
+      const { data: history, error: historyError } = await supabase
+        .from('login_history')
+        .select('id,user_id,created_at,user_agent')
+        .gte('created_at', start.toISOString())
+        .lt('created_at', endExclusive.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(500)
+
+      if (historyError) throw historyError
+
+      const userIds = [...new Set((history || []).map((item) => item.user_id).filter(Boolean))]
+      let profilesById = {}
+      if (userIds.length) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from('user_profiles')
+          .select('user_id,nama,email')
+          .in('user_id', userIds)
+        if (profilesError) throw profilesError
+        profilesById = Object.fromEntries((profiles || []).map((item) => [item.user_id, item]))
+      }
+
+      setLoginHistoryRows((history || []).map((item) => ({
+        ...item,
+        nama: profilesById[item.user_id]?.nama || 'Nama tidak tersedia',
+        email: profilesById[item.user_id]?.email || '—',
+      })))
+      setLoginHistoryLoaded(true)
+    } catch (historyError) {
+      const message = historyError.message || ''
+      if (message.includes("Could not find the table 'public.login_history'") || message.includes('schema cache')) {
+        setLoginHistoryError('Tabel riwayat login belum tersedia di database. Migrasi login_history perlu diterapkan pada Supabase V1 terlebih dahulu.')
+      } else {
+        setLoginHistoryError(message || 'Gagal mengambil riwayat login.')
+      }
+      setLoginHistoryLoaded(false)
+    } finally {
+      setLoginHistoryLoading(false)
+    }
+  }
+
   async function loadSupabaseLogs() {
     if (!isAdmin || !session?.access_token) {
       setSupabaseLogsVerified(false)
@@ -682,6 +747,7 @@ function App() {
       if (!response.ok) throw new Error(payload?.error || 'Gagal mengambil log.')
       setSupabaseLogs(Array.isArray(payload.logs) ? payload.logs : [])
       setSupabaseLogsWindow({ start: payload.windowStart, end: payload.windowEnd })
+      setSupabaseLogsLoaded(true)
     } catch (logError) {
       setSupabaseLogsError(logError.message || 'Gagal mengambil log Supabase.')
     } finally {
@@ -715,7 +781,10 @@ function App() {
       if (!response.ok) throw new Error(payload?.error || 'Verifikasi gagal.')
       setSupabaseLogsCode('')
       setSupabaseLogsVerified(true)
-      await loadSupabaseLogs()
+      setActiveLogTab('')
+      setSupabaseLogsLoaded(false)
+      setSupabaseLogs([])
+      setSupabaseLogsError('')
     } catch (verifyError) {
       setSupabaseLogsError(verifyError.message || 'Verifikasi gagal.')
     } finally {
@@ -798,6 +867,17 @@ function App() {
       setAuthError('Akun berhasil login, tetapi belum memiliki akses ke sistem. Silakan hubungi Admin.')
       setAuthLoading(false)
       return
+    }
+
+    // Catat login berhasil. Kegagalan pencatatan tidak boleh menghalangi login.
+    try {
+      const { error: historyInsertError } = await supabase.from('login_history').insert({
+        user_id: data.user.id,
+        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 1000) : null,
+      })
+      if (historyInsertError) console.warn('Riwayat login tidak berhasil dicatat.')
+    } catch {
+      console.warn('Riwayat login tidak berhasil dicatat.')
     }
 
     setSession(data.session)
@@ -1803,7 +1883,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
         <nav className="nav">
           <button type="button" className={activeTab === 'schedule' ? 'nav-settings active' : 'nav-settings'} onClick={() => setActiveTab('schedule')}>⌂ &nbsp; Jadwal Karyawan</button>
           <button type="button" className={activeTab === 'employees' ? 'nav-settings active' : 'nav-settings'} onClick={() => setActiveTab('employees')}>♟ &nbsp; Karyawan</button>
-          {isAdmin && <button type="button" className={activeTab === 'logs' ? 'nav-settings active' : 'nav-settings'} onClick={() => { setActiveTab('logs'); loadSupabaseLogs() }}>◷ &nbsp; Riwayat Aktivitas</button>}
+          {isAdmin && <button type="button" className={activeTab === 'logs' ? 'nav-settings active' : 'nav-settings'} onClick={() => setActiveTab('logs')}>◷ &nbsp; Riwayat Aktivitas</button>}
           <div>▦ &nbsp; Departemen</div>
           <div>▣ &nbsp; JOB</div>
           <div>☷ &nbsp; Kode Jadwal</div>
@@ -1825,6 +1905,46 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
         <p className="sub">{activeTab === 'employees' ? 'Kelola data master karyawan dan status kepegawaian.' : activeTab === 'logs' ? 'Log permintaan API Supabase yang gagal dalam 24 jam terakhir.' : 'Frontend awal berdasarkan Prototype UI v2'}</p>
 
         {activeTab === 'logs' ? (
+          !supabaseLogsVerified ? (
+            <section className="card">
+              <div className="title">
+                <div>
+                  <h2>Verifikasi Riwayat Aktivitas</h2>
+                  <div className="meta">Khusus Admin · verifikasi berlaku selama 10 menit</div>
+                </div>
+              </div>
+              <div className="state">
+                <p>Masukkan PIN angka 6 digit untuk membuka menu Log Error dan Riwayat Login User.</p>
+                <form onSubmit={handleVerifySupabaseLogs} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
+                  <input
+                    aria-label="PIN Riwayat Aktivitas"
+                    type="password"
+                    inputMode="numeric"
+                    pattern="[0-9]{6}"
+                    autoComplete="off"
+                    maxLength={6}
+                    value={supabaseLogsCode}
+                    onChange={(event) => setSupabaseLogsCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="Masukkan 6 digit PIN"
+                    style={{ width: 220, textAlign: 'center', letterSpacing: '0.35em' }}
+                    disabled={supabaseLogsVerifyLoading}
+                  />
+                  <button className="focus-toggle" type="submit" disabled={supabaseLogsVerifyLoading || supabaseLogsCode.length !== 6}>
+                    {supabaseLogsVerifyLoading ? 'Memverifikasi...' : 'Verifikasi'}
+                  </button>
+                </form>
+                {supabaseLogsError && <div className="state error">{supabaseLogsError}</div>}
+              </div>
+            </section>
+          ) : (
+          <>
+            <section className="card log-tabs-card">
+              <div className="log-tabs" role="tablist" aria-label="Riwayat Aktivitas">
+                <button type="button" role="tab" aria-selected={activeLogTab === 'errors'} className={activeLogTab === 'errors' ? 'log-tab active' : 'log-tab'} onClick={() => { setActiveLogTab('errors'); if (supabaseLogsVerified && !supabaseLogsLoaded) loadSupabaseLogs() }}>Log Error</button>
+                <button type="button" role="tab" aria-selected={activeLogTab === 'login'} className={activeLogTab === 'login' ? 'log-tab active' : 'log-tab'} onClick={() => { setActiveLogTab('login'); if (!loginHistoryLoaded) loadLoginHistory() }}>Riwayat Login User</button>
+              </div>
+            </section>
+            {activeLogTab === 'errors' ? (
           <section className="card">
             <div className="title">
               <div>
@@ -1864,7 +1984,8 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
                 {supabaseLogsWindow && <p className="meta">Periode: {new Date(supabaseLogsWindow.start).toLocaleString('id-ID')} – {new Date(supabaseLogsWindow.end).toLocaleString('id-ID')}</p>}
                 {supabaseLogsError && <div className="state error">{supabaseLogsError}</div>}
                 {supabaseLogsLoading && <div className="state">Mengambil log dari Supabase...</div>}
-                {!supabaseLogsLoading && !supabaseLogsError && supabaseLogs.length === 0 && <div className="state">Tidak ada log error pada rentang waktu ini, atau belum ada konfigurasi log yang sesuai.</div>}
+                {!supabaseLogsLoading && !supabaseLogsLoaded && !supabaseLogsError && <div className="state">PIN sudah diverifikasi. Klik tab <strong>Log Error</strong> untuk mengambil data dari Supabase.</div>}
+                {!supabaseLogsLoading && supabaseLogsLoaded && !supabaseLogsError && supabaseLogs.length === 0 && <div className="state">Tidak ada log error pada rentang waktu ini, atau belum ada konfigurasi log yang sesuai.</div>}
                 {!supabaseLogsLoading && supabaseLogs.length > 0 && (
                   <div className="wrap">
                     <table>
@@ -1887,6 +2008,62 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
               </>
             )}
           </section>
+            ) : activeLogTab === 'login' ? (
+              <section className="card">
+                <div className="title">
+                  <div>
+                    <h2>Riwayat Login User</h2>
+                    <div className="meta">Khusus Admin · data hanya akan dimuat saat diperlukan</div>
+                  </div>
+                </div>
+                <div className="filters login-history-filters">
+                  <div>
+                    <label htmlFor="login-date-from">Dari Tanggal</label>
+                    <input id="login-date-from" type="date" value={loginDateFrom} max={loginDateTo} onChange={(event) => setLoginDateFrom(event.target.value)} />
+                  </div>
+                  <div>
+                    <label htmlFor="login-date-to">Sampai Tanggal</label>
+                    <input id="login-date-to" type="date" value={loginDateTo} min={loginDateFrom} onChange={(event) => setLoginDateTo(event.target.value)} />
+                  </div>
+                  <div className="login-history-filter-action">
+                    <label>&nbsp;</label>
+                    <button type="button" className="focus-toggle" onClick={loadLoginHistory} disabled={loginHistoryLoading || !loginDateFrom || !loginDateTo || loginDateFrom > loginDateTo}>
+                      {loginHistoryLoading ? 'Memuat...' : 'Terapkan Filter'}
+                    </button>
+                  </div>
+                </div>
+                {loginHistoryError && <div className="state error">{loginHistoryError}</div>}
+                {loginHistoryLoading && <div className="state">Mengambil riwayat login sesuai rentang tanggal...</div>}
+                {!loginHistoryLoading && !loginHistoryLoaded && !loginHistoryError && <div className="state">Pilih rentang tanggal lalu klik Terapkan Filter untuk memuat riwayat login.</div>}
+                {!loginHistoryLoading && loginHistoryLoaded && loginHistoryRows.length === 0 && <div className="state">Tidak ada riwayat login pada rentang tanggal tersebut.</div>}
+                {!loginHistoryLoading && loginHistoryLoaded && loginHistoryRows.length > 0 && (
+                  <>
+                    <div className="meta">Menampilkan {loginHistoryRows.length} catatan terbaru, maksimal 500 catatan dalam rentang tanggal terpilih.</div>
+                    <div className="wrap">
+                      <table>
+                        <thead><tr><th>Waktu Login</th><th>Nama Pengguna</th><th>Email</th><th>Browser / Perangkat</th></tr></thead>
+                        <tbody>
+                          {loginHistoryRows.map((item) => (
+                            <tr key={item.id}>
+                              <td>{new Date(item.created_at).toLocaleString('id-ID')}</td>
+                              <td>{item.nama}</td>
+                              <td>{item.email}</td>
+                              <td>{item.user_agent || 'Tidak tersedia'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                )}
+              </section>
+            ) : (
+              <section className="card">
+                <div className="state">Pilih tab <strong>Log Error</strong> atau <strong>Riwayat Login User</strong> untuk membuka data.</div>
+              </section>
+            )}
+          </>
+          )
         ) : activeTab === 'employees' ? (
           <section className="card employee-master-card">
             <div className="title">
