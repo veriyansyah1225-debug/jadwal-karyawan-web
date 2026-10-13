@@ -322,3 +322,11 @@
   .bulk-schedule-grid{grid-template-columns:1fr}
   .schedule-name-button{padding:8px 4px}
 }
+
+/* Riwayat Aktivitas: tab dan filter tanggal */
+.log-tabs-card{padding:10px 14px}
+.log-tabs{display:flex;gap:8px;flex-wrap:wrap}
+.log-tabs .log-tab{width:auto;min-width:150px;padding:0 18px;background:#f0f4f9;color:#34445a;border:1px solid #dfe5ee}
+.log-tabs .log-tab.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.login-history-filters{grid-template-columns:repeat(2,minmax(180px,240px));max-width:520px;margin-bottom:16px}
+@media(max-width:700px){.login-history-filters{grid-template-columns:1fr}.log-tabs .log-tab{flex:1;min-width:130px}}
