@@ -1903,7 +1903,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
             <section className="card log-tabs-card">
               <div className="log-tabs" role="tablist" aria-label="Riwayat Aktivitas">
                 <button type="button" role="tab" aria-selected={activeLogTab === 'errors'} className={activeLogTab === 'errors' ? 'log-tab active' : 'log-tab'} onClick={() => { setActiveLogTab('errors'); if (supabaseLogsVerified && !supabaseLogsLoaded) loadSupabaseLogs() }}>Log Error</button>
-                <button type="button" role="tab" aria-selected={activeLogTab === 'login'} className={activeLogTab === 'login' ? 'log-tab active' : 'log-tab'} onClick={() => setActiveLogTab('login')}>Riwayat Login User</button>
+                <button type="button" role="tab" aria-selected={activeLogTab === 'login'} className={activeLogTab === 'login' ? 'log-tab active' : 'log-tab'} onClick={() => { setActiveLogTab('login'); if (!loginHistoryLoaded) loadLoginHistory() }}>Riwayat Login User</button>
               </div>
             </section>
             {activeLogTab === 'errors' ? (
@@ -1987,11 +1987,37 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
                     <label htmlFor="login-date-to">Sampai Tanggal</label>
                     <input id="login-date-to" type="date" value={loginDateTo} min={loginDateFrom} onChange={(event) => setLoginDateTo(event.target.value)} />
                   </div>
+                  <div className="login-history-filter-action">
+                    <label>&nbsp;</label>
+                    <button type="button" className="focus-toggle" onClick={loadLoginHistory} disabled={loginHistoryLoading || !loginDateFrom || !loginDateTo || loginDateFrom > loginDateTo}>
+                      {loginHistoryLoading ? 'Memuat...' : 'Terapkan Filter'}
+                    </button>
+                  </div>
                 </div>
-                <div className="state">
-                  <h3>Integrasi riwayat login belum diaktifkan</h3>
-                  <p>Filter tanggal sudah disiapkan. Data login belum diminta ke database sampai sumber audit dan endpoint pembacaannya terverifikasi.</p>
-                </div>
+                {loginHistoryError && <div className="state error">{loginHistoryError}</div>}
+                {loginHistoryLoading && <div className="state">Mengambil riwayat login sesuai rentang tanggal...</div>}
+                {!loginHistoryLoading && !loginHistoryLoaded && !loginHistoryError && <div className="state">Pilih rentang tanggal lalu klik Terapkan Filter untuk memuat riwayat login.</div>}
+                {!loginHistoryLoading && loginHistoryLoaded && loginHistoryRows.length === 0 && <div className="state">Tidak ada riwayat login pada rentang tanggal tersebut.</div>}
+                {!loginHistoryLoading && loginHistoryLoaded && loginHistoryRows.length > 0 && (
+                  <>
+                    <div className="meta">Menampilkan {loginHistoryRows.length} catatan terbaru, maksimal 500 catatan dalam rentang tanggal terpilih.</div>
+                    <div className="wrap">
+                      <table>
+                        <thead><tr><th>Waktu Login</th><th>Nama Pengguna</th><th>Email</th><th>Browser / Perangkat</th></tr></thead>
+                        <tbody>
+                          {loginHistoryRows.map((item) => (
+                            <tr key={item.id}>
+                              <td>{new Date(item.created_at).toLocaleString('id-ID')}</td>
+                              <td>{item.nama}</td>
+                              <td>{item.email}</td>
+                              <td>{item.user_agent || 'Tidak tersedia'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                )}
               </section>
             )}
           </>
