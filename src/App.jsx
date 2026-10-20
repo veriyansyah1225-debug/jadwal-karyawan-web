@@ -2227,7 +2227,6 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
               <button className="focus-toggle" type="button" onClick={toggleFocusMode}>
                 {focusMode ? 'Kecilkan Jadwal' : 'Perbesar Jadwal'}
               </button>
-              <button className={`employee-count-toggle${showJobColumn ? " active" : ""}`} type="button" onClick={() => setShowJobColumn((value) => !value)} title={showJobColumn ? "Sembunyikan Job" : "Tampilkan Job"}>{showJobColumn ? "Sembunyikan Job" : "Tampilkan Job"}</button>
             </div>
           </div>
 
