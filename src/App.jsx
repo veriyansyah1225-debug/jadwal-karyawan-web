@@ -55,23 +55,27 @@ function getDateRange(startDate, endDate) {
 }
 
 
-function buildExportMatrix(rows, dateRange, includeJob) {
+function buildExportMatrix(rows, dateRange) {
   const header = [
-    ...(includeJob ? ['JOB'] : []),
     'Nama Karyawan',
     ...dateRange.map(({ day, dayName }) => `${day} ${dayName}`),
   ]
+  const body = []
+  let previousJob = null
 
-  const body = rows.map((row) => [
-    ...(includeJob ? [row.job || ''] : []),
-    row.name,
-    ...dateRange.map(({ value }) => row.codes?.[value] || ''),
-  ])
+  for (const row of rows) {
+    const currentJob = (row.job || 'Belum ditentukan').trim()
+    if (currentJob.toLocaleUpperCase() !== previousJob) {
+      body.push([currentJob, ...dateRange.map(() => '')])
+      previousJob = currentJob.toLocaleUpperCase()
+    }
+    body.push([row.name, ...dateRange.map(({ value }) => row.codes?.[value] || '')])
+  }
 
   return [header, ...body]
 }
 
-function exportExcel(rows, dateRange, department, includeJob, startDate, endDate) {
+function exportExcel(rows, dateRange, department, startDate, endDate) {
   if (!rows.length || !dateRange.length) return
 
   const title = [
@@ -80,10 +84,10 @@ function exportExcel(rows, dateRange, department, includeJob, startDate, endDate
     ['Periode: ' + startDate + ' s/d ' + endDate],
     [],
   ]
-  const matrix = [...title, ...buildExportMatrix(rows, dateRange, includeJob)]
+  const matrix = [...title, ...buildExportMatrix(rows, dateRange)]
   const worksheet = XLSX.utils.aoa_to_sheet(matrix)
   const headerRow = title.length
-  const lastColumn = (includeJob ? 2 : 1) + dateRange.length
+  const lastColumn = 1 + dateRange.length
   const lastColumnLetter = XLSX.utils.encode_col(lastColumn - 1)
   const border = {
     top: { style: 'thin', color: { rgb: 'D7DEE9' } },
@@ -99,7 +103,6 @@ function exportExcel(rows, dateRange, department, includeJob, startDate, endDate
     { s: { r: 2, c: 0 }, e: { r: 2, c: lastColumn - 1 } },
   ]
   worksheet['!cols'] = [
-    ...(includeJob ? [{ wch: 22 }] : []),
     { wch: 30 },
     ...dateRange.map(() => ({ wch: 10 })),
   ]
@@ -107,7 +110,7 @@ function exportExcel(rows, dateRange, department, includeJob, startDate, endDate
     { hpt: 24 }, { hpt: 20 }, { hpt: 20 }, { hpt: 8 }, { hpt: 28 },
     ...rows.map(() => ({ hpt: 22 })),
   ]
-  worksheet['!freeze'] = { xSplit: includeJob ? 2 : 1, ySplit: headerRow }
+  worksheet['!freeze'] = { xSplit: 1, ySplit: headerRow }
   worksheet['!autofilter'] = { ref: 'A' + (headerRow + 1) + ':' + lastColumnLetter + (headerRow + rows.length + 1) }
   worksheet['!pageSetup'] = { orientation: 'landscape', paperSize: 8, fitToWidth: 1, fitToHeight: 0 }
   worksheet['!printHeader'] = [(headerRow + 1) + ':' + (headerRow + 1)]
@@ -170,7 +173,7 @@ function exportExcel(rows, dateRange, department, includeJob, startDate, endDate
   XLSX.writeFile(workbook, 'jadwal-karyawan-' + startDate + '-' + endDate + '.xlsx')
 }
 
-function exportPdf(rows, dateRange, department, includeJob, startDate, endDate) {
+function exportPdf(rows, dateRange, department, startDate, endDate) {
   if (!rows.length || !dateRange.length) return
 
   const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3' })
@@ -180,8 +183,7 @@ function exportPdf(rows, dateRange, department, includeJob, startDate, endDate) 
   const titleHeight = 18
   const headerHeight = 12
   const rowHeight = 10
-  const nameWidth = includeJob ? 72 : 82
-  const jobWidth = includeJob ? 30 : 0
+  const nameWidth = 82
   const datesPerPage = dateRange.length
   const dateChunks = [dateRange]
 
@@ -204,7 +206,7 @@ function exportPdf(rows, dateRange, department, includeJob, startDate, endDate) 
 
   for (const dateChunk of dateChunks) {
     const dateWidth = (pageWidth - (margin * 2) - nameWidth - jobWidth) / dateChunk.length
-    const tableWidth = nameWidth + jobWidth + (dateWidth * dateChunk.length)
+    const tableWidth = nameWidth + (dateWidth * dateChunk.length)
     const left = (pageWidth - tableWidth) / 2
 
     for (const rowChunk of rowChunks) {
@@ -228,12 +230,6 @@ function exportPdf(rows, dateRange, department, includeJob, startDate, endDate) 
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(9.5)
 
-      if (includeJob) {
-        pdf.rect(x, y, jobWidth, headerHeight)
-        pdf.text('JOB', x + jobWidth / 2, y + 6.7, { align: 'center' })
-        x += jobWidth
-      }
-
       pdf.rect(x, y, nameWidth, headerHeight)
       pdf.text('Nama Karyawan', x + nameWidth / 2, y + 6.7, { align: 'center' })
       x += nameWidth
@@ -250,17 +246,26 @@ function exportPdf(rows, dateRange, department, includeJob, startDate, endDate) 
       y += headerHeight
       pdf.setFontSize(9)
 
+      let previousJob = null
       for (const row of rowChunk) {
+        const currentJob = (row.job || 'Belum ditentukan').trim()
+        const normalizedJob = currentJob.toLocaleUpperCase()
+        if (normalizedJob !== previousJob) {
+          pdf.setFillColor(238, 243, 248)
+          pdf.rect(left, y, tableWidth, rowHeight, 'F')
+          pdf.setDrawColor(215, 222, 233)
+          pdf.rect(left, y, tableWidth, rowHeight)
+          pdf.setFont('helvetica', 'bold')
+          pdf.setFontSize(9)
+          pdf.setTextColor(20, 32, 51)
+          pdf.text(currentJob, left + 2.5, y + 6.7, { maxWidth: tableWidth - 5 })
+          y += rowHeight
+          previousJob = normalizedJob
+        }
+
         x = left
         pdf.setFont('helvetica', 'normal')
         pdf.setTextColor(20, 32, 51)
-
-        if (includeJob) {
-          pdf.rect(x, y, jobWidth, rowHeight)
-          pdf.text(String(row.job || ''), x + 2.5, y + 6.7, { maxWidth: jobWidth - 5 })
-          x += jobWidth
-        }
-
         pdf.rect(x, y, nameWidth, rowHeight)
         pdf.text(String(row.name || ''), x + 2.5, y + 6.7, { maxWidth: nameWidth - 5 })
         x += nameWidth
@@ -2219,8 +2224,8 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
                 </button>
                 {downloadMenuOpen && (
                   <div className="download-menu-list">
-                    <button type="button" onClick={() => { exportExcel(filteredRows, dateRange, department, showJobColumn, startDate, endDate); setDownloadMenuOpen(false) }}>Excel</button>
-                    <button type="button" onClick={() => { exportPdf(filteredRows, dateRange, department, showJobColumn, startDate, endDate); setDownloadMenuOpen(false) }}>PDF</button>
+                    <button type="button" onClick={() => { exportExcel(filteredRows, dateRange, department, startDate, endDate); setDownloadMenuOpen(false) }}>Excel</button>
+                    <button type="button" onClick={() => { exportPdf(filteredRows, dateRange, department, startDate, endDate); setDownloadMenuOpen(false) }}>PDF</button>
                   </div>
                 )}
               </div>
