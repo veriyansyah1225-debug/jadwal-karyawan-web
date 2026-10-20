@@ -295,7 +295,7 @@ function App() {
   const [endDate, setEndDate] = useState(toInputDate(getMonthEnd(today)))
   const [department, setDepartment] = useState('FARM')
   const [departments, setDepartments] = useState([])
-  const [job, setJob] = useState('')
+  const [selectedJobs, setSelectedJobs] = useState([])
   const [employeeSearch, setEmployeeSearch] = useState('')
   const [selectedEmployees, setSelectedEmployees] = useState([])
   const [employeePickerOpen, setEmployeePickerOpen] = useState(false)
@@ -410,27 +410,29 @@ function App() {
   const invalidRange = Boolean(startDate && endDate && startDate > endDate)
 
   const jobs = useMemo(
-    () => [...new Set(rows.flatMap((row) => row.jobs || (row.job ? [row.job] : [])))].sort(),
+    () => [...new Set(rows.map((row) => row.job).filter(Boolean))].sort((a, b) => a.localeCompare(b)),
     [rows],
   )
 
   const availableEmployees = useMemo(() => {
     const q = employeeSearch.trim().toLowerCase()
     return rows
-      .filter((row) => !job || (row.jobs || []).includes(job))
+      .filter((row) => selectedJobs.length === 0 || selectedJobs.includes(row.job))
       .filter((row) => !q || row.name.toLowerCase().includes(q))
       .sort((a, b) => a.name.localeCompare(b.name))
-  }, [rows, job, employeeSearch])
+  }, [rows, selectedJobs, employeeSearch])
 
   const selectedEmployeeSet = useMemo(() => new Set(selectedEmployees), [selectedEmployees])
 
   const filteredRows = useMemo(() => {
-    return rows.filter((row) =>
-      (!department || row.department === department) &&
-      (!job || (row.jobs || []).includes(job)) &&
-      (selectedEmployees.length === 0 || selectedEmployeeSet.has(String(row.employeeId))),
-    )
-  }, [rows, department, job, selectedEmployees, selectedEmployeeSet])
+    return rows
+      .filter((row) =>
+        (!department || row.department === department) &&
+        (selectedJobs.length === 0 || selectedJobs.includes(row.job)) &&
+        (selectedEmployees.length === 0 || selectedEmployeeSet.has(String(row.employeeId))),
+      )
+      .sort((a, b) => (a.job || 'Belum ditentukan').localeCompare(b.job || 'Belum ditentukan') || a.name.localeCompare(b.name))
+  }, [rows, department, selectedJobs, selectedEmployees, selectedEmployeeSet])
 
   function toggleEmployee(employeeId) {
     const key = String(employeeId)
@@ -452,7 +454,7 @@ function App() {
     const selectedDate = new Date(year, monthIndex, 1)
     setStartDate(toInputDate(getMonthStart(selectedDate)))
     setEndDate(toInputDate(getMonthEnd(selectedDate)))
-    setJob('')
+    setSelectedJobs([])
     setSelectedEmployees([])
     setMonthPickerOpen(false)
   }
@@ -1746,8 +1748,6 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
         // tetap mengikuti master karyawan aktif.
         if (!row) continue
 
-        if (item.nama_job) row.jobs.add(item.nama_job)
-
         const dateKey = String(item.tanggal)
         const normalizedCode = item.kode_jadwal === 'OFF' ? 'L' : item.kode_jadwal
 
@@ -2168,8 +2168,8 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
                 </div>
               )}
             </div>
-            <div><label>Departemen</label><select value={department} onChange={(e) => { setDepartment(e.target.value); setJob(''); setSelectedEmployees([]) }}>{departments.map((item) => <option key={item} value={item}>{item}</option>)}</select></div>
-            <div><label>JOB</label><select value={job} onChange={(e) => { setJob(e.target.value); setSelectedEmployees([]) }}><option value="">Semua</option>{jobs.map((item) => <option key={item}>{item}</option>)}</select></div>
+            <div><label>Departemen</label><select value={department} onChange={(e) => { setDepartment(e.target.value); setSelectedJobs([]); setSelectedEmployees([]) }}>{departments.map((item) => <option key={item} value={item}>{item}</option>)}</select></div>
+            <div><label>JOB (bisa pilih lebih dari satu)</label><select multiple size={Math.min(5, Math.max(2, jobs.length))} value={selectedJobs} onChange={(e) => { setSelectedJobs(Array.from(e.target.selectedOptions, (option) => option.value)); setSelectedEmployees([]) }} aria-label="Filter beberapa JOB">{jobs.map((item) => <option key={item} value={item}>{item}</option>)}</select><small className="meta">Tidak ada pilihan = semua JOB</small></div>
             <div className="employee-filter">
               <label>Pilih Karyawan</label>
               <button type="button" className="employee-picker-trigger" onClick={() => setEmployeePickerOpen((open) => !open)}>
