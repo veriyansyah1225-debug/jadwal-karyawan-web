@@ -296,6 +296,7 @@ function App() {
   const [department, setDepartment] = useState('FARM')
   const [departments, setDepartments] = useState([])
   const [selectedJobs, setSelectedJobs] = useState([])
+  const [jobPickerOpen, setJobPickerOpen] = useState(false)
   const [employeeSearch, setEmployeeSearch] = useState('')
   const [selectedEmployees, setSelectedEmployees] = useState([])
   const [employeePickerOpen, setEmployeePickerOpen] = useState(false)
@@ -2169,7 +2170,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
               )}
             </div>
             <div><label>Departemen</label><select value={department} onChange={(e) => { setDepartment(e.target.value); setSelectedJobs([]); setSelectedEmployees([]) }}>{departments.map((item) => <option key={item} value={item}>{item}</option>)}</select></div>
-            <div><label>JOB (bisa pilih lebih dari satu)</label><select multiple size={Math.min(5, Math.max(2, jobs.length))} value={selectedJobs} onChange={(e) => { setSelectedJobs(Array.from(e.target.selectedOptions, (option) => option.value)); setSelectedEmployees([]) }} aria-label="Filter beberapa JOB">{jobs.map((item) => <option key={item} value={item}>{item}</option>)}</select><small className="meta">Tidak ada pilihan = semua JOB</small></div>
+            <div className="job-filter"><label>JOB</label><button type="button" className="employee-picker-trigger job-picker-trigger" onClick={() => setJobPickerOpen((open) => !open)} aria-expanded={jobPickerOpen}>{selectedJobs.length ? `${selectedJobs.length} JOB dipilih` : 'Semua JOB'}<span>⌄</span></button>{jobPickerOpen && <div className="employee-picker job-picker"><div className="employee-picker-actions"><button type="button" className="picker-action" onClick={() => { setSelectedJobs([]); setSelectedEmployees([]) }}>Semua JOB</button><button type="button" className="picker-action" onClick={() => { setSelectedJobs(jobs); setSelectedEmployees([]) }}>Pilih Semua</button></div><div className="job-picker-list">{jobs.map((item) => <label className="job-picker-option" key={item}><input type="checkbox" checked={selectedJobs.includes(item)} onChange={(e) => { setSelectedJobs((current) => e.target.checked ? [...current, item] : current.filter((value) => value !== item)); setSelectedEmployees([]) }} />{item}</label>)}</div></div>}</div>
             <div className="employee-filter">
               <label>Pilih Karyawan</label>
               <button type="button" className="employee-picker-trigger" onClick={() => setEmployeePickerOpen((open) => !open)}>
