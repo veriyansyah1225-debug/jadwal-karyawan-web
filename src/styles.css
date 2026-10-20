@@ -330,3 +330,12 @@
 .log-tabs .log-tab.active{background:var(--blue);border-color:var(--blue);color:#fff}
 .login-history-filters{grid-template-columns:minmax(180px,240px) minmax(180px,240px) auto;max-width:760px;margin-bottom:16px}.login-history-filter-action{min-width:145px}
 @media(max-width:700px){.login-history-filters{grid-template-columns:1fr}.log-tabs .log-tab{flex:1;min-width:130px}}
+
+/* JOB filter uses a compact checkbox popover so it does not stretch the filter row. */
+.job-filter{position:relative;min-width:0}
+.job-picker-trigger{white-space:nowrap;overflow:hidden}
+.job-picker{min-width:220px;max-height:320px;display:flex;flex-direction:column}
+.job-picker-list{overflow-y:auto;max-height:245px;padding:6px 10px}
+.job-picker-option{display:flex;align-items:center;gap:9px;padding:7px 2px;margin:0;font-size:13px;font-weight:400;cursor:pointer}
+.job-picker-option input{width:16px;height:16px;flex:0 0 16px;margin:0;padding:0}
+@media(max-width:560px){.job-picker{position:fixed;left:14px;right:14px;top:150px;min-width:0}}
