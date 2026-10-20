@@ -2167,7 +2167,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
           </section>
         ) : (
           <>
-        <section className="card">
+        <section className="card filters-card">
           <div className="filters">
             <div><label>Dari Tanggal</label><input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></div>
             <div><label>Sampai Tanggal</label><input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} /></div>
@@ -2223,7 +2223,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
           {invalidRange && <div className="state error date-error">Tanggal awal tidak boleh lebih besar dari tanggal akhir.</div>}
         </section>
 
-        <section className="card">
+        <section className="card schedule-card">
           <div className="title">
             <div>
               <h2>Jadwal {department} — {formatDisplayDate(startDate)}{startDate !== endDate ? ` – ${formatDisplayDate(endDate)}` : ''}</h2>
@@ -2240,6 +2240,9 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
                   </div>
                 )}
               </div>
+              <button className="secondary print-trigger" type="button" onClick={() => { setDownloadMenuOpen(false); setEmployeePickerOpen(false); setJobPickerOpen(false); setMonthPickerOpen(false); window.print() }} disabled={loading || filteredRows.length === 0}>
+                Print Jadwal
+              </button>
               <button className="focus-toggle" type="button" onClick={toggleFocusMode}>
                 {focusMode ? 'Kecilkan Jadwal' : 'Perbesar Jadwal'}
               </button>
