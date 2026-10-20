@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { supabase, supabaseConfigured } from './lib/supabase'
 import jsPDF from 'jspdf'
 import * as XLSX from 'xlsx-js-style'
@@ -55,23 +55,27 @@ function getDateRange(startDate, endDate) {
 }
 
 
-function buildExportMatrix(rows, dateRange, includeJob) {
+function buildExportMatrix(rows, dateRange) {
   const header = [
-    ...(includeJob ? ['JOB'] : []),
     'Nama Karyawan',
     ...dateRange.map(({ day, dayName }) => `${day} ${dayName}`),
   ]
+  const body = []
+  let previousJob = null
 
-  const body = rows.map((row) => [
-    ...(includeJob ? [row.job || ''] : []),
-    row.name,
-    ...dateRange.map(({ value }) => row.codes?.[value] || ''),
-  ])
+  for (const row of rows) {
+    const currentJob = (row.job || 'Belum ditentukan').trim()
+    if (currentJob.toLocaleUpperCase() !== previousJob) {
+      body.push([currentJob, ...dateRange.map(() => '')])
+      previousJob = currentJob.toLocaleUpperCase()
+    }
+    body.push([row.name, ...dateRange.map(({ value }) => row.codes?.[value] || '')])
+  }
 
   return [header, ...body]
 }
 
-function exportExcel(rows, dateRange, department, includeJob, startDate, endDate) {
+function exportExcel(rows, dateRange, department, startDate, endDate) {
   if (!rows.length || !dateRange.length) return
 
   const title = [
@@ -80,10 +84,10 @@ function exportExcel(rows, dateRange, department, includeJob, startDate, endDate
     ['Periode: ' + startDate + ' s/d ' + endDate],
     [],
   ]
-  const matrix = [...title, ...buildExportMatrix(rows, dateRange, includeJob)]
+  const matrix = [...title, ...buildExportMatrix(rows, dateRange)]
   const worksheet = XLSX.utils.aoa_to_sheet(matrix)
   const headerRow = title.length
-  const lastColumn = (includeJob ? 2 : 1) + dateRange.length
+  const lastColumn = 1 + dateRange.length
   const lastColumnLetter = XLSX.utils.encode_col(lastColumn - 1)
   const border = {
     top: { style: 'thin', color: { rgb: 'D7DEE9' } },
@@ -99,16 +103,15 @@ function exportExcel(rows, dateRange, department, includeJob, startDate, endDate
     { s: { r: 2, c: 0 }, e: { r: 2, c: lastColumn - 1 } },
   ]
   worksheet['!cols'] = [
-    ...(includeJob ? [{ wch: 22 }] : []),
     { wch: 30 },
     ...dateRange.map(() => ({ wch: 10 })),
   ]
   worksheet['!rows'] = [
     { hpt: 24 }, { hpt: 20 }, { hpt: 20 }, { hpt: 8 }, { hpt: 28 },
-    ...rows.map(() => ({ hpt: 22 })),
+    ...Array.from({ length: matrix.length - title.length }, (_, index) => ({ hpt: index === 0 ? 22 : 22 })),
   ]
-  worksheet['!freeze'] = { xSplit: includeJob ? 2 : 1, ySplit: headerRow }
-  worksheet['!autofilter'] = { ref: 'A' + (headerRow + 1) + ':' + lastColumnLetter + (headerRow + rows.length + 1) }
+  worksheet['!freeze'] = { xSplit: 1, ySplit: headerRow }
+  worksheet['!autofilter'] = { ref: 'A' + (headerRow + 1) + ':' + lastColumnLetter + matrix.length }
   worksheet['!pageSetup'] = { orientation: 'landscape', paperSize: 8, fitToWidth: 1, fitToHeight: 0 }
   worksheet['!printHeader'] = [(headerRow + 1) + ':' + (headerRow + 1)]
 
@@ -146,12 +149,23 @@ function exportExcel(rows, dateRange, department, includeJob, startDate, endDate
     if (cell) cell.s = headerStyle
   }
 
-  for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
+  for (let rowIndex = 0; rowIndex < matrix.length - headerRow - 1; rowIndex += 1) {
     const sheetRow = headerRow + 1 + rowIndex
     for (let col = 0; col < lastColumn; col += 1) {
       const cell = worksheet[XLSX.utils.encode_cell({ r: sheetRow, c: col })]
       if (!cell) continue
-      const isCodeCell = col >= (includeJob ? 2 : 1)
+      const isGroupRow = col === 0 && String(cell.v || '') !== '' &&
+        Array.from({ length: dateRange.length }, (_, index) => worksheet[XLSX.utils.encode_cell({ r: sheetRow, c: index + 1 })]?.v || '').every((value) => value === '')
+      if (isGroupRow) {
+        cell.s = {
+          font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: '142033' } },
+          fill: { patternType: 'solid', fgColor: { rgb: 'EEF3F8' } },
+          alignment: { horizontal: 'left', vertical: 'center' },
+          border,
+        }
+        continue
+      }
+      const isCodeCell = col >= 1
       if (isCodeCell) {
         const code = String(cell.v || '')
         cell.s = {
@@ -170,7 +184,7 @@ function exportExcel(rows, dateRange, department, includeJob, startDate, endDate
   XLSX.writeFile(workbook, 'jadwal-karyawan-' + startDate + '-' + endDate + '.xlsx')
 }
 
-function exportPdf(rows, dateRange, department, includeJob, startDate, endDate) {
+function exportPdf(rows, dateRange, department, startDate, endDate) {
   if (!rows.length || !dateRange.length) return
 
   const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3' })
@@ -180,8 +194,7 @@ function exportPdf(rows, dateRange, department, includeJob, startDate, endDate) 
   const titleHeight = 18
   const headerHeight = 12
   const rowHeight = 10
-  const nameWidth = includeJob ? 72 : 82
-  const jobWidth = includeJob ? 30 : 0
+  const nameWidth = 82
   const datesPerPage = dateRange.length
   const dateChunks = [dateRange]
 
@@ -203,8 +216,8 @@ function exportPdf(rows, dateRange, department, includeJob, startDate, endDate) 
   let pageNumber = 0
 
   for (const dateChunk of dateChunks) {
-    const dateWidth = (pageWidth - (margin * 2) - nameWidth - jobWidth) / dateChunk.length
-    const tableWidth = nameWidth + jobWidth + (dateWidth * dateChunk.length)
+    const dateWidth = (pageWidth - (margin * 2) - nameWidth) / dateChunk.length
+    const tableWidth = nameWidth + (dateWidth * dateChunk.length)
     const left = (pageWidth - tableWidth) / 2
 
     for (const rowChunk of rowChunks) {
@@ -228,12 +241,6 @@ function exportPdf(rows, dateRange, department, includeJob, startDate, endDate) 
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(9.5)
 
-      if (includeJob) {
-        pdf.rect(x, y, jobWidth, headerHeight)
-        pdf.text('JOB', x + jobWidth / 2, y + 6.7, { align: 'center' })
-        x += jobWidth
-      }
-
       pdf.rect(x, y, nameWidth, headerHeight)
       pdf.text('Nama Karyawan', x + nameWidth / 2, y + 6.7, { align: 'center' })
       x += nameWidth
@@ -250,17 +257,26 @@ function exportPdf(rows, dateRange, department, includeJob, startDate, endDate) 
       y += headerHeight
       pdf.setFontSize(9)
 
+      let previousJob = null
       for (const row of rowChunk) {
+        const currentJob = (row.job || 'Belum ditentukan').trim()
+        const normalizedJob = currentJob.toLocaleUpperCase()
+        if (normalizedJob !== previousJob) {
+          pdf.setFillColor(238, 243, 248)
+          pdf.rect(left, y, tableWidth, rowHeight, 'F')
+          pdf.setDrawColor(215, 222, 233)
+          pdf.rect(left, y, tableWidth, rowHeight)
+          pdf.setFont('helvetica', 'bold')
+          pdf.setFontSize(9)
+          pdf.setTextColor(20, 32, 51)
+          pdf.text(currentJob, left + 2.5, y + 6.7, { maxWidth: tableWidth - 5 })
+          y += rowHeight
+          previousJob = normalizedJob
+        }
+
         x = left
         pdf.setFont('helvetica', 'normal')
         pdf.setTextColor(20, 32, 51)
-
-        if (includeJob) {
-          pdf.rect(x, y, jobWidth, rowHeight)
-          pdf.text(String(row.job || ''), x + 2.5, y + 6.7, { maxWidth: jobWidth - 5 })
-          x += jobWidth
-        }
-
         pdf.rect(x, y, nameWidth, rowHeight)
         pdf.text(String(row.name || ''), x + 2.5, y + 6.7, { maxWidth: nameWidth - 5 })
         x += nameWidth
@@ -295,7 +311,8 @@ function App() {
   const [endDate, setEndDate] = useState(toInputDate(getMonthEnd(today)))
   const [department, setDepartment] = useState('FARM')
   const [departments, setDepartments] = useState([])
-  const [job, setJob] = useState('')
+  const [selectedJobs, setSelectedJobs] = useState([])
+  const [jobPickerOpen, setJobPickerOpen] = useState(false)
   const [employeeSearch, setEmployeeSearch] = useState('')
   const [selectedEmployees, setSelectedEmployees] = useState([])
   const [employeePickerOpen, setEmployeePickerOpen] = useState(false)
@@ -410,27 +427,29 @@ function App() {
   const invalidRange = Boolean(startDate && endDate && startDate > endDate)
 
   const jobs = useMemo(
-    () => [...new Set(rows.flatMap((row) => row.jobs || (row.job ? [row.job] : [])))].sort(),
+    () => [...new Set(rows.map((row) => row.job).filter(Boolean))].sort((a, b) => a.localeCompare(b)),
     [rows],
   )
 
   const availableEmployees = useMemo(() => {
     const q = employeeSearch.trim().toLowerCase()
     return rows
-      .filter((row) => !job || (row.jobs || []).includes(job))
+      .filter((row) => selectedJobs.length === 0 || selectedJobs.includes(row.job))
       .filter((row) => !q || row.name.toLowerCase().includes(q))
       .sort((a, b) => a.name.localeCompare(b.name))
-  }, [rows, job, employeeSearch])
+  }, [rows, selectedJobs, employeeSearch])
 
   const selectedEmployeeSet = useMemo(() => new Set(selectedEmployees), [selectedEmployees])
 
   const filteredRows = useMemo(() => {
-    return rows.filter((row) =>
-      (!department || row.department === department) &&
-      (!job || (row.jobs || []).includes(job)) &&
-      (selectedEmployees.length === 0 || selectedEmployeeSet.has(String(row.employeeId))),
-    )
-  }, [rows, department, job, selectedEmployees, selectedEmployeeSet])
+    return rows
+      .filter((row) =>
+        (!department || row.department === department) &&
+        (selectedJobs.length === 0 || selectedJobs.includes(row.job)) &&
+        (selectedEmployees.length === 0 || selectedEmployeeSet.has(String(row.employeeId))),
+      )
+      .sort((a, b) => (a.job || 'Belum ditentukan').trim().toLocaleUpperCase().localeCompare((b.job || 'Belum ditentukan').trim().toLocaleUpperCase()) || a.name.localeCompare(b.name))
+  }, [rows, department, selectedJobs, selectedEmployees, selectedEmployeeSet])
 
   function toggleEmployee(employeeId) {
     const key = String(employeeId)
@@ -452,7 +471,7 @@ function App() {
     const selectedDate = new Date(year, monthIndex, 1)
     setStartDate(toInputDate(getMonthStart(selectedDate)))
     setEndDate(toInputDate(getMonthEnd(selectedDate)))
-    setJob('')
+    setSelectedJobs([])
     setSelectedEmployees([])
     setMonthPickerOpen(false)
   }
@@ -1746,8 +1765,6 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
         // tetap mengikuti master karyawan aktif.
         if (!row) continue
 
-        if (item.nama_job) row.jobs.add(item.nama_job)
-
         const dateKey = String(item.tanggal)
         const normalizedCode = item.kode_jadwal === 'OFF' ? 'L' : item.kode_jadwal
 
@@ -2150,7 +2167,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
           </section>
         ) : (
           <>
-        <section className="card">
+        <section className="card filters-card">
           <div className="filters">
             <div><label>Dari Tanggal</label><input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></div>
             <div><label>Sampai Tanggal</label><input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} /></div>
@@ -2168,8 +2185,8 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
                 </div>
               )}
             </div>
-            <div><label>Departemen</label><select value={department} onChange={(e) => { setDepartment(e.target.value); setJob(''); setSelectedEmployees([]) }}>{departments.map((item) => <option key={item} value={item}>{item}</option>)}</select></div>
-            <div><label>JOB</label><select value={job} onChange={(e) => { setJob(e.target.value); setSelectedEmployees([]) }}><option value="">Semua</option>{jobs.map((item) => <option key={item}>{item}</option>)}</select></div>
+            <div><label>Departemen</label><select value={department} onChange={(e) => { setDepartment(e.target.value); setSelectedJobs([]); setSelectedEmployees([]) }}>{departments.map((item) => <option key={item} value={item}>{item}</option>)}</select></div>
+            <div className="job-filter"><label>JOB</label><button type="button" className="employee-picker-trigger job-picker-trigger" onClick={() => setJobPickerOpen((open) => !open)} aria-expanded={jobPickerOpen}>{selectedJobs.length ? `${selectedJobs.length} JOB dipilih` : 'Semua JOB'}<span>⌄</span></button>{jobPickerOpen && <div className="employee-picker job-picker"><div className="employee-picker-actions"><button type="button" className="picker-action" onClick={() => { setSelectedJobs([]); setSelectedEmployees([]) }}>Semua JOB</button><button type="button" className="picker-action" onClick={() => { setSelectedJobs(jobs); setSelectedEmployees([]) }}>Pilih Semua</button></div><div className="job-picker-list">{jobs.map((item) => <label className="job-picker-option" key={item}><input type="checkbox" checked={selectedJobs.includes(item)} onChange={(e) => { setSelectedJobs((current) => e.target.checked ? [...current, item] : current.filter((value) => value !== item)); setSelectedEmployees([]) }} />{item}</label>)}</div></div>}</div>
             <div className="employee-filter">
               <label>Pilih Karyawan</label>
               <button type="button" className="employee-picker-trigger" onClick={() => setEmployeePickerOpen((open) => !open)}>
@@ -2206,7 +2223,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
           {invalidRange && <div className="state error date-error">Tanggal awal tidak boleh lebih besar dari tanggal akhir.</div>}
         </section>
 
-        <section className="card">
+        <section className="card schedule-card">
           <div className="title">
             <div>
               <h2>Jadwal {department} — {formatDisplayDate(startDate)}{startDate !== endDate ? ` – ${formatDisplayDate(endDate)}` : ''}</h2>
@@ -2218,15 +2235,17 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
                 </button>
                 {downloadMenuOpen && (
                   <div className="download-menu-list">
-                    <button type="button" onClick={() => { exportExcel(filteredRows, dateRange, department, showJobColumn, startDate, endDate); setDownloadMenuOpen(false) }}>Excel</button>
-                    <button type="button" onClick={() => { exportPdf(filteredRows, dateRange, department, showJobColumn, startDate, endDate); setDownloadMenuOpen(false) }}>PDF</button>
+                    <button type="button" onClick={() => { exportExcel(filteredRows, dateRange, department, startDate, endDate); setDownloadMenuOpen(false) }}>Excel</button>
+                    <button type="button" onClick={() => { exportPdf(filteredRows, dateRange, department, startDate, endDate); setDownloadMenuOpen(false) }}>PDF</button>
                   </div>
                 )}
               </div>
+              <button className="secondary print-trigger" type="button" onClick={() => { setDownloadMenuOpen(false); setEmployeePickerOpen(false); setJobPickerOpen(false); setMonthPickerOpen(false); window.print() }} disabled={loading || filteredRows.length === 0}>
+                Print Jadwal
+              </button>
               <button className="focus-toggle" type="button" onClick={toggleFocusMode}>
                 {focusMode ? 'Kecilkan Jadwal' : 'Perbesar Jadwal'}
               </button>
-              <button className={`employee-count-toggle${showJobColumn ? " active" : ""}`} type="button" onClick={() => setShowJobColumn((value) => !value)} title={showJobColumn ? "Sembunyikan Job" : "Tampilkan Job"}>{showJobColumn ? "Sembunyikan Job" : "Tampilkan Job"}</button>
             </div>
           </div>
 
@@ -2238,7 +2257,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
             <div className="wrap">
               <table>
                 <thead><tr>{showJobColumn && <th className="sticky-job">JOB</th>}<th className={showJobColumn ? "sticky-name" : "sticky-name no-job"}>Nama Karyawan</th>{dateRange.map(({ value, day, dayName }) => <th key={value} className={dayName === "MG" ? "sunday-header" : ""}>{day}<br /><span>{dayName}</span></th>)}</tr></thead>
-                <tbody>{filteredRows.map((row) => <tr key={row.employeeId || row.name}>{showJobColumn && <td className="sticky-job group">{row.job || '—'}</td>}<td className={showJobColumn ? "sticky-name" : "sticky-name no-job"}>{isAdmin ? <button type="button" className="schedule-name-button" onClick={() => openBulkScheduleEditor(row)} title="Atur jadwal bulanan">{row.name}</button> : row.name}</td>{dateRange.map(({ value }) => { const code = row.codes?.[value] || ''; const assignment = row.assignmentDays?.has(value); const detail = row.details?.[value]; return <td key={value}><button type="button" className={code ? assignment ? 'cell-button assignment' : `cell-button ${code}` : 'cell-button empty'} onClick={() => setSelectedCell({ row, date: value, detail })} title="Klik untuk melihat detail">{code || '—'}</button></td> })}</tr>)}</tbody>
+                <tbody>{filteredRows.map((row, index) => <Fragment key={row.employeeId || row.name}><tr hidden={index > 0 && (filteredRows[index - 1].job || '').trim().toLocaleUpperCase() === (row.job || '').trim().toLocaleUpperCase()}><td colSpan={dateRange.length + (showJobColumn ? 2 : 1)} style={{ background: '#eef3f8', fontWeight: 700, textAlign: 'left', padding: '8px 12px' }} >{(row.job || 'Belum ditentukan').trim()}</td></tr><tr key={row.employeeId || row.name}>{showJobColumn && <td className="sticky-job group">{row.job || '—'}</td>}<td className={showJobColumn ? "sticky-name" : "sticky-name no-job"}>{isAdmin ? <button type="button" className="schedule-name-button" onClick={() => openBulkScheduleEditor(row)} title="Atur jadwal bulanan">{row.name}</button> : row.name}</td>{dateRange.map(({ value }) => { const code = row.codes?.[value] || ''; const assignment = row.assignmentDays?.has(value); const detail = row.details?.[value]; return <td key={value}><button type="button" className={code ? assignment ? 'cell-button assignment' : `cell-button ${code}` : 'cell-button empty'} onClick={() => setSelectedCell({ row, date: value, detail })} title="Klik untuk melihat detail">{code || '—'}</button></td> })}</tr></Fragment>)}</tbody>
               </table>
             </div>
           )}

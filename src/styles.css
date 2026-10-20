@@ -330,3 +330,48 @@
 .log-tabs .log-tab.active{background:var(--blue);border-color:var(--blue);color:#fff}
 .login-history-filters{grid-template-columns:minmax(180px,240px) minmax(180px,240px) auto;max-width:760px;margin-bottom:16px}.login-history-filter-action{min-width:145px}
 @media(max-width:700px){.login-history-filters{grid-template-columns:1fr}.log-tabs .log-tab{flex:1;min-width:130px}}
+
+/* JOB filter uses a compact checkbox popover so it does not stretch the filter row. */
+.job-filter{position:relative;min-width:0}
+.job-picker-trigger{white-space:nowrap;overflow:hidden}
+.job-picker{min-width:220px;max-height:320px;display:flex;flex-direction:column}
+.job-picker-list{overflow-y:auto;max-height:245px;padding:6px 10px}
+.job-picker-option{display:flex;align-items:center;gap:9px;padding:7px 2px;margin:0;font-size:13px;font-weight:400;cursor:pointer}
+.job-picker-option input{width:16px;height:16px;flex:0 0 16px;margin:0;padding:0}
+@media(max-width:560px){.job-picker{position:fixed;left:14px;right:14px;top:150px;min-width:0}}
+
+/* Keep the employee dropdown fully inside the visible viewport. */
+.employee-filter{position:relative}
+.employee-picker{width:max(100%,260px);right:auto;left:0;max-width:calc(100vw - 32px)}
+@media(min-width:701px){
+  .employee-filter .employee-picker{left:auto;right:0}
+}
+@media(max-width:700px){
+  .employee-filter .employee-picker{position:fixed;left:16px;right:16px;top:50%;transform:translateY(-50%);width:auto;max-width:none;max-height:min(70vh,520px)}
+  .employee-picker-list{max-height:calc(70vh - 170px)}
+}
+
+/* Print the schedule directly from the browser without downloading a file. */
+.print-trigger{white-space:nowrap}
+@page{size:A3 landscape;margin:8mm}
+@media print{
+  body{background:#fff!important;color:#142033!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .side,.mobile-bottom-nav,.filters-card,.title-actions,.legend,.modal-backdrop,.toast,.state,.download-menu-list{display:none!important}
+  .app{min-height:0!important}
+  .main{margin:0!important;padding:0!important;max-width:none!important;width:100%!important}
+  .schedule-card{margin:0!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:#fff!important;overflow:visible!important}
+  .schedule-card .title{display:block!important;margin:0 0 8px!important}
+  .schedule-card .title h2{font-size:16pt!important;color:#142033!important;margin:0 0 4mm!important}
+  .schedule-card .wrap{overflow:visible!important;width:100%!important;max-height:none!important}
+  .schedule-card table{width:100%!important;min-width:0!important;border-collapse:collapse!important;table-layout:fixed!important;font-size:7pt!important}
+  .schedule-card thead{display:table-header-group!important}
+  .schedule-card tr{break-inside:avoid!important;page-break-inside:avoid!important}
+  .schedule-card th,.schedule-card td{position:static!important;min-width:0!important;padding:2px 1px!important;height:auto!important;white-space:normal!important;border:1px solid #cbd5e1!important;color:#142033!important}
+  .schedule-card th:first-child,.schedule-card td:first-child{width:35mm!important;text-align:left!important}
+  .schedule-card th:not(:first-child),.schedule-card td:not(:first-child){width:auto!important;text-align:center!important}
+  .schedule-card th{background:#eef3f8!important;font-size:6.5pt!important}
+  .schedule-card td button,.schedule-card .schedule-name-button{display:block!important;width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:1px!important;border:0!important;border-radius:0!important;background:transparent!important;color:#142033!important;font-size:7pt!important;font-weight:400!important;text-align:inherit!important}
+  .schedule-card td button.empty{color:#7b8798!important}
+  .schedule-card td button.assignment,.schedule-card td button.P,.schedule-card td button.S,.schedule-card td button.M,.schedule-card td button.L,.schedule-card td button.CT{font-weight:700!important}
+  .schedule-card tr[hidden]{display:none!important}
+}
