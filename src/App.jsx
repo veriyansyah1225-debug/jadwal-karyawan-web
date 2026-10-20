@@ -149,7 +149,7 @@ function exportExcel(rows, dateRange, department, startDate, endDate) {
     if (cell) cell.s = headerStyle
   }
 
-  for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
+  for (let rowIndex = 0; rowIndex < matrix.length - headerRow - 1; rowIndex += 1) {
     const sheetRow = headerRow + 1 + rowIndex
     for (let col = 0; col < lastColumn; col += 1) {
       const cell = worksheet[XLSX.utils.encode_cell({ r: sheetRow, c: col })]
