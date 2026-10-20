@@ -108,10 +108,10 @@ function exportExcel(rows, dateRange, department, startDate, endDate) {
   ]
   worksheet['!rows'] = [
     { hpt: 24 }, { hpt: 20 }, { hpt: 20 }, { hpt: 8 }, { hpt: 28 },
-    ...rows.map(() => ({ hpt: 22 })),
+    ...Array.from({ length: matrix.length - title.length }, (_, index) => ({ hpt: index === 0 ? 22 : 22 })),
   ]
   worksheet['!freeze'] = { xSplit: 1, ySplit: headerRow }
-  worksheet['!autofilter'] = { ref: 'A' + (headerRow + 1) + ':' + lastColumnLetter + (headerRow + rows.length + 1) }
+  worksheet['!autofilter'] = { ref: 'A' + (headerRow + 1) + ':' + lastColumnLetter + matrix.length }
   worksheet['!pageSetup'] = { orientation: 'landscape', paperSize: 8, fitToWidth: 1, fitToHeight: 0 }
   worksheet['!printHeader'] = [(headerRow + 1) + ':' + (headerRow + 1)]
 
@@ -154,7 +154,18 @@ function exportExcel(rows, dateRange, department, startDate, endDate) {
     for (let col = 0; col < lastColumn; col += 1) {
       const cell = worksheet[XLSX.utils.encode_cell({ r: sheetRow, c: col })]
       if (!cell) continue
-      const isCodeCell = col >= (includeJob ? 2 : 1)
+      const isGroupRow = col === 0 && String(cell.v || '') !== '' &&
+        Array.from({ length: dateRange.length }, (_, index) => worksheet[XLSX.utils.encode_cell({ r: sheetRow, c: index + 1 })]?.v || '').every((value) => value === '')
+      if (isGroupRow) {
+        cell.s = {
+          font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: '142033' } },
+          fill: { patternType: 'solid', fgColor: { rgb: 'EEF3F8' } },
+          alignment: { horizontal: 'left', vertical: 'center' },
+          border,
+        }
+        continue
+      }
+      const isCodeCell = col >= 1
       if (isCodeCell) {
         const code = String(cell.v || '')
         cell.s = {
@@ -205,7 +216,7 @@ function exportPdf(rows, dateRange, department, startDate, endDate) {
   let pageNumber = 0
 
   for (const dateChunk of dateChunks) {
-    const dateWidth = (pageWidth - (margin * 2) - nameWidth - jobWidth) / dateChunk.length
+    const dateWidth = (pageWidth - (margin * 2) - nameWidth) / dateChunk.length
     const tableWidth = nameWidth + (dateWidth * dateChunk.length)
     const left = (pageWidth - tableWidth) / 2
 
