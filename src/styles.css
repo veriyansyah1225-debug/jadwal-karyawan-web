@@ -350,3 +350,28 @@
   .employee-filter .employee-picker{position:fixed;left:16px;right:16px;top:50%;transform:translateY(-50%);width:auto;max-width:none;max-height:min(70vh,520px)}
   .employee-picker-list{max-height:calc(70vh - 170px)}
 }
+
+/* Print the schedule directly from the browser without downloading a file. */
+.print-trigger{white-space:nowrap}
+@page{size:A3 landscape;margin:8mm}
+@media print{
+  body{background:#fff!important;color:#142033!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .side,.mobile-bottom-nav,.filters-card,.title-actions,.legend,.modal-backdrop,.toast,.state,.download-menu-list{display:none!important}
+  .app{min-height:0!important}
+  .main{margin:0!important;padding:0!important;max-width:none!important;width:100%!important}
+  .schedule-card{margin:0!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:#fff!important;overflow:visible!important}
+  .schedule-card .title{display:block!important;margin:0 0 8px!important}
+  .schedule-card .title h2{font-size:16pt!important;color:#142033!important;margin:0 0 4mm!important}
+  .schedule-card .wrap{overflow:visible!important;width:100%!important;max-height:none!important}
+  .schedule-card table{width:100%!important;min-width:0!important;border-collapse:collapse!important;table-layout:fixed!important;font-size:7pt!important}
+  .schedule-card thead{display:table-header-group!important}
+  .schedule-card tr{break-inside:avoid!important;page-break-inside:avoid!important}
+  .schedule-card th,.schedule-card td{position:static!important;min-width:0!important;padding:2px 1px!important;height:auto!important;white-space:normal!important;border:1px solid #cbd5e1!important;color:#142033!important}
+  .schedule-card th:first-child,.schedule-card td:first-child{width:35mm!important;text-align:left!important}
+  .schedule-card th:not(:first-child),.schedule-card td:not(:first-child){width:auto!important;text-align:center!important}
+  .schedule-card th{background:#eef3f8!important;font-size:6.5pt!important}
+  .schedule-card td button,.schedule-card .schedule-name-button{display:block!important;width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:1px!important;border:0!important;border-radius:0!important;background:transparent!important;color:#142033!important;font-size:7pt!important;font-weight:400!important;text-align:inherit!important}
+  .schedule-card td button.empty{color:#7b8798!important}
+  .schedule-card td button.assignment,.schedule-card td button.P,.schedule-card td button.S,.schedule-card td button.M,.schedule-card td button.L,.schedule-card td button.CT{font-weight:700!important}
+  .schedule-card tr[hidden]{display:none!important}
+}
