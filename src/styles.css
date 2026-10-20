@@ -339,3 +339,14 @@
 .job-picker-option{display:flex;align-items:center;gap:9px;padding:7px 2px;margin:0;font-size:13px;font-weight:400;cursor:pointer}
 .job-picker-option input{width:16px;height:16px;flex:0 0 16px;margin:0;padding:0}
 @media(max-width:560px){.job-picker{position:fixed;left:14px;right:14px;top:150px;min-width:0}}
+
+/* Keep the employee dropdown fully inside the visible viewport. */
+.employee-filter{position:relative}
+.employee-picker{width:max(100%,260px);right:auto;left:0;max-width:calc(100vw - 32px)}
+@media(min-width:701px){
+  .employee-filter .employee-picker{left:auto;right:0}
+}
+@media(max-width:700px){
+  .employee-filter .employee-picker{position:fixed;left:16px;right:16px;top:50%;transform:translateY(-50%);width:auto;max-width:none;max-height:min(70vh,520px)}
+  .employee-picker-list{max-height:calc(70vh - 170px)}
+}
