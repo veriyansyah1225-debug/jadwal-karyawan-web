@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { supabase, supabaseConfigured } from './lib/supabase'
+import VisitHistory from './VisitHistory'
 import jsPDF from 'jspdf'
 import * as XLSX from 'xlsx-js-style'
 
@@ -1959,6 +1960,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
               <div className="log-tabs" role="tablist" aria-label="Riwayat Aktivitas">
                 <button type="button" role="tab" aria-selected={activeLogTab === 'errors'} className={activeLogTab === 'errors' ? 'log-tab active' : 'log-tab'} onClick={() => { setActiveLogTab('errors'); if (supabaseLogsVerified && !supabaseLogsLoaded) loadSupabaseLogs() }}>Log Error</button>
                 <button type="button" role="tab" aria-selected={activeLogTab === 'login'} className={activeLogTab === 'login' ? 'log-tab active' : 'log-tab'} onClick={() => { setActiveLogTab('login'); if (!loginHistoryLoaded) loadLoginHistory() }}>Riwayat Login User</button>
+                <button type="button" role="tab" aria-selected={activeLogTab === 'visits'} className={activeLogTab === 'visits' ? 'log-tab active' : 'log-tab'} onClick={() => setActiveLogTab('visits')}>Histori Kunjungan</button>
               </div>
             </section>
             {activeLogTab === 'errors' ? (
@@ -2074,9 +2076,11 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
                   </>
                 )}
               </section>
+            ) : activeLogTab === 'visits' ? (
+              <VisitHistory />
             ) : (
               <section className="card">
-                <div className="state">Pilih tab <strong>Log Error</strong> atau <strong>Riwayat Login User</strong> untuk membuka data.</div>
+                <div className="state">Pilih tab <strong>Log Error</strong>, <strong>Riwayat Login User</strong>, atau <strong>Histori Kunjungan</strong> untuk membuka data.</div>
               </section>
             )}
           </>
