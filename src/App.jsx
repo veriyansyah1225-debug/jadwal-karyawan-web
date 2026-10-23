@@ -188,16 +188,21 @@ function exportExcel(rows, dateRange, department, startDate, endDate) {
 function exportPdf(rows, dateRange, department, startDate, endDate) {
   if (!rows.length || !dateRange.length) return
 
-  const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3' })
-  const margin = 10
+  // A4 landscape; keep the full date range (1–31) on every page.
+  // jsPDF draws vector text/shapes, so output remains sharp when printed.
+  const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
+  const margin = 8
   const pageWidth = pdf.internal.pageSize.getWidth()
   const pageHeight = pdf.internal.pageSize.getHeight()
   const titleHeight = 18
   const headerHeight = 12
-  const rowHeight = 10
-  const nameWidth = 82
-  const datesPerPage = dateRange.length
-  const dateChunks = [dateRange]
+  const rowHeight = 7.5
+  const nameWidth = 60
+  const dateWidth = (pageWidth - (margin * 2) - nameWidth) / dateRange.length
+  const tableWidth = nameWidth + (dateWidth * dateRange.length)
+  const left = (pageWidth - tableWidth) / 2
+  const contentHeight = pageHeight - margin - titleHeight - headerHeight - margin
+  const maxUnitsPerPage = Math.floor(contentHeight / rowHeight)
 
   const codeFill = {
     P: [201, 242, 207],
@@ -207,103 +212,115 @@ function exportPdf(rows, dateRange, department, startDate, endDate) {
     CT: [222, 208, 255],
   }
 
-  const rowsPerPage = Math.max(1, Math.floor((pageHeight - (margin * 2) - titleHeight - headerHeight - 14) / rowHeight))
+  // Count JOB heading rows as well as employee rows to avoid overflow.
+  // When a JOB continues on the next page, its heading is repeated there.
   const rowChunks = []
-  for (let index = 0; index < rows.length; index += rowsPerPage) {
-    rowChunks.push(rows.slice(index, index + rowsPerPage))
+  let currentChunk = []
+  let currentUnits = 0
+  let previousJobInChunk = null
+
+  for (const row of rows) {
+    const currentJob = (row.job || 'Belum ditentukan').trim()
+    const normalizedJob = currentJob.toLocaleUpperCase()
+    const needsJobHeading = normalizedJob !== previousJobInChunk
+    const rowCost = 1 + (needsJobHeading ? 1 : 0)
+
+    if (currentChunk.length && currentUnits + rowCost > maxUnitsPerPage) {
+      rowChunks.push(currentChunk)
+      currentChunk = []
+      currentUnits = 0
+      previousJobInChunk = null
+    }
+
+    const needsHeadingOnThisPage = normalizedJob !== previousJobInChunk
+    currentChunk.push(row)
+    currentUnits += 1 + (needsHeadingOnThisPage ? 1 : 0)
+    previousJobInChunk = normalizedJob
   }
+  if (currentChunk.length) rowChunks.push(currentChunk)
 
-  const totalPages = dateChunks.length * rowChunks.length
-  let pageNumber = 0
+  const totalPages = rowChunks.length
+  rowChunks.forEach((rowChunk, pageIndex) => {
+    if (pageIndex > 0) pdf.addPage('a4', 'landscape')
 
-  for (const dateChunk of dateChunks) {
-    const dateWidth = (pageWidth - (margin * 2) - nameWidth) / dateChunk.length
-    const tableWidth = nameWidth + (dateWidth * dateChunk.length)
-    const left = (pageWidth - tableWidth) / 2
+    pdf.setTextColor(20, 32, 51)
+    pdf.setFont('helvetica', 'bold')
+    pdf.setFontSize(16)
+    pdf.text('Jadwal Karyawan', margin, margin + 4)
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(9)
+    pdf.text('Departemen: ' + department + ' | Periode: ' + startDate + ' s/d ' + endDate, margin, margin + 10)
+    pdf.text('A4 | Seluruh tanggal | Halaman ' + (pageIndex + 1) + '/' + totalPages, pageWidth - margin, margin + 10, { align: 'right' })
 
-    for (const rowChunk of rowChunks) {
-      if (pageNumber > 0) pdf.addPage('a3', 'landscape')
-      pageNumber += 1
+    let y = margin + titleHeight
+    let x = left
+    pdf.setFillColor(239, 244, 250)
+    pdf.rect(x, y, tableWidth, headerHeight, 'F')
+    pdf.setDrawColor(95, 108, 125)
+    pdf.setLineWidth(0.35)
+    pdf.setFont('helvetica', 'bold')
+    pdf.setFontSize(9.5)
 
-      pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(16)
-      pdf.text('Jadwal Karyawan', margin, margin + 3)
-      pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(9)
-      pdf.text('Departemen: ' + department + ' | Periode: ' + startDate + ' s/d ' + endDate, margin, margin + 10)
-      pdf.text('A3 | Tanggal ' + dateChunk[0].day + '–' + dateChunk[dateChunk.length - 1].day + ' | Halaman ' + pageNumber + '/' + totalPages, pageWidth - margin, margin + 10, { align: 'right' })
+    pdf.rect(x, y, nameWidth, headerHeight)
+    pdf.text('Nama Karyawan', x + nameWidth / 2, y + 6.7, { align: 'center' })
+    x += nameWidth
 
-      let y = margin + titleHeight
-      let x = left
-      pdf.setFillColor(239, 244, 250)
-      pdf.rect(x, y, tableWidth, headerHeight, 'F')
-      pdf.setDrawColor(95, 108, 125)
-      pdf.setLineWidth(0.45)
-      pdf.setFont('helvetica', 'bold')
+    for (const item of dateRange) {
+      pdf.rect(x, y, dateWidth, headerHeight)
+      pdf.text(String(item.day), x + dateWidth / 2, y + 5.2, { align: 'center' })
+      pdf.setFontSize(7.2)
+      pdf.text(item.dayName, x + dateWidth / 2, y + 9.0, { align: 'center' })
       pdf.setFontSize(9.5)
+      x += dateWidth
+    }
 
-      pdf.rect(x, y, nameWidth, headerHeight)
-      pdf.text('Nama Karyawan', x + nameWidth / 2, y + 6.7, { align: 'center' })
+    y += headerHeight
+    let previousJob = null
+
+    for (const row of rowChunk) {
+      const currentJob = (row.job || 'Belum ditentukan').trim()
+      const normalizedJob = currentJob.toLocaleUpperCase()
+      if (normalizedJob !== previousJob) {
+        pdf.setFillColor(238, 243, 248)
+        pdf.rect(left, y, tableWidth, rowHeight, 'F')
+        pdf.setDrawColor(215, 222, 233)
+        pdf.rect(left, y, tableWidth, rowHeight)
+        pdf.setFont('helvetica', 'bold')
+        pdf.setFontSize(9.5)
+        pdf.setTextColor(20, 32, 51)
+        pdf.text(currentJob, left + 2.5, y + 5.2, { maxWidth: tableWidth - 5 })
+        y += rowHeight
+        previousJob = normalizedJob
+      }
+
+      x = left
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(9.5)
+      pdf.setTextColor(20, 32, 51)
+      pdf.rect(x, y, nameWidth, rowHeight)
+      pdf.text(String(row.name || ''), x + 2.5, y + 5.2, { maxWidth: nameWidth - 5 })
       x += nameWidth
 
-      for (const item of dateChunk) {
-        pdf.rect(x, y, dateWidth, headerHeight)
-        pdf.text(String(item.day), x + dateWidth / 2, y + 5.2, { align: 'center' })
-        pdf.setFontSize(7.2)
-        pdf.text(item.dayName, x + dateWidth / 2, y + 9.0, { align: 'center' })
-        pdf.setFontSize(9.5)
+      for (const item of dateRange) {
+        const code = row.codes?.[item.value] || ''
+        const fill = codeFill[code]
+        if (fill) {
+          pdf.setFillColor(...fill)
+          pdf.rect(x, y, dateWidth, rowHeight, 'F')
+        }
+        pdf.rect(x, y, dateWidth, rowHeight)
+        if (code) {
+          pdf.setFont('helvetica', 'bold')
+          pdf.setFontSize(code.length > 1 ? 8.5 : 10)
+          pdf.text(code, x + dateWidth / 2, y + 5.2, { align: 'center' })
+        }
         x += dateWidth
       }
-
-      y += headerHeight
-      pdf.setFontSize(9)
-
-      let previousJob = null
-      for (const row of rowChunk) {
-        const currentJob = (row.job || 'Belum ditentukan').trim()
-        const normalizedJob = currentJob.toLocaleUpperCase()
-        if (normalizedJob !== previousJob) {
-          pdf.setFillColor(238, 243, 248)
-          pdf.rect(left, y, tableWidth, rowHeight, 'F')
-          pdf.setDrawColor(215, 222, 233)
-          pdf.rect(left, y, tableWidth, rowHeight)
-          pdf.setFont('helvetica', 'bold')
-          pdf.setFontSize(9)
-          pdf.setTextColor(20, 32, 51)
-          pdf.text(currentJob, left + 2.5, y + 6.7, { maxWidth: tableWidth - 5 })
-          y += rowHeight
-          previousJob = normalizedJob
-        }
-
-        x = left
-        pdf.setFont('helvetica', 'normal')
-        pdf.setTextColor(20, 32, 51)
-        pdf.rect(x, y, nameWidth, rowHeight)
-        pdf.text(String(row.name || ''), x + 2.5, y + 6.7, { maxWidth: nameWidth - 5 })
-        x += nameWidth
-
-        for (const item of dateChunk) {
-          const code = row.codes?.[item.value] || ''
-          const fill = codeFill[code]
-          if (fill) {
-            pdf.setFillColor(...fill)
-            pdf.rect(x, y, dateWidth, rowHeight, 'F')
-          }
-          pdf.rect(x, y, dateWidth, rowHeight)
-          if (code) {
-            pdf.setFont('helvetica', 'bold')
-            pdf.setFontSize(code.length > 1 ? 8.5 : 10)
-            pdf.text(code, x + dateWidth / 2, y + 6.7, { align: 'center' })
-            pdf.setFontSize(9)
-          }
-          x += dateWidth
-        }
-        y += rowHeight
-      }
+      y += rowHeight
     }
-  }
+  })
 
-  pdf.save('jadwal-karyawan-a3-' + startDate + '-' + endDate + '.pdf')
+  pdf.save('jadwal-karyawan-a4-' + startDate + '-' + endDate + '.pdf')
 }
 
 function App() {
