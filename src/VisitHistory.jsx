@@ -195,57 +195,55 @@ export default function VisitHistory() {
   if (!isAdmin || !profile?.aktif) return null
 
   return (
-    <>
-      <button
-        type="button"
-        onClick={() => { setOpen(true); if (!loaded) void loadHistory() }}
-        style={{ position: 'fixed', right: 18, bottom: 82, zIndex: 1000, border: 0, borderRadius: 10, padding: '11px 15px', background: '#174a35', color: '#fff', boxShadow: '0 4px 18px #0002', cursor: 'pointer', fontWeight: 600 }}
-      >
-        Histori Kunjungan
-      </button>
-      {open && (
-        <div role="presentation" onClick={(event) => { if (event.target === event.currentTarget) setOpen(false) }} style={{ position: 'fixed', inset: 0, zIndex: 1100, background: '#10182899', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <section role="dialog" aria-modal="true" aria-labelledby="visit-history-title" style={{ background: '#fff', color: '#172b22', width: 'min(1100px, 100%)', maxHeight: '90vh', overflow: 'auto', borderRadius: 14, padding: 22, boxShadow: '0 18px 60px #0003' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-              <div>
-                <h2 id="visit-history-title" style={{ margin: 0 }}>Histori Kunjungan User</h2>
-                <p style={{ margin: '6px 0 0', color: '#667085', fontSize: 13 }}>Kunjungan dicatat saat aplikasi dibuka atau pengguna kembali setelah tidak aktif 30 menit.</p>
-              </div>
-              <button type="button" onClick={() => setOpen(false)} aria-label="Tutup histori kunjungan" style={{ border: 0, background: 'transparent', fontSize: 26, cursor: 'pointer' }}>×</button>
-            </div>
-            <div style={{ display: 'flex', gap: 12, alignItems: 'end', flexWrap: 'wrap', margin: '18px 0' }}>
-              <label style={{ display: 'grid', gap: 5, fontSize: 13 }}>Dari tanggal<input type="date" value={dateFrom} max={dateTo} onChange={(event) => setDateFrom(event.target.value)} /></label>
-              <label style={{ display: 'grid', gap: 5, fontSize: 13 }}>Sampai tanggal<input type="date" value={dateTo} min={dateFrom} onChange={(event) => setDateTo(event.target.value)} /></label>
-              <button type="button" onClick={() => void loadHistory()} disabled={loading || !dateFrom || !dateTo || dateFrom > dateTo} style={{ border: 0, borderRadius: 8, padding: '10px 14px', background: '#174a35', color: '#fff', cursor: 'pointer' }}>{loading ? 'Memuat...' : 'Terapkan Filter'}</button>
-              <button type="button" onClick={() => void loadHistory()} disabled={loading} style={{ border: '1px solid #d0d5dd', borderRadius: 8, padding: '9px 13px', background: '#fff', cursor: 'pointer' }}>Muat Ulang</button>
-            </div>
-            {error && <p role="alert" style={{ color: '#b42318' }}>{error}</p>}
-            {loading && <p>Memuat histori kunjungan...</p>}
-            {!loading && !loaded && !error && <p>Pilih rentang tanggal lalu terapkan filter.</p>}
-            {!loading && loaded && rows.length === 0 && <p>Belum ada histori kunjungan pada rentang tanggal tersebut.</p>}
-            {!loading && loaded && rows.length > 0 && (
-              <>
-                <p style={{ color: '#667085', fontSize: 13 }}>Menampilkan {rows.length} catatan terbaru (maksimal 500) · {new Set(rows.map((item) => item.user_id)).size} pengguna unik.</p>
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                    <thead><tr>{['Waktu Kunjungan', 'Nama Pengguna', 'Email', 'Jenis Kunjungan'].map((heading) => <th key={heading} style={{ textAlign: 'left', padding: 10, borderBottom: '1px solid #d0d5dd', whiteSpace: 'nowrap' }}>{heading}</th>)}</tr></thead>
-                    <tbody>
-                      {rows.map((item) => (
-                        <tr key={item.id}>
-                          <td style={{ padding: 10, borderBottom: '1px solid #eaecf0', whiteSpace: 'nowrap' }}>{new Date(item.visited_at).toLocaleString('id-ID')}</td>
-                          <td style={{ padding: 10, borderBottom: '1px solid #eaecf0' }}>{item.nama}</td>
-                          <td style={{ padding: 10, borderBottom: '1px solid #eaecf0' }}>{item.email}</td>
-                          <td style={{ padding: 10, borderBottom: '1px solid #eaecf0' }}>{item.visit_source === 'return_after_inactivity' ? 'Kembali setelah tidak aktif' : 'Membuka aplikasi'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            )}
-          </section>
+    <section className="card">
+      <div className="title">
+        <div>
+          <h2>Histori Kunjungan User</h2>
+          <div className="meta">Kunjungan dicatat saat aplikasi dibuka atau pengguna kembali setelah tidak aktif 30 menit.</div>
         </div>
+      </div>
+      <div className="filters login-history-filters">
+        <div>
+          <label htmlFor="visit-date-from">Dari Tanggal</label>
+          <input id="visit-date-from" type="date" value={dateFrom} max={dateTo} onChange={(event) => setDateFrom(event.target.value)} />
+        </div>
+        <div>
+          <label htmlFor="visit-date-to">Sampai Tanggal</label>
+          <input id="visit-date-to" type="date" value={dateTo} min={dateFrom} onChange={(event) => setDateTo(event.target.value)} />
+        </div>
+        <div className="login-history-filter-action">
+          <label>&nbsp;</label>
+          <button type="button" className="focus-toggle" onClick={() => void loadHistory()} disabled={loading || !dateFrom || !dateTo || dateFrom > dateTo}>{loading ? 'Memuat...' : 'Terapkan Filter'}</button>
+        </div>
+        <div className="login-history-filter-action">
+          <label>&nbsp;</label>
+          <button type="button" className="focus-toggle" onClick={() => void loadHistory()} disabled={loading}>{loading ? 'Memuat...' : 'Muat Ulang'}</button>
+        </div>
+      </div>
+      {error && <div className="state error">{error}</div>}
+      {loading && <div className="state">Memuat histori kunjungan...</div>}
+      {!loading && !loaded && !error && <div className="state">Pilih rentang tanggal lalu klik Terapkan Filter untuk memuat histori kunjungan.</div>}
+      {!loading && loaded && rows.length === 0 && <div className="state">Belum ada histori kunjungan pada rentang tanggal tersebut.</div>}
+      {!loading && loaded && rows.length > 0 && (
+        <>
+          <div className="meta">Menampilkan {rows.length} catatan terbaru (maksimal 500) · {new Set(rows.map((item) => item.user_id)).size} pengguna unik.</div>
+          <div className="wrap">
+            <table>
+              <thead><tr><th>Waktu Kunjungan</th><th>Nama Pengguna</th><th>Email</th><th>Jenis Kunjungan</th></tr></thead>
+              <tbody>
+                {rows.map((item) => (
+                  <tr key={item.id}>
+                    <td>{new Date(item.visited_at).toLocaleString('id-ID')}</td>
+                    <td>{item.nama}</td>
+                    <td>{item.email}</td>
+                    <td>{item.visit_source === 'return_after_inactivity' ? 'Kembali setelah tidak aktif' : 'Membuka aplikasi'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
-    </>
+    </section>
   )
 }
