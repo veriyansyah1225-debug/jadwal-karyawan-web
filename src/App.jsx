@@ -323,6 +323,26 @@ function exportPdf(rows, dateRange, department, startDate, endDate) {
   pdf.save('jadwal-karyawan-a4-' + startDate + '-' + endDate + '.pdf')
 }
 
+function useCloseFilterMenusOnOutsideClick() {
+  useEffect(() => {
+    const closeMenus = (event) => {
+      const target = event.target
+      if (!(target instanceof Element)) return
+      if (!target.closest('.month-picker')) {
+        document.dispatchEvent(new CustomEvent('close-month-picker'))
+      }
+      if (!target.closest('.job-filter')) {
+        document.dispatchEvent(new CustomEvent('close-job-picker'))
+      }
+      if (!target.closest('.employee-filter')) {
+        document.dispatchEvent(new CustomEvent('close-employee-picker'))
+      }
+    }
+    document.addEventListener('pointerdown', closeMenus)
+    return () => document.removeEventListener('pointerdown', closeMenus)
+  }, [])
+}
+
 function App() {
   const today = new Date()
   const [startDate, setStartDate] = useState(toInputDate(getMonthStart(today)))
@@ -340,6 +360,29 @@ function App() {
   const [selectedCell, setSelectedCell] = useState(null)
   const [focusMode, setFocusMode] = useState(false)
   const [monthPickerOpen, setMonthPickerOpen] = useState(false)
+  useCloseFilterMenusOnOutsideClick()
+  useEffect(() => {
+    const closeMonth = () => setMonthPickerOpen(false)
+    const closeJob = () => setJobPickerOpen(false)
+    const closeEmployee = () => setEmployeePickerOpen(false)
+    document.addEventListener('close-month-picker', closeMonth)
+    document.addEventListener('close-job-picker', closeJob)
+    document.addEventListener('close-employee-picker', closeEmployee)
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setMonthPickerOpen(false)
+        setJobPickerOpen(false)
+        setEmployeePickerOpen(false)
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('close-month-picker', closeMonth)
+      document.removeEventListener('close-job-picker', closeJob)
+      document.removeEventListener('close-employee-picker', closeEmployee)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [])
   const [downloadMenuOpen, setDownloadMenuOpen] = useState(false)
   const [showJobColumn, setShowJobColumn] = useState(false)
   const [session, setSession] = useState(null)
