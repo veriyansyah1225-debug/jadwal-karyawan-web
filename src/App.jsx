@@ -1956,6 +1956,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
 
   return (
     <div className={`app${focusMode ? ' focus-mode' : ''}`}>
+      <VisitHistory trackingOnly />
       <aside className="side">
         <div className="brand">▣ Jadwal Karyawan<small>Database Jadwal & Absensi</small></div>
         <nav className="nav">
@@ -2137,7 +2138,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
                 )}
               </section>
             ) : activeLogTab === 'visits' ? (
-              <VisitHistory />
+              <VisitHistory trackVisits={false} />
             ) : (
               <section className="card">
                 <div className="state">Pilih tab <strong>Log Error</strong>, <strong>Riwayat Login User</strong>, atau <strong>Histori Kunjungan</strong> untuk membuka data.</div>
