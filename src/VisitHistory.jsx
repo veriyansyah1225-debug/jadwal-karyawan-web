@@ -23,7 +23,7 @@ export default function VisitHistory({ trackingOnly = false, trackVisits = true 
   const [profile, setProfile] = useState(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [open, setOpen] = useState(false)
-  const [dateFrom, setDateFrom] = useState(inputDate(new Date(Date.now() - 6 * 86400000)))
+  const [dateFrom, setDateFrom] = useState(inputDate(new Date()))
   const [dateTo, setDateTo] = useState(inputDate(new Date()))
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(false)
