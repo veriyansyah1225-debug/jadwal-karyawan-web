@@ -18,7 +18,7 @@ function createUuid() {
   })
 }
 
-export default function VisitHistory() {
+export default function VisitHistory({ trackingOnly = false, trackVisits = true } = {}) {
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -71,6 +71,7 @@ export default function VisitHistory() {
   }, [session?.user?.id])
 
   useEffect(() => {
+    if (!trackVisits) return undefined
     const userId = session?.user?.id
     if (!supabase || !userId || profile?.user_id !== userId || !profile?.aktif) return undefined
 
@@ -142,7 +143,7 @@ export default function VisitHistory() {
       window.removeEventListener('touchstart', handleActivity)
       document.removeEventListener('visibilitychange', handleVisibility)
     }
-  }, [session?.user?.id, profile?.user_id, profile?.aktif])
+  }, [trackVisits, session?.user?.id, profile?.user_id, profile?.aktif])
 
   async function loadHistory() {
     if (!isAdmin || !session?.user?.id) {
@@ -192,7 +193,7 @@ export default function VisitHistory() {
     }
   }
 
-  if (!isAdmin || !profile?.aktif) return null
+  if (trackingOnly || !isAdmin || !profile?.aktif) return null
 
   return (
     <section className="card">
