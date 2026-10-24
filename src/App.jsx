@@ -413,7 +413,7 @@ function App() {
   const [activeLogTab, setActiveLogTab] = useState('')
   const [supabaseLogsLoaded, setSupabaseLogsLoaded] = useState(false)
   const [loginDateTo, setLoginDateTo] = useState(toInputDate(new Date()))
-  const [loginDateFrom, setLoginDateFrom] = useState(toInputDate(new Date(Date.now() - 6 * 24 * 60 * 60 * 1000)))
+  const [loginDateFrom, setLoginDateFrom] = useState(toInputDate(new Date()))
   const [loginHistoryRows, setLoginHistoryRows] = useState([])
   const [loginHistoryLoading, setLoginHistoryLoading] = useState(false)
   const [loginHistoryLoaded, setLoginHistoryLoaded] = useState(false)
