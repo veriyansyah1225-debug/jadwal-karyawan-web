@@ -370,6 +370,8 @@
   .schedule-card th:first-child,.schedule-card td:first-child{width:35mm!important;text-align:left!important}
   .schedule-card th:not(:first-child),.schedule-card td:not(:first-child){width:auto!important;text-align:center!important}
   .schedule-card th{background:#eef3f8!important;font-size:6.5pt!important}
+  .schedule-card thead th.sunday-header{background:#ffd0d0!important;color:#b33a3a!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .schedule-card thead th.sunday-header span{color:#b33a3a!important}
   .schedule-card td button,.schedule-card .schedule-name-button{display:block!important;width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:1px!important;border:0!important;border-radius:0!important;background:transparent!important;color:#142033!important;font-size:7pt!important;font-weight:400!important;text-align:inherit!important}
   .schedule-card td button.empty{color:#7b8798!important}
   .schedule-card td button.assignment,.schedule-card td button.P,.schedule-card td button.S,.schedule-card td button.M,.schedule-card td button.L,.schedule-card td button.CT{font-weight:700!important}
