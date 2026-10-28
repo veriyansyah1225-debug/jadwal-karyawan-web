@@ -280,11 +280,21 @@ function exportPdf(rows, dateRange, department, startDate, endDate) {
     x += nameWidth
 
     for (const item of dateRange) {
+      const isSunday = item.dayName === 'MG'
+      if (isSunday) {
+        pdf.setFillColor(255, 208, 208)
+        pdf.rect(x, y, dateWidth, headerHeight, 'F')
+        pdf.setTextColor(179, 58, 58)
+      } else {
+        pdf.setFillColor(239, 244, 250)
+        pdf.setTextColor(20, 32, 51)
+      }
       pdf.rect(x, y, dateWidth, headerHeight)
       pdf.text(String(item.day), x + dateWidth / 2, y + 5.2, { align: 'center' })
       pdf.setFontSize(7.2)
       pdf.text(item.dayName, x + dateWidth / 2, y + 9.0, { align: 'center' })
       pdf.setFontSize(9.5)
+      pdf.setTextColor(20, 32, 51)
       x += dateWidth
     }
 
