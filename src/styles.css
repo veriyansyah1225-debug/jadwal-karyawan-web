@@ -375,3 +375,29 @@
   .schedule-card td button.assignment,.schedule-card td button.P,.schedule-card td button.S,.schedule-card td button.M,.schedule-card td button.L,.schedule-card td button.CT{font-weight:700!important}
   .schedule-card tr[hidden]{display:none!important}
 }
+
+
+/* Keep No. Kandang and Nama Karyawan pinned during horizontal schedule scrolling. */
+.schedule-card .sticky-kandang,
+.schedule-card .kandang-number-cell{
+  position:sticky;
+  left:0;
+  z-index:6;
+  width:90px;
+  min-width:90px;
+  background:#fff;
+}
+.schedule-card .sticky-kandang{top:0;z-index:8;background:#f4f7fb}
+.schedule-card .sticky-kandang.kandang-with-job,
+.schedule-card .kandang-number-cell.kandang-with-job{left:155px}
+.schedule-card .sticky-name.after-kandang{left:245px!important;background:#fff}
+.schedule-card .sticky-name.no-job.after-kandang{left:90px!important}
+.schedule-card .sticky-name{z-index:7}
+@media(max-width:900px){
+  .schedule-card .sticky-kandang,
+  .schedule-card .kandang-number-cell{width:90px;min-width:90px}
+  .schedule-card .sticky-kandang.kandang-with-job,
+  .schedule-card .kandang-number-cell.kandang-with-job{left:120px}
+  .schedule-card .sticky-name.after-kandang{left:210px!important}
+  .schedule-card .sticky-name.no-job.after-kandang{left:90px!important}
+}
