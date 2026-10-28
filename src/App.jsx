@@ -57,7 +57,9 @@ function getDateRange(startDate, endDate) {
 
 
 function buildExportMatrix(rows, dateRange) {
+  const hasKandang = rows.some((row) => (row.job || '').trim().toLocaleUpperCase() === 'KANDANG')
   const header = [
+    ...(hasKandang ? ['No. Kandang'] : []),
     'Nama Karyawan',
     ...dateRange.map(({ day, dayName }) => `${day} ${dayName}`),
   ]
@@ -67,10 +69,10 @@ function buildExportMatrix(rows, dateRange) {
   for (const row of rows) {
     const currentJob = (row.job || 'Belum ditentukan').trim()
     if (currentJob.toLocaleUpperCase() !== previousJob) {
-      body.push([currentJob, ...dateRange.map(() => '')])
+      body.push([currentJob, ...(hasKandang ? [''] : []), ...dateRange.map(() => '')])
       previousJob = currentJob.toLocaleUpperCase()
     }
-    body.push([row.name, ...dateRange.map(({ value }) => row.codes?.[value] || '')])
+    body.push([...(hasKandang ? [(currentJob.toLocaleUpperCase() === 'KANDANG' ? (row.nomorKandang || '') : '')] : []), row.name, ...dateRange.map(({ value }) => row.codes?.[value] || '')])
   }
 
   return [header, ...body]
@@ -88,7 +90,10 @@ function exportExcel(rows, dateRange, department, startDate, endDate) {
   const matrix = [...title, ...buildExportMatrix(rows, dateRange)]
   const worksheet = XLSX.utils.aoa_to_sheet(matrix)
   const headerRow = title.length
-  const lastColumn = 1 + dateRange.length
+  const hasKandang = rows.some((row) => (row.job || '').trim().toLocaleUpperCase() === 'KANDANG')
+  const nameColumnIndex = hasKandang ? 1 : 0
+  const dateColumnStart = hasKandang ? 2 : 1
+  const lastColumn = (hasKandang ? 2 : 1) + dateRange.length
   const lastColumnLetter = XLSX.utils.encode_col(lastColumn - 1)
   const border = {
     top: { style: 'thin', color: { rgb: 'D7DEE9' } },
@@ -104,6 +109,7 @@ function exportExcel(rows, dateRange, department, startDate, endDate) {
     { s: { r: 2, c: 0 }, e: { r: 2, c: lastColumn - 1 } },
   ]
   worksheet['!cols'] = [
+    ...(hasKandang ? [{ wch: 14 }] : []),
     { wch: 30 },
     ...dateRange.map(() => ({ wch: 10 })),
   ]
@@ -156,7 +162,7 @@ function exportExcel(rows, dateRange, department, startDate, endDate) {
       const cell = worksheet[XLSX.utils.encode_cell({ r: sheetRow, c: col })]
       if (!cell) continue
       const isGroupRow = col === 0 && String(cell.v || '') !== '' &&
-        Array.from({ length: dateRange.length }, (_, index) => worksheet[XLSX.utils.encode_cell({ r: sheetRow, c: index + 1 })]?.v || '').every((value) => value === '')
+        Array.from({ length: dateRange.length + (hasKandang ? 1 : 0) }, (_, index) => worksheet[XLSX.utils.encode_cell({ r: sheetRow, c: index + 1 })]?.v || '').every((value) => value === '')
       if (isGroupRow) {
         cell.s = {
           font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: '142033' } },
@@ -166,7 +172,7 @@ function exportExcel(rows, dateRange, department, startDate, endDate) {
         }
         continue
       }
-      const isCodeCell = col >= 1
+      const isCodeCell = col >= dateColumnStart
       if (isCodeCell) {
         const code = String(cell.v || '')
         cell.s = {
@@ -197,9 +203,11 @@ function exportPdf(rows, dateRange, department, startDate, endDate) {
   const titleHeight = 18
   const headerHeight = 12
   const rowHeight = 7.5
+  const hasKandang = rows.some((row) => (row.job || '').trim().toLocaleUpperCase() === 'KANDANG')
+  const kandangWidth = hasKandang ? 14 : 0
   const nameWidth = 60
-  const dateWidth = (pageWidth - (margin * 2) - nameWidth) / dateRange.length
-  const tableWidth = nameWidth + (dateWidth * dateRange.length)
+  const dateWidth = (pageWidth - (margin * 2) - nameWidth - kandangWidth) / dateRange.length
+  const tableWidth = kandangWidth + nameWidth + (dateWidth * dateRange.length)
   const left = (pageWidth - tableWidth) / 2
   const contentHeight = pageHeight - margin - titleHeight - headerHeight - margin
   const maxUnitsPerPage = Math.floor(contentHeight / rowHeight)
@@ -261,6 +269,12 @@ function exportPdf(rows, dateRange, department, startDate, endDate) {
     pdf.setFont('helvetica', 'bold')
     pdf.setFontSize(9.5)
 
+    if (hasKandang) {
+      pdf.rect(x, y, kandangWidth, headerHeight)
+      pdf.setFontSize(8.5)
+      pdf.text('No. Kandang', x + kandangWidth / 2, y + 6.7, { align: 'center', maxWidth: kandangWidth - 1 })
+      x += kandangWidth
+    }
     pdf.rect(x, y, nameWidth, headerHeight)
     pdf.text('Nama Karyawan', x + nameWidth / 2, y + 6.7, { align: 'center' })
     x += nameWidth
@@ -297,6 +311,12 @@ function exportPdf(rows, dateRange, department, startDate, endDate) {
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(9.5)
       pdf.setTextColor(20, 32, 51)
+      if (hasKandang) {
+        pdf.rect(x, y, kandangWidth, rowHeight)
+        const number = normalizedJob === 'KANDANG' ? (row.nomorKandang || '') : ''
+        if (number) pdf.text(String(number), x + kandangWidth / 2, y + 5.2, { align: 'center' })
+        x += kandangWidth
+      }
       pdf.rect(x, y, nameWidth, rowHeight)
       pdf.text(String(row.name || ''), x + 2.5, y + 5.2, { maxWidth: nameWidth - 5 })
       x += nameWidth
@@ -439,6 +459,7 @@ function App() {
   const [employeeFormName, setEmployeeFormName] = useState('')
   const [employeeFormDepartmentId, setEmployeeFormDepartmentId] = useState('')
   const [employeeFormJobId, setEmployeeFormJobId] = useState('')
+  const [employeeFormKandang, setEmployeeFormKandang] = useState('')
   const [employeeFormActive, setEmployeeFormActive] = useState(true)
   const [employeeFormStartDate, setEmployeeFormStartDate] = useState('')
   const [employeeFormEndDate, setEmployeeFormEndDate] = useState('')
@@ -509,7 +530,15 @@ function App() {
         (selectedJobs.length === 0 || selectedJobs.includes(row.job)) &&
         (selectedEmployees.length === 0 || selectedEmployeeSet.has(String(row.employeeId))),
       )
-      .sort((a, b) => (a.job || 'Belum ditentukan').trim().toLocaleUpperCase().localeCompare((b.job || 'Belum ditentukan').trim().toLocaleUpperCase()) || a.name.localeCompare(b.name))
+      .sort((a, b) => {
+        const jobCompare = (a.job || 'Belum ditentukan').trim().toLocaleUpperCase().localeCompare((b.job || 'Belum ditentukan').trim().toLocaleUpperCase())
+        if (jobCompare) return jobCompare
+        if ((a.job || '').trim().toLocaleUpperCase() === 'KANDANG') {
+          const kandangCompare = (a.nomorKandang || 'ZZ').localeCompare(b.nomorKandang || 'ZZ', 'id', { numeric: true, sensitivity: 'base' })
+          if (kandangCompare) return kandangCompare
+        }
+        return a.name.localeCompare(b.name, 'id', { sensitivity: 'base' })
+      })
   }, [rows, department, selectedJobs, selectedEmployees, selectedEmployeeSet])
 
   function toggleEmployee(employeeId) {
@@ -1059,7 +1088,7 @@ function App() {
       const [{ data: employeeData, error: employeeError }, { data: departmentData, error: departmentError }, { data: jobData, error: jobError }] = await Promise.all([
         supabase
           .from('employees')
-          .select('id,kode_karyawan,nama,aktif,department_id,job_id,tanggal_masuk,tanggal_keluar,keterangan,departments(id,nama_departemen),jobs(id,nama_job,department_id)')
+          .select('id,kode_karyawan,nama,aktif,department_id,job_id,nomor_kandang,tanggal_masuk,tanggal_keluar,keterangan,departments(id,nama_departemen),jobs(id,nama_job,department_id)')
           .order('nama'),
         supabase
           .from('departments')
@@ -1161,6 +1190,7 @@ function App() {
     setEmployeeFormName(employee?.nama || '')
     setEmployeeFormDepartmentId(employee ? String(employee.department_id || '') : String(masterDepartments[0]?.id || ''))
     setEmployeeFormJobId(employee?.job_id ? String(employee.job_id) : '')
+    setEmployeeFormKandang(employee?.nomor_kandang || '')
     setEmployeeFormActive(employee ? Boolean(employee.aktif) : true)
     setEmployeeFormStartDate(employee?.tanggal_masuk || '')
     setEmployeeFormEndDate(employee?.tanggal_keluar || '')
@@ -1461,6 +1491,7 @@ function App() {
       nama: name,
       department_id: Number(employeeFormDepartmentId),
       job_id: employeeFormJobId ? Number(employeeFormJobId) : null,
+      nomor_kandang: employeeFormJobId && masterJobs.find((item) => String(item.id) === String(employeeFormJobId))?.nama_job?.trim().toLocaleUpperCase() === 'KANDANG' ? (employeeFormKandang || null) : null,
       aktif: employeeFormActive,
       tanggal_masuk: employeeFormStartDate || null,
       tanggal_keluar: employeeFormActive ? null : (employeeFormEndDate || null),
@@ -1776,7 +1807,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
       const [{ data: employeeData, error: employeeError }, { data: scheduleData, error: scheduleError }] = await Promise.all([
         supabase
           .from('employees')
-          .select('id,nama,aktif,departments(nama_departemen),jobs(nama_job)')
+          .select('id,nama,aktif,nomor_kandang,departments(nama_departemen),jobs(nama_job)')
           .eq('aktif', true)
           .order('nama'),
         supabase
@@ -1811,6 +1842,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
           job: masterJob,
           jobs: new Set(masterJob ? [masterJob] : []),
           name: employee.nama,
+          nomorKandang: employee.nomor_kandang || '',
           codes: {},
           details: {},
           assignmentDays: new Set(),
@@ -2195,6 +2227,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
                     <th className="employee-master-name">Nama Karyawan</th>
                     <th>Departemen</th>
                     <th>JOB</th>
+                    <th>No. Kandang</th>
                     <th>Tanggal Masuk</th>
                     <th>Tanggal Berhenti</th>
                     <th>Status</th>
@@ -2211,6 +2244,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
                       <td className="employee-master-name">{employee.nama}</td>
                       <td>{employee.departments?.nama_departemen || '—'}</td>
                       <td>{employee.jobs?.nama_job || '—'}</td>
+                      <td>{employee.jobs?.nama_job?.trim().toLocaleUpperCase() === 'KANDANG' ? (employee.nomor_kandang || '—') : '—'}</td>
                       <td>{employee.tanggal_masuk || '—'}</td>
                       <td>{employee.tanggal_keluar || '—'}</td>
                       <td><span className={employee.aktif ? 'employee-status active' : 'employee-status inactive'}>{employee.aktif ? 'Aktif' : 'Berhenti'}</span></td>
@@ -2321,8 +2355,8 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
           {!loading && !error && !invalidRange && filteredRows.length > 0 && (
             <div className="wrap">
               <table>
-                <thead><tr>{showJobColumn && <th className="sticky-job">JOB</th>}<th className={showJobColumn ? "sticky-name" : "sticky-name no-job"}>Nama Karyawan</th>{dateRange.map(({ value, day, dayName }) => <th key={value} className={dayName === "MG" ? "sunday-header" : ""}>{day}<br /><span>{dayName}</span></th>)}</tr></thead>
-                <tbody>{filteredRows.map((row, index) => <Fragment key={row.employeeId || row.name}><tr hidden={index > 0 && (filteredRows[index - 1].job || '').trim().toLocaleUpperCase() === (row.job || '').trim().toLocaleUpperCase()}><td colSpan={dateRange.length + (showJobColumn ? 2 : 1)} style={{ background: '#eef3f8', fontWeight: 700, textAlign: 'left', padding: '8px 12px' }} >{(row.job || 'Belum ditentukan').trim()}</td></tr><tr key={row.employeeId || row.name}>{showJobColumn && <td className="sticky-job group">{row.job || '—'}</td>}<td className={showJobColumn ? "sticky-name" : "sticky-name no-job"}>{isAdmin ? <button type="button" className="schedule-name-button" onClick={() => openBulkScheduleEditor(row)} title="Atur jadwal bulanan">{row.name}</button> : row.name}</td>{dateRange.map(({ value }) => { const code = row.codes?.[value] || ''; const assignment = row.assignmentDays?.has(value); const detail = row.details?.[value]; return <td key={value}><button type="button" className={code ? assignment ? 'cell-button assignment' : `cell-button ${code}` : 'cell-button empty'} onClick={() => setSelectedCell({ row, date: value, detail })} title="Klik untuk melihat detail">{code || '—'}</button></td> })}</tr></Fragment>)}</tbody>
+                <thead><tr>{showJobColumn && <th className="sticky-job">JOB</th>}{filteredRows.some((row) => (row.job || '').trim().toLocaleUpperCase() === 'KANDANG') && <th>No. Kandang</th>}<th className={showJobColumn ? "sticky-name" : "sticky-name no-job"}>Nama Karyawan</th>{dateRange.map(({ value, day, dayName }) => <th key={value} className={dayName === "MG" ? "sunday-header" : ""}>{day}<br /><span>{dayName}</span></th>)}</tr></thead>
+                <tbody>{filteredRows.map((row, index) => <Fragment key={row.employeeId || row.name}><tr hidden={index > 0 && (filteredRows[index - 1].job || '').trim().toLocaleUpperCase() === (row.job || '').trim().toLocaleUpperCase()}><td colSpan={dateRange.length + (showJobColumn ? 2 : 1) + (filteredRows.some((row) => (row.job || '').trim().toLocaleUpperCase() === 'KANDANG') ? 1 : 0)} style={{ background: '#eef3f8', fontWeight: 700, textAlign: 'left', padding: '8px 12px' }} >{(row.job || 'Belum ditentukan').trim()}</td></tr><tr key={row.employeeId || row.name}>{showJobColumn && <td className="sticky-job group">{row.job || '—'}</td>}{filteredRows.some((item) => (item.job || '').trim().toLocaleUpperCase() === 'KANDANG') && <td className="kandang-number-cell">{(row.job || '').trim().toLocaleUpperCase() === 'KANDANG' ? (row.nomorKandang || '—') : '—'}</td>}<td className={showJobColumn ? "sticky-name" : "sticky-name no-job"}>{isAdmin ? <button type="button" className="schedule-name-button" onClick={() => openBulkScheduleEditor(row)} title="Atur jadwal bulanan">{row.name}</button> : row.name}</td>{dateRange.map(({ value }) => { const code = row.codes?.[value] || ''; const assignment = row.assignmentDays?.has(value); const detail = row.details?.[value]; return <td key={value}><button type="button" className={code ? assignment ? 'cell-button assignment' : `cell-button ${code}` : 'cell-button empty'} onClick={() => setSelectedCell({ row, date: value, detail })} title="Klik untuk melihat detail">{code || '—'}</button></td> })}</tr></Fragment>)}</tbody>
               </table>
             </div>
           )}
@@ -2686,11 +2720,17 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
                   </select>
                 </label>
                 <label>JOB
-                  <select value={employeeFormJobId} onChange={(e) => setEmployeeFormJobId(e.target.value)}>
+                  <select value={employeeFormJobId} onChange={(e) => { setEmployeeFormJobId(e.target.value); if (masterJobs.find((item) => String(item.id) === String(e.target.value))?.nama_job?.trim().toLocaleUpperCase() !== 'KANDANG') setEmployeeFormKandang('') }}>
                     <option value="">Belum ditentukan</option>
                     {employeeFormJobs.map((item) => <option key={item.id} value={item.id}>{item.nama_job}</option>)}
                   </select>
                 </label>
+                {masterJobs.find((item) => String(item.id) === String(employeeFormJobId))?.nama_job?.trim().toLocaleUpperCase() === 'KANDANG' && <label>No. Kandang (opsional)
+                  <select value={employeeFormKandang} onChange={(e) => setEmployeeFormKandang(e.target.value)}>
+                    <option value="">Tidak ditentukan</option>
+                    {Array.from({ length: 12 }, (_, index) => `A${index + 1}`).map((number) => <option key={number} value={number}>{number}</option>)}
+                  </select>
+                </label>}
                 <label>Tanggal Masuk
                   <input type="date" value={employeeFormStartDate} onChange={(e) => setEmployeeFormStartDate(e.target.value)} />
                 </label>
