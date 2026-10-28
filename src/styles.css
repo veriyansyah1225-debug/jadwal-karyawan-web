@@ -469,3 +469,27 @@
   .schedule-card .title{break-after:avoid!important;page-break-after:avoid!important}
   .schedule-card .title h2{margin-bottom:3mm!important}
 }
+
+
+@media print{
+  /* Explicitly keep the schedule card and its title visible in enlarged mode. */
+  .focus-mode .main>.card.schedule-card,
+  .focus-mode .main>section.schedule-card{
+    display:block!important;
+    visibility:visible!important;
+  }
+  .focus-mode .schedule-card .title,
+  .focus-mode .schedule-card .title h2{
+    display:block!important;
+    visibility:visible!important;
+    height:auto!important;
+    max-height:none!important;
+    overflow:visible!important;
+    color:#142033!important;
+  }
+  .focus-mode .schedule-card .title h2{
+    font-size:16pt!important;
+    line-height:1.25!important;
+    margin:0 0 3mm!important;
+  }
+}
