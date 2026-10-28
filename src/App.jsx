@@ -31,6 +31,15 @@ function formatDisplayDate(value) {
   })
 }
 
+function formatExportDate(value) {
+  if (!value) return ''
+  return new Date(`${value}T00:00:00`).toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
 function getDateRange(startDate, endDate) {
   if (!startDate || !endDate || startDate > endDate) return []
 
@@ -84,7 +93,7 @@ function exportExcel(rows, dateRange, department, startDate, endDate) {
   const title = [
     ['Jadwal Karyawan'],
     ['Departemen: ' + department],
-    ['Periode: ' + startDate + ' s/d ' + endDate],
+    ['Periode: ' + formatExportDate(startDate) + ' s/d ' + formatExportDate(endDate)],
     [],
   ]
   const matrix = [...title, ...buildExportMatrix(rows, dateRange)]
@@ -257,7 +266,7 @@ function exportPdf(rows, dateRange, department, startDate, endDate) {
     pdf.text('Jadwal Karyawan', margin, margin + 4)
     pdf.setFont('helvetica', 'normal')
     pdf.setFontSize(9)
-    pdf.text('Departemen: ' + department + ' | Periode: ' + startDate + ' s/d ' + endDate, margin, margin + 10)
+    pdf.text('Departemen: ' + department + ' | Periode: ' + formatExportDate(startDate) + ' s/d ' + formatExportDate(endDate), margin, margin + 10)
     pdf.text('A4 | Seluruh tanggal | Halaman ' + (pageIndex + 1) + '/' + totalPages, pageWidth - margin, margin + 10, { align: 'right' })
 
     let y = margin + titleHeight
