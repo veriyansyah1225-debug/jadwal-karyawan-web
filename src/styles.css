@@ -436,3 +436,36 @@
   }
   .schedule-card thead th.sticky-name.after-kandang{white-space:normal!important}
 }
+
+
+@media print{
+  /* Print layout must ignore screen-only enlarged/focus mode dimensions. */
+  html,body,#root,.app,.focus-mode,.focus-mode .main{
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow:visible!important;
+  }
+  .focus-mode .main{padding:0!important}
+  .focus-mode .main>.card,
+  .focus-mode .main>.card.schedule-card,
+  .schedule-card{
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:visible!important;
+    break-inside:auto!important;
+    page-break-inside:auto!important;
+  }
+  .focus-mode .wrap,
+  .schedule-card .wrap{
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow:visible!important;
+  }
+  .schedule-card .title{break-after:avoid!important;page-break-after:avoid!important}
+  .schedule-card .title h2{margin-bottom:3mm!important}
+}
