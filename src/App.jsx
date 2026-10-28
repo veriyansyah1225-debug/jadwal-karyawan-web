@@ -2236,7 +2236,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
                 </thead>
                 <tbody>
                   {filteredEmployeeMasterRows.length === 0 && (
-                    <tr><td colSpan={isAdmin ? 8 : 7}><div className="state">Tidak ada data karyawan yang sesuai.</div></td></tr>
+                    <tr><td colSpan={isAdmin ? 9 : 8}><div className="state">Tidak ada data karyawan yang sesuai.</div></td></tr>
                   )}
                   {filteredEmployeeMasterRows.map((employee) => (
                     <tr key={employee.id}>
