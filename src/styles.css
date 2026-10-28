@@ -413,3 +413,26 @@
 .schedule-card tbody td.sticky-job,
 .schedule-card tbody td.kandang-number-cell,
 .schedule-card tbody td.sticky-name{z-index:5}
+
+
+@media print{
+  /* Compact the pen-number column and give employee names more room on paper. */
+  .schedule-card thead th.sticky-kandang,
+  .schedule-card tbody td.kandang-number-cell{
+    width:14mm!important;
+    min-width:14mm!important;
+    max-width:14mm!important;
+    padding:2px 1px!important;
+    text-align:center!important;
+    white-space:nowrap!important;
+  }
+  .schedule-card thead th.sticky-name.after-kandang,
+  .schedule-card tbody td.sticky-name.after-kandang{
+    width:48mm!important;
+    min-width:48mm!important;
+    max-width:48mm!important;
+    text-align:left!important;
+    padding:2px 2mm!important;
+  }
+  .schedule-card thead th.sticky-name.after-kandang{white-space:normal!important}
+}
