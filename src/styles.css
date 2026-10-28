@@ -493,3 +493,22 @@
     margin:0 0 3mm!important;
   }
 }
+
+
+/* The repeated title row is used only by browser printing. */
+.schedule-card .print-repeat-title{display:none}
+@media print{
+  .schedule-card .title{display:none!important}
+  .schedule-card thead tr.print-repeat-title{display:table-row!important;break-inside:avoid!important;page-break-inside:avoid!important}
+  .schedule-card thead tr.print-repeat-title th{
+    display:table-cell!important;
+    text-align:left!important;
+    background:#fff!important;
+    color:#142033!important;
+    font-size:11pt!important;
+    font-weight:800!important;
+    padding:0 0 3mm!important;
+    height:auto!important;
+    border:0!important;
+  }
+}
