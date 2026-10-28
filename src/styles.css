@@ -401,3 +401,13 @@
   .schedule-card .sticky-name.after-kandang{left:210px!important}
   .schedule-card .sticky-name.no-job.after-kandang{left:90px!important}
 }
+
+
+/* Layering fix: the frozen header must paint above scrolling employee-name cells. */
+.schedule-card thead th{z-index:10}
+.schedule-card thead th.sticky-job,
+.schedule-card thead th.sticky-kandang,
+.schedule-card thead th.sticky-name{z-index:12}
+.schedule-card tbody td.sticky-job,
+.schedule-card tbody td.kandang-number-cell,
+.schedule-card tbody td.sticky-name{z-index:5}
