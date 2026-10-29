@@ -598,3 +598,30 @@
   .schedule-card td button.L{background:#ffc7ce!important;color:#7f1d1d!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
   .schedule-card td button.CT{background:#ffe0a3!important;color:#7c4a03!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 }
+
+
+@media print{
+  /* Final print sizing: name column must not collapse into a narrow first column. */
+  html body .schedule-card table{width:100%!important;min-width:0!important;table-layout:fixed!important}
+  html body .schedule-card thead th.sticky-name.no-job,
+  html body .schedule-card tbody td.sticky-name.no-job{
+    width:65mm!important;min-width:65mm!important;max-width:65mm!important;
+    white-space:nowrap!important;overflow:hidden!important;overflow-wrap:normal!important;
+    padding:1mm 2mm!important;text-align:left!important;font-size:6.5pt!important;
+  }
+  html body .schedule-card thead th.sticky-name:not(.no-job),
+  html body .schedule-card tbody td.sticky-name:not(.no-job){
+    width:52mm!important;min-width:52mm!important;max-width:52mm!important;
+    white-space:nowrap!important;overflow:hidden!important;overflow-wrap:normal!important;
+    padding:1mm 1.5mm!important;text-align:left!important;font-size:6.5pt!important;
+  }
+  html body .schedule-card thead th.sticky-job,
+  html body .schedule-card tbody td.sticky-job{
+    width:22mm!important;min-width:22mm!important;max-width:22mm!important;
+  }
+  html body .schedule-card thead th.sticky-kandang,
+  html body .schedule-card tbody td.kandang-number-cell{
+    width:13mm!important;min-width:13mm!important;max-width:13mm!important;
+  }
+  html body .schedule-card thead th.sticky-name{font-size:7pt!important}
+}
