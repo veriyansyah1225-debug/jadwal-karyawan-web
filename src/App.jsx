@@ -110,7 +110,7 @@ function exportExcel(rows, dateRange, department, startDate, endDate) {
     left: { style: 'thin', color: { rgb: 'D7DEE9' } },
     right: { style: 'thin', color: { rgb: 'D7DEE9' } },
   }
-  const codeFill = { P: 'C9F2CF', S: 'CBE2FB', M: 'FFE9A8', L: 'FFD0D0', CT: 'DED0FF' }
+  const codeFill = { P: 'C9F2CF', S: 'CBE2FB', M: 'FFE9A8', L: 'FFC7CE', CT: 'FFE0A3' }
 
   worksheet['!merges'] = [
     { s: { r: 0, c: 0 }, e: { r: 0, c: lastColumn - 1 } },
@@ -225,8 +225,8 @@ function exportPdf(rows, dateRange, department, startDate, endDate) {
     P: [201, 242, 207],
     S: [203, 226, 251],
     M: [255, 233, 168],
-    L: [255, 208, 208],
-    CT: [222, 208, 255],
+    L: [255, 199, 206],
+    CT: [255, 224, 163],
   }
 
   // Count JOB heading rows as well as employee rows to avoid overflow.
