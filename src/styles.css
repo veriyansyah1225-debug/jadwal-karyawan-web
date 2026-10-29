@@ -656,3 +656,69 @@
     text-align:center!important;white-space:nowrap!important;font-size:6.5pt!important;
   }
 }
+
+
+@media print{
+  /* Final layout correction: give every calendar day exactly the same width. */
+  html body .schedule-card table{
+    width:100%!important;
+    min-width:0!important;
+    table-layout:fixed!important;
+    border-collapse:collapse!important;
+  }
+  html body .schedule-card thead tr:not(.print-repeat-title) th.sticky-name.no-job,
+  html body .schedule-card tbody td.sticky-name.no-job{
+    width:80mm!important;min-width:80mm!important;max-width:80mm!important;
+  }
+  html body .schedule-card thead tr:not(.print-repeat-title) th.sticky-name:not(.no-job),
+  html body .schedule-card tbody td.sticky-name:not(.no-job){
+    width:65mm!important;min-width:65mm!important;max-width:65mm!important;
+  }
+  html body .schedule-card thead tr:not(.print-repeat-title) th.sticky-job,
+  html body .schedule-card tbody td.sticky-job{
+    width:22mm!important;min-width:22mm!important;max-width:22mm!important;
+  }
+  html body .schedule-card thead tr:not(.print-repeat-title) th.sticky-kandang,
+  html body .schedule-card tbody td.kandang-number-cell{
+    width:13mm!important;min-width:13mm!important;max-width:13mm!important;
+  }
+  /* No JOB or No. Kandang: name + 31 equal date columns. */
+  html body .schedule-card table:not(:has(th.sticky-job)):not(:has(th.sticky-kandang))
+    thead tr:not(.print-repeat-title) th:not(.sticky-name),
+  html body .schedule-card table:not(:has(th.sticky-job)):not(:has(th.sticky-kandang))
+    tbody tr:not(.group) td:not(.sticky-name){
+    width:calc((100% - 80mm)/31)!important;
+    min-width:0!important;max-width:none!important;
+  }
+  /* JOB only: JOB + name + equal date columns. */
+  html body .schedule-card table:has(th.sticky-job):not(:has(th.sticky-kandang))
+    thead tr:not(.print-repeat-title) th:not(.sticky-job):not(.sticky-name),
+  html body .schedule-card table:has(th.sticky-job):not(:has(th.sticky-kandang))
+    tbody tr:not(.group) td:not(.sticky-job):not(.sticky-name){
+    width:calc((100% - 22mm - 65mm)/31)!important;
+    min-width:0!important;max-width:none!important;
+  }
+  /* No. Kandang only: kandang + name + equal date columns. */
+  html body .schedule-card table:not(:has(th.sticky-job)):has(th.sticky-kandang)
+    thead tr:not(.print-repeat-title) th:not(.sticky-kandang):not(.sticky-name),
+  html body .schedule-card table:not(:has(th.sticky-job)):has(th.sticky-kandang)
+    tbody tr:not(.group) td:not(.kandang-number-cell):not(.sticky-name){
+    width:calc((100% - 13mm - 65mm)/31)!important;
+    min-width:0!important;max-width:none!important;
+  }
+  /* JOB + No. Kandang: both fixed columns and equal date columns. */
+  html body .schedule-card table:has(th.sticky-job):has(th.sticky-kandang)
+    thead tr:not(.print-repeat-title) th:not(.sticky-job):not(.sticky-kandang):not(.sticky-name),
+  html body .schedule-card table:has(th.sticky-job):has(th.sticky-kandang)
+    tbody tr:not(.group) td:not(.sticky-job):not(.kandang-number-cell):not(.sticky-name){
+    width:calc((100% - 22mm - 13mm - 65mm)/31)!important;
+    min-width:0!important;max-width:none!important;
+  }
+  html body .schedule-card tbody td.sticky-name{
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:clip!important;
+    padding-left:2mm!important;padding-right:2mm!important;
+    border-right:1px solid #b9c5d5!important;
+  }
+}
