@@ -512,3 +512,31 @@
     border:0!important;
   }
 }
+
+
+@media print{
+  /* Explicit print column proportions; avoid the generic first-column rule
+     forcing JOB or No. Kandang to consume too much width. */
+  .schedule-card table{table-layout:fixed!important;width:100%!important}
+  .schedule-card thead th.sticky-job,
+  .schedule-card tbody td.sticky-job{
+    width:24mm!important;min-width:24mm!important;max-width:24mm!important;
+    padding-left:1.5mm!important;padding-right:1mm!important;text-align:left!important;
+  }
+  .schedule-card thead th.sticky-kandang,
+  .schedule-card tbody td.kandang-number-cell{
+    width:13mm!important;min-width:13mm!important;max-width:13mm!important;
+    padding-left:0.5mm!important;padding-right:0.5mm!important;text-align:center!important;
+  }
+  .schedule-card thead th.sticky-name,
+  .schedule-card tbody td.sticky-name{
+    width:52mm!important;min-width:52mm!important;max-width:52mm!important;
+    padding-left:1.5mm!important;padding-right:1mm!important;text-align:left!important;
+    overflow-wrap:anywhere!important;
+  }
+  .schedule-card thead th:not(.sticky-job):not(.sticky-kandang):not(.sticky-name),
+  .schedule-card tbody td:not(.sticky-job):not(.kandang-number-cell):not(.sticky-name){
+    min-width:0!important;padding-left:0!important;padding-right:0!important;
+    text-align:center!important;
+  }
+}
