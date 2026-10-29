@@ -722,3 +722,35 @@
     border-right:1px solid #b9c5d5!important;
   }
 }
+
+
+@media print{
+  /* Prevent employee names from visually spilling into date cells. */
+  html body .schedule-card table{table-layout:fixed!important;width:100%!important}
+  html body .schedule-card thead th.sticky-name,
+  html body .schedule-card tbody td.sticky-name{
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+    text-overflow:clip!important;
+    white-space:nowrap!important;
+    overflow-wrap:normal!important;
+    word-break:normal!important;
+    position:static!important;
+    z-index:auto!important;
+    background:#fff!important;
+  }
+  html body .schedule-card thead th.sticky-name.no-job,
+  html body .schedule-card tbody td.sticky-name.no-job{
+    width:80mm!important;min-width:80mm!important;max-width:80mm!important;
+  }
+  html body .schedule-card thead th.sticky-name:not(.no-job),
+  html body .schedule-card tbody td.sticky-name:not(.no-job){
+    width:65mm!important;min-width:65mm!important;max-width:65mm!important;
+  }
+  html body .schedule-card thead th.sticky-job,
+  html body .schedule-card tbody td.sticky-job,
+  html body .schedule-card thead th.sticky-kandang,
+  html body .schedule-card tbody td.kandang-number-cell{
+    box-sizing:border-box!important;overflow:hidden!important;
+  }
+}
