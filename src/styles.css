@@ -625,3 +625,34 @@
   }
   html body .schedule-card thead th.sticky-name{font-size:7pt!important}
 }
+
+
+@media print{
+  /* Further widen employee-name column; date columns share the remaining width. */
+  html body .schedule-card table{width:100%!important;min-width:0!important;table-layout:fixed!important}
+  html body .schedule-card thead th.sticky-name.no-job,
+  html body .schedule-card tbody td.sticky-name.no-job{
+    width:80mm!important;min-width:80mm!important;max-width:80mm!important;
+    white-space:nowrap!important;overflow:visible!important;overflow-wrap:normal!important;
+    padding:1mm 2mm!important;text-align:left!important;font-size:7pt!important;
+  }
+  html body .schedule-card thead th.sticky-name:not(.no-job),
+  html body .schedule-card tbody td.sticky-name:not(.no-job){
+    width:65mm!important;min-width:65mm!important;max-width:65mm!important;
+    white-space:nowrap!important;overflow:visible!important;overflow-wrap:normal!important;
+    padding:1mm 2mm!important;text-align:left!important;font-size:7pt!important;
+  }
+  html body .schedule-card thead th.sticky-job,
+  html body .schedule-card tbody td.sticky-job{
+    width:22mm!important;min-width:22mm!important;max-width:22mm!important;
+  }
+  html body .schedule-card thead th.sticky-kandang,
+  html body .schedule-card tbody td.kandang-number-cell{
+    width:13mm!important;min-width:13mm!important;max-width:13mm!important;
+  }
+  html body .schedule-card thead th:not(.sticky-job):not(.sticky-kandang):not(.sticky-name),
+  html body .schedule-card tbody td:not(.sticky-job):not(.kandang-number-cell):not(.sticky-name){
+    min-width:0!important;padding-left:0!important;padding-right:0!important;
+    text-align:center!important;white-space:nowrap!important;font-size:6.5pt!important;
+  }
+}
