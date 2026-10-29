@@ -128,7 +128,8 @@ function exportExcel(rows, dateRange, department, startDate, endDate) {
   ]
   worksheet['!freeze'] = { xSplit: 1, ySplit: headerRow }
   worksheet['!autofilter'] = { ref: 'A' + (headerRow + 1) + ':' + lastColumnLetter + matrix.length }
-  worksheet['!pageSetup'] = { orientation: 'landscape', paperSize: 9, fitToWidth: 1, fitToHeight: 0 }\n  worksheet['!pageMargins'] = { left: 0.1969, right: 0.1969, top: 0.1969, bottom: 0.1969, header: 0.1, footer: 0.1 }
+  worksheet['!pageSetup'] = { orientation: 'landscape', paperSize: 9, fitToWidth: 1, fitToHeight: 0 }
+  worksheet['!pageMargins'] = { left: 0.1969, right: 0.1969, top: 0.1969, bottom: 0.1969, header: 0.1, footer: 0.1 }
   worksheet['!printHeader'] = [(headerRow + 1) + ':' + (headerRow + 1)]
 
   const titleStyle = {
