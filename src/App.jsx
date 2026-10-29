@@ -145,6 +145,11 @@ function exportExcel(rows, dateRange, department, startDate, endDate) {
     alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
     border,
   }
+  const sundayHeaderStyle = {
+    ...headerStyle,
+    font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: 'B33A3A' } },
+    fill: { patternType: 'solid', fgColor: { rgb: 'FFC7CE' } },
+  }
   const nameStyle = {
     font: { name: 'Calibri', sz: 10, color: { rgb: '142033' } },
     alignment: { horizontal: 'left', vertical: 'center' },
