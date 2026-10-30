@@ -68,7 +68,7 @@ function getDateRange(startDate, endDate) {
 function buildExportMatrix(rows, dateRange) {
   const hasKandang = rows.some((row) => (row.job || '').trim().toLocaleUpperCase() === 'KANDANG')
   const header = [
-    ...(hasKandang ? ['No. Kandang'] : []),
+    ...(hasKandang ? ['No. Kd'] : []),
     'Nama Karyawan',
     ...dateRange.map(({ day, dayName }) => `${day}\n${dayName}`),
   ]
@@ -118,9 +118,9 @@ function exportExcel(rows, dateRange, department, startDate, endDate) {
     { s: { r: 2, c: 0 }, e: { r: 2, c: lastColumn - 1 } },
   ]
   worksheet['!cols'] = [
-    ...(hasKandang ? [{ wch: 10 }] : []),
-    { wch: 24 },
-    ...dateRange.map(() => ({ wch: 3.29 })),
+    ...(hasKandang ? [{ wch: 4.8 }] : []),
+    { wch: 22 },
+    ...dateRange.map(() => ({ wch: 3 })),
   ]
   worksheet['!rows'] = [
     { hpt: 24 }, { hpt: 20 }, { hpt: 20 }, { hpt: 8 }, { hpt: 34 },
