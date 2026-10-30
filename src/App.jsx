@@ -118,9 +118,9 @@ function exportExcel(rows, dateRange, department, startDate, endDate) {
     { s: { r: 2, c: 0 }, e: { r: 2, c: lastColumn - 1 } },
   ]
   worksheet['!cols'] = [
-    ...(hasKandang ? [{ wch: 14 }] : []),
-    { wch: 30 },
-    ...dateRange.map(() => ({ wch: 10 })),
+    ...(hasKandang ? [{ wch: 10 }] : []),
+    { wch: 24 },
+    ...dateRange.map(() => ({ wch: 3.29 })),
   ]
   worksheet['!rows'] = [
     { hpt: 24 }, { hpt: 20 }, { hpt: 20 }, { hpt: 8 }, { hpt: 34 },
