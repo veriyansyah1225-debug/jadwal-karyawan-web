@@ -805,3 +805,12 @@
     text-overflow:clip!important;
   }
 }
+
+
+/* Compact default web UI scale: reduce typography and component frames together. */
+@media screen{
+  .app{zoom:.75}
+}
+@media print{
+  .app{zoom:1!important}
+}
