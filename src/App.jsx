@@ -2083,7 +2083,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
         <nav className="nav">
           <button type="button" className={activeTab === 'schedule' ? 'nav-settings active' : 'nav-settings'} onClick={() => setActiveTab('schedule')}>⌂ &nbsp; Jadwal Karyawan</button>
           <button type="button" className={activeTab === 'employees' ? 'nav-settings active' : 'nav-settings'} onClick={() => setActiveTab('employees')}>♟ &nbsp; Karyawan</button>
-          <button type="button" className={activeTab === 'schedule-info' ? 'nav-settings active' : 'nav-settings'} onClick={() => setActiveTab('schedule-info')}><span aria-hidden="true">◷</span><span className="schedule-update-nav-label">Update Perubahan Jadwal</span></button>
+          <button type="button" className={activeTab === 'schedule-info' ? 'nav-settings schedule-update-nav active' : 'nav-settings schedule-update-nav'} onClick={() => setActiveTab('schedule-info')}><span aria-hidden="true">◷</span><span className="schedule-update-nav-label">Update Perubahan Jadwal</span></button>
           {isAdmin && <button type="button" className={activeTab === 'logs' ? 'nav-settings active' : 'nav-settings'} onClick={() => setActiveTab('logs')}>◷ &nbsp; Riwayat Aktivitas</button>}
           <div>▦ &nbsp; Departemen</div>
           <div>▣ &nbsp; JOB</div>
