@@ -459,6 +459,10 @@ function App() {
   const [adminDeleteLoading, setAdminDeleteLoading] = useState(false)
   const [adminDeleteError, setAdminDeleteError] = useState('')
   const [activeTab, setActiveTab] = useState('schedule')
+  const [activityMonth, setActivityMonth] = useState(String(today.getFullYear()) + '-' + String(today.getMonth() + 1).padStart(2, '0'))
+  const [scheduleActivityRows, setScheduleActivityRows] = useState([])
+  const [scheduleActivityLoading, setScheduleActivityLoading] = useState(false)
+  const [scheduleActivityError, setScheduleActivityError] = useState('')
   const [activeLogTab, setActiveLogTab] = useState('')
   const [supabaseLogsLoaded, setSupabaseLogsLoaded] = useState(false)
   const [loginDateTo, setLoginDateTo] = useState(toInputDate(new Date()))
@@ -1564,6 +1568,7 @@ function App() {
           tanggal: adminScheduleDate,
           schedule_code_id: Number(adminScheduleCodeId),
           keterangan: adminScheduleNote.trim() || null,
+          updated_at: new Date().toISOString(),
         },
         { onConflict: 'employee_id,tanggal' },
       )
@@ -1732,6 +1737,7 @@ function updateBulkScheduleValue(code, value) {
           job_id: null,
           department_id: existingByDate.get(item.date)?.department_id ?? null,
           keterangan: existingByDate.get(item.date)?.keterangan || null,
+          updated_at: new Date().toISOString(),
         }))
         const { error: upsertError } = await supabase
           .from('employee_schedules')
@@ -1783,6 +1789,59 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
     await deleteAdminSchedule(selectedCell.row.employeeId, selectedCell.date, selectedCell.row.name)
   }
 
+  useEffect(() => {
+    if (!supabaseConfigured || !supabase || !session?.user?.id || activeTab !== 'schedule-info') return
+    let cancelled = false
+
+    async function loadScheduleActivity() {
+      setScheduleActivityLoading(true)
+      setScheduleActivityError('')
+      try {
+        const [year, month] = activityMonth.split('-').map(Number)
+        if (!year || !month) throw new Error('Bulan yang dipilih tidak valid.')
+        // Batas waktu bulan berdasarkan zona waktu Jakarta (UTC+7).
+        const start = new Date(Date.UTC(year, month - 1, 1) - (7 * 60 * 60 * 1000)).toISOString()
+        const end = new Date(Date.UTC(year, month, 1) - (7 * 60 * 60 * 1000)).toISOString()
+        const { data: scheduleData, error: scheduleError } = await supabase
+          .from('employee_schedules')
+          .select('employee_id,updated_at')
+          .gte('updated_at', start)
+          .lt('updated_at', end)
+          .order('updated_at', { ascending: false })
+        if (scheduleError) throw new Error(scheduleError.message)
+
+        const employeeIds = [...new Set((scheduleData || []).map((item) => item.employee_id).filter(Boolean))]
+        let employeeNames = new Map()
+        if (employeeIds.length) {
+          const { data: employeeData, error: employeeError } = await supabase
+            .from('employees')
+            .select('id,nama')
+            .in('id', employeeIds)
+          if (employeeError) throw new Error(employeeError.message)
+          employeeNames = new Map((employeeData || []).map((item) => [String(item.id), item.nama]))
+        }
+
+        const grouped = new Map()
+        for (const item of scheduleData || []) {
+          const name = employeeNames.get(String(item.employee_id))
+          if (!name || !item.updated_at) continue
+          const updatedAt = new Date(item.updated_at)
+          const dateKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit' }).format(updatedAt)
+          const key = String(item.employee_id) + '-' + dateKey
+          if (!grouped.has(key)) grouped.set(key, { id: key, date: dateKey, name })
+        }
+        const result = [...grouped.values()].sort((a, b) => b.date.localeCompare(a.date) || a.name.localeCompare(b.name, 'id'))
+        if (!cancelled) setScheduleActivityRows(result)
+      } catch (loadError) {
+        if (!cancelled) setScheduleActivityError(loadError.message || 'Gagal memuat informasi perubahan jadwal.')
+      } finally {
+        if (!cancelled) setScheduleActivityLoading(false)
+      }
+    }
+
+    loadScheduleActivity()
+    return () => { cancelled = true }
+  }, [session?.user?.id, activeTab, activityMonth, scheduleRefresh])
   useEffect(() => {
     let lastScrollY = window.scrollY
     let ticking = false
@@ -2023,6 +2082,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
         <nav className="nav">
           <button type="button" className={activeTab === 'schedule' ? 'nav-settings active' : 'nav-settings'} onClick={() => setActiveTab('schedule')}>⌂ &nbsp; Jadwal Karyawan</button>
           <button type="button" className={activeTab === 'employees' ? 'nav-settings active' : 'nav-settings'} onClick={() => setActiveTab('employees')}>♟ &nbsp; Karyawan</button>
+          <button type="button" className={activeTab === 'schedule-info' ? 'nav-settings active' : 'nav-settings'} onClick={() => setActiveTab('schedule-info')}>◷ &nbsp; Informasi Perubahan Jadwal</button>
           {isAdmin && <button type="button" className={activeTab === 'logs' ? 'nav-settings active' : 'nav-settings'} onClick={() => setActiveTab('logs')}>◷ &nbsp; Riwayat Aktivitas</button>}
           <div>▦ &nbsp; Departemen</div>
           <div>▣ &nbsp; JOB</div>
@@ -2035,14 +2095,14 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
       <header className="mobile-header">
         <div className="mobile-brand">
           <strong>Jadwal Karyawan</strong>
-          <span>{activeTab === 'employees' ? 'Master Karyawan' : activeTab === 'logs' ? 'Riwayat Aktivitas' : department}</span>
+          <span>{activeTab === 'employees' ? 'Master Karyawan' : activeTab === 'logs' ? 'Riwayat Aktivitas' : activeTab === 'schedule-info' ? 'Informasi Perubahan Jadwal' : department}</span>
         </div>
         <button className="mobile-header-button" type="button" onClick={() => setSettingsOpen(true)} aria-label="Buka pengaturan">⚙</button>
       </header>
 
       <main className="main">
-        <h1>{activeTab === 'employees' ? 'Master Karyawan' : activeTab === 'logs' ? 'Riwayat Aktivitas' : 'Jadwal Karyawan'}</h1>
-        <p className="sub">{activeTab === 'employees' ? 'Kelola data master karyawan dan status kepegawaian.' : activeTab === 'logs' ? 'Log permintaan API Supabase yang gagal dalam 24 jam terakhir.' : 'Frontend awal berdasarkan Prototype UI v2'}</p>
+        <h1>{activeTab === 'employees' ? 'Master Karyawan' : activeTab === 'logs' ? 'Riwayat Aktivitas' : activeTab === 'schedule-info' ? 'Informasi Perubahan Jadwal' : 'Jadwal Karyawan'}</h1>
+        <p className="sub">{activeTab === 'employees' ? 'Kelola data master karyawan dan status kepegawaian.' : activeTab === 'logs' ? 'Log permintaan API Supabase yang gagal dalam 24 jam terakhir.' : activeTab === 'schedule-info' ? 'Tanggal pencatatan atau pembaruan jadwal karyawan pada bulan yang dipilih.' : 'Frontend awal berdasarkan Prototype UI v2'}</p>
 
         {activeTab === 'logs' ? (
           !supabaseLogsVerified ? (
@@ -2207,8 +2267,45 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
             )}
           </>
           )
-        ) : activeTab === 'employees' ? (
-          <section className="card employee-master-card">
+        ) : activeTab === 'schedule-info' ? (
+          <section className="card schedule-activity-card">
+            <div className="title">
+              <div>
+                <h2>Aktivitas Jadwal</h2>
+                <div className="meta">{scheduleActivityRows.length} karyawan tercatat pada bulan yang dipilih</div>
+              </div>
+              <div className="filters">
+                <div>
+                  <label htmlFor="schedule-activity-month">Bulan</label>
+                  <input id="schedule-activity-month" type="month" value={activityMonth} onChange={(event) => setActivityMonth(event.target.value)} />
+                </div>
+              </div>
+            </div>
+            <div className="meta" style={{ marginBottom: 12 }}>
+              Daftar menampilkan nama karyawan satu kali per tanggal berdasarkan kolom updated_at. Untuk data lama, waktu tersebut dapat sama dengan waktu pembuatan jadwal; perubahan yang disimpan mulai sekarang akan memperbarui waktu ini.
+            </div>
+            {scheduleActivityLoading && <div className="state">Memuat informasi jadwal...</div>}
+            {scheduleActivityError && <div className="state error">{scheduleActivityError}</div>}
+            {!scheduleActivityLoading && !scheduleActivityError && scheduleActivityRows.length === 0 && (
+              <div className="state">Belum ada aktivitas jadwal pada bulan ini.</div>
+            )}
+            {!scheduleActivityLoading && !scheduleActivityError && scheduleActivityRows.length > 0 && (
+              <div className="wrap">
+                <table>
+                  <thead><tr><th>Tanggal</th><th>Nama Karyawan</th></tr></thead>
+                  <tbody>
+                    {scheduleActivityRows.map((item) => (
+                      <tr key={item.id}>
+                        <td>{new Date(item.date + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}</td>
+                        <td>{item.name}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        ) : activeTab === 'employees' ? (          <section className="card employee-master-card">
             <div className="title">
               <div>
                 <h2>Data Karyawan</h2>
@@ -2406,6 +2503,9 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
         </button>
         <button type="button" className={activeTab === 'employees' ? 'mobile-nav-item active' : 'mobile-nav-item'} onClick={() => setActiveTab('employees')}>
           <span>♟</span><small>Karyawan</small>
+        </button>
+        <button type="button" className={activeTab === 'schedule-info' ? 'mobile-nav-item active' : 'mobile-nav-item'} onClick={() => setActiveTab('schedule-info')}>
+          <span>◷</span><small>Info</small>
         </button>
         <button type="button" className={settingsOpen ? 'mobile-nav-item active' : 'mobile-nav-item'} onClick={() => setSettingsOpen(true)}>
           <span>⚙</span><small>Pengaturan</small>
