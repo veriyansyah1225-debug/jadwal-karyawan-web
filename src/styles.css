@@ -814,3 +814,8 @@
 @media print{
   .app{zoom:1!important}
 }
+
+/* Keep the schedule-update navigation label fully inside its button. */
+.nav .schedule-update-nav{display:flex;align-items:center;gap:8px;min-width:0;white-space:normal;line-height:1.25;padding:10px 12px;}
+.nav .schedule-update-nav>span:first-child{flex:0 0 auto;line-height:1.2;}
+.nav .schedule-update-nav .schedule-update-nav-label{display:block;min-width:0;overflow-wrap:anywhere;}
