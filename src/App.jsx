@@ -1724,12 +1724,12 @@ function updateBulkScheduleValue(code, value) {
         if (deleteError) throw new Error(deleteError.message)
       }
 
-      const desiredRows = [...desiredByDate.entries()].map(([date, item]) => ({
-        date,
-        codeId: item.codeId,
-      }))
+      const desiredRows = [...desiredByDate.entries()]
+        .filter(([date, item]) => Number(existingByDate.get(date)?.schedule_code_id || 0) !== item.codeId)
+        .map(([date, item]) => ({ date, codeId: item.codeId }))
 
       if (desiredRows.length) {
+        const changedAt = new Date().toISOString()
         const payload = desiredRows.map((item) => ({
           employee_id: Number(bulkScheduleEmployee.employeeId),
           tanggal: item.date,
@@ -1737,7 +1737,7 @@ function updateBulkScheduleValue(code, value) {
           job_id: null,
           department_id: existingByDate.get(item.date)?.department_id ?? null,
           keterangan: existingByDate.get(item.date)?.keterangan || null,
-          updated_at: new Date().toISOString(),
+          updated_at: changedAt,
         }))
         const { error: upsertError } = await supabase
           .from('employee_schedules')
@@ -1826,7 +1826,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
           const name = employeeNames.get(String(item.employee_id))
           if (!name || !item.updated_at) continue
           const updatedAt = new Date(item.updated_at)
-          const dateKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit' }).format(updatedAt)
+          const dateKey = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit' }).format(updatedAt)
           const key = String(item.employee_id) + '-' + dateKey
           if (!grouped.has(key)) grouped.set(key, { id: key, date: dateKey, name })
         }
