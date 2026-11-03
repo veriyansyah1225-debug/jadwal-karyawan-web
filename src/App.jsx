@@ -1813,12 +1813,13 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
         const employeeIds = [...new Set((scheduleData || []).map((item) => item.employee_id).filter(Boolean))]
         let employeeNames = new Map()
         if (employeeIds.length) {
+          // Use the schedule view so every role that can view schedules can also resolve employee names.
           const { data: employeeData, error: employeeError } = await supabase
-            .from('employees')
-            .select('id,nama')
-            .in('id', employeeIds)
+            .from('v_jadwal_karyawan')
+            .select('employee_id,nama_karyawan')
+            .in('employee_id', employeeIds)
           if (employeeError) throw new Error(employeeError.message)
-          employeeNames = new Map((employeeData || []).map((item) => [String(item.id), item.nama]))
+          employeeNames = new Map((employeeData || []).map((item) => [String(item.employee_id), item.nama_karyawan]))
         }
 
         const grouped = new Map()
