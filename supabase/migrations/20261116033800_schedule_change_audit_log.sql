@@ -12,6 +12,8 @@ create table if not exists public.schedule_change_logs (
   new_employee_id bigint,
   old_employee_name text,
   new_employee_name text,
+  old_department_id bigint,
+  new_department_id bigint,
   old_schedule_date date,
   new_schedule_date date,
   old_schedule_code_id bigint,
@@ -49,6 +51,21 @@ create policy "Active users can read schedule change logs"
       from public.user_profiles as profile
       where profile.user_id = (select auth.uid())
         and profile.aktif = true
+        and (
+          profile.role = any (array['admin', 'hrd', 'manager', 'external'])
+          or (
+            profile.role = any (array['supervisor_farm', 'supervisor_hatchery'])
+            and exists (
+              select 1
+              from public.user_access_scopes as scope
+              where scope.user_id = profile.user_id
+                and scope.department_id in (
+                  schedule_change_logs.old_department_id,
+                  schedule_change_logs.new_department_id
+                )
+            )
+          )
+        )
     )
   );
 
@@ -114,6 +131,8 @@ begin
     new_employee_id,
     old_employee_name,
     new_employee_name,
+    old_department_id,
+    new_department_id,
     old_schedule_date,
     new_schedule_date,
     old_schedule_code_id,
@@ -133,6 +152,8 @@ begin
     case when tg_op = 'DELETE' then null else new.employee_id end,
     v_old_employee_name,
     v_new_employee_name,
+    case when tg_op = 'INSERT' then null else old.department_id end,
+    case when tg_op = 'DELETE' then null else new.department_id end,
     case when tg_op = 'INSERT' then null else old.tanggal end,
     case when tg_op = 'DELETE' then null else new.tanggal end,
     case when tg_op = 'INSERT' then null else old.schedule_code_id end,
