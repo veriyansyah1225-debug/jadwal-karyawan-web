@@ -1804,7 +1804,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
         const end = new Date(Date.UTC(year, month, 1) - (7 * 60 * 60 * 1000)).toISOString()
         const { data, error: auditError } = await supabase
           .from('schedule_change_logs')
-          .select('id,changed_at,action,actor_user_id,actor_name,old_employee_name,new_employee_name,old_schedule_date,new_schedule_date,old_schedule_code, new_schedule_code,old_schedule_name,new_schedule_name,old_note,new_note')
+          .select('id,changed_at,action,actor_user_id,actor_name,old_employee_name,new_employee_name,old_schedule_date,new_schedule_date,old_schedule_code,new_schedule_code,old_schedule_name,new_schedule_name,old_note,new_note')
           .gte('changed_at', start)
           .lt('changed_at', end)
           .order('changed_at', { ascending: false })
