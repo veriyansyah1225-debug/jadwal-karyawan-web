@@ -2308,7 +2308,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
             )}
             {!scheduleActivityLoading && !scheduleActivityError && scheduleActivityRows.length > 0 && (
               <div className="wrap">
-                <table>
+                <table className="schedule-audit-table">
                   <thead>
                     <tr>
                       <th>Waktu (WIB)</th>
