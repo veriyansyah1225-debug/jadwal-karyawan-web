@@ -2119,7 +2119,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
 
       <main className="main">
         <h1>{activeTab === 'employees' ? 'Master Karyawan' : activeTab === 'logs' ? 'Riwayat Aktivitas' : activeTab === 'schedule-info' ? 'Riwayat Perubahan Jadwal' : 'Jadwal Karyawan'}</h1>
-        <p className="sub">{activeTab === 'employees' ? 'Kelola data master karyawan dan status kepegawaian.' : activeTab === 'logs' ? 'Log permintaan API Supabase yang gagal dalam 24 jam terakhir.' : activeTab === 'schedule-info' ? 'Tanggal pencatatan atau pembaruan jadwal karyawan pada bulan yang dipilih.' : 'Frontend awal berdasarkan Prototype UI v2'}</p>
+        <p className="sub">{activeTab === 'employees' ? 'Kelola data master karyawan dan status kepegawaian.' : activeTab === 'logs' ? 'Log permintaan API Supabase yang gagal dalam 24 jam terakhir.' : activeTab === 'schedule-info' ? 'Riwayat penambahan, perubahan, dan penghapusan jadwal pada bulan yang dipilih.' : 'Frontend awal berdasarkan Prototype UI v2'}</p>
 
         {activeTab === 'logs' ? (
           !supabaseLogsVerified ? (
@@ -2539,7 +2539,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
           <span>♟</span><small>Karyawan</small>
         </button>
         <button type="button" className={activeTab === 'schedule-info' ? 'mobile-nav-item active' : 'mobile-nav-item'} onClick={() => setActiveTab('schedule-info')}>
-          <span>◷</span><small>Info</small>
+          <span>◷</span><small>Riwayat</small>
         </button>
         <button type="button" className={settingsOpen ? 'mobile-nav-item active' : 'mobile-nav-item'} onClick={() => setSettingsOpen(true)}>
           <span>⚙</span><small>Pengaturan</small>
