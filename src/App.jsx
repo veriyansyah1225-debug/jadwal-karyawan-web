@@ -1844,7 +1844,7 @@ async function deleteAdminSchedule(employeeId, date, employeeName) {
             scheduleDate: item.new_schedule_date || item.old_schedule_date || null,
             oldCode,
             newCode,
-            actor: item.actor_name || (item.actor_user_id ? 'Pengguna ' + item.actor_user_id : 'Sistem / identitas tidak tersedia'),
+            actor: item.actor_user_id ? 'Admin' : 'Sistem',
             note,
           }
         })
